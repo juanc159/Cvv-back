@@ -24,7 +24,6 @@ class BannerStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => 'required',
             'path' => 'required',
         ];
     }
@@ -32,7 +31,6 @@ class BannerStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'company_id.required' => 'El campo es obligatorio',
             'path.required' => 'El campo es obligatorio',
         ];
     }

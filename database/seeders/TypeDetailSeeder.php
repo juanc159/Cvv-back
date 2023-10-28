@@ -15,15 +15,6 @@ class TypeDetailSeeder extends Seeder
 
         $dataArray = [
             [
-                "name" => "Dirección",
-            ],
-            [
-                "name" => "Teléfonos",
-            ],
-            [
-                "name" => "Correos",
-            ],
-            [
                 "name" => "Facebook",
             ],
             [
@@ -38,6 +29,19 @@ class TypeDetailSeeder extends Seeder
             [
                 "name" => "youtube",
             ],
+            [
+                "name" => "Dirección",
+            ],
+            [
+                "name" => "Teléfonos",
+            ],
+            [
+                "name" => "Correos",
+            ],
+            [
+                "name" => "Iframe GoogleMap",
+            ],
+
         ];
 
         foreach ($dataArray as $key => $value) {

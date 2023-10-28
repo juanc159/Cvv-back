@@ -52,6 +52,7 @@ class RouteServiceProvider extends ServiceProvider
         $routesApi = [
             'routes/api.php',
             'routes/authentication.php',
+            'routes/pw.php',
         ];
         foreach ($this->centralDomains() as $domain) {
             foreach ($routesApi as $route) {

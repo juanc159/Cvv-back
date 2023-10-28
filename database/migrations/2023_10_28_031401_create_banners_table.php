@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('companies');
+            $table->foreignId('company_id')->nullable()->constrained('companies');
             $table->string('path')->nullable();
             $table->boolean('state')->default(1);
             $table->timestamps();

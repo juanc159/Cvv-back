@@ -17,9 +17,14 @@ class BannerRepository extends BaseRepository
             if (! empty($request['name'])) {
                 $query->where('name', 'like', '%'.$request['name'].'%');
             }
+
             if (! empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
+            }else {
+                $query->whereNull('company_id');
             }
+
+
             if (! empty($request['state'])) {
                 $query->where('state', $request['state']);
             }

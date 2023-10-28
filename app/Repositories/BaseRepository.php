@@ -124,7 +124,7 @@ class BaseRepository
     public function clearNull($array)
     {
         foreach ($array as $clave => $valor) {
-            if ($valor === 'null') {
+            if ($valor === 'null' || $valor === 'undefined') {
                 $array[$clave] = null; // Asignar null en lugar de 'null'
             }
         }
