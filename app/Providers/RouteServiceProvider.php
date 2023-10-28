@@ -68,6 +68,8 @@ class RouteServiceProvider extends ServiceProvider
         $routesAuthApi = [
             'routes/Querys/query.php',
             'routes/user.php',
+            'routes/company.php',
+            'routes/banner.php',
         ];
 
         //este es para el o los centrales

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('photo')->nullable();
             $table->boolean('state')->default(1);
+            $table->foreignId('company_id')->nullable()->constrained('companies');
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

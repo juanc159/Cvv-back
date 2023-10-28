@@ -21,8 +21,8 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'name' => 'tenants.index',
-                'description' => 'Visualizar Módulo Tenant',
+                'name' => 'company.index',
+                'description' => 'Visualizar Módulo Companias',
                 'menu_id' => 2,
             ],
             [
@@ -36,7 +36,13 @@ class PermissionSeeder extends Seeder
                 'name' => 'roles.index',
                 'description' => 'Visualizar Módulo Roles',
                 'menu_id' => 4,
-            ]
+            ],
+            [
+                'id' => 5,
+                'name' => 'banner.index',
+                'description' => 'Visualizar Módulo Banner',
+                'menu_id' => 5,
+            ],
         ];
 
         foreach ($array as $key => $value) {

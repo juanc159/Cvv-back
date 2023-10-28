@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
             [
                 "name" => "Administrador",
                 "last_name" => "Principal",
+                "company_id" => null,
                 "email" => "admin@admin.com",
                 "permissions" => $permisions,
             ],
@@ -29,6 +30,7 @@ class UserSeeder extends Seeder
             $data = new User();
             $data->name = $value["name"];
             $data->last_name = $value["last_name"];
+            $data->company_id = $value["company_id"];
             $data->email = $value["email"];
             $data->password = Hash::make(123456789);
             $data->save();

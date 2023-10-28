@@ -22,10 +22,10 @@ class MenuSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'title' => 'Tenants',
-                'to' => 'Tenants-Index',
+                'title' => 'Compañias',
+                'to' => 'Company-Index',
                 'icon' => 'flag-checkered',
-                'requiredPermission' => 'tenants.index',
+                'requiredPermission' => 'company.index',
             ],
             [
                 'id' => 3,
@@ -40,7 +40,14 @@ class MenuSeeder extends Seeder
                 'to' => 'Roles-Index',
                 'icon' => 'mdi-account-lock-outline',
                 'requiredPermission' => 'roles.index',
-            ]
+            ],
+            [
+                'id' => 5,
+                'title' => 'Banner',
+                'to' => 'Banner-Index',
+                'icon' => 'mdi-account-lock-outline',
+                'requiredPermission' => 'banner.index',
+            ],
         ];
         foreach ($arrayData as $key => $value) {
             $data = new Menu();

@@ -26,48 +26,6 @@ class PassportAuthController extends Controller
         $this->mailService = $mailService;
     }
 
-    public function register(PassportAuthRegisterRequest $request)
-    {
-        try {
-            DB::beginTransaction();
-            $permisos = $request->input('permisos');
-            unset($request['permisos']);
-            // update
-
-            $requestPerson = [
-                'full_name' => $request->full_name,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'status' => $request->status,
-                'gender_id' => $request->gender_id,
-            ];
-
-
-            $requestUser = [
-                'status' => $request->status,
-                'email' => $request->email,
-                'password' => $request->password,
-            ];
-
-            $data = $this->userRepository->register($requestUser);
-
-            $data->permissions()->sync($permisos);
-
-            // $this->mailService->setEmailTo($request->input('email'));
-            // $this->mailService->setView('Mails.UserOutRegister');
-            // $this->mailService->setSubject('Registro de usuario');
-            // $this->mailService->sendMessage();
-
-            DB::commit();
-
-            return response()->json(['code' => 200, 'message' => 'Registro agregado correctamente', 'data' => $data]);
-        } catch (Throwable $th) {
-            DB::rollBack();
-
-            return response()->json(['code' => 500, 'message' => $th->getMessage()], 500);
-        }
-    }
-
     public function login(PassportAuthLoginRequest $request)
     {
           $data = [
@@ -93,6 +51,8 @@ class PassportAuthController extends Controller
             $obj['id'] = $user->id;
             $obj['name'] = $user->name;
             $obj['email'] = $user->email;
+            $obj['company_id'] = $user->company_id;
+            $obj['company'] = $user->company;
 
             if (count($user->all_permissions) > 0) {
                 $menu = $this->menuRepository->list([
