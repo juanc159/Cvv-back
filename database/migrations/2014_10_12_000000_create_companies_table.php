@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string("name");
             $table->string("slogan")->nullable();
+            $table->string("image_principal")->nullable();
             $table->string("iframeGoogleMap")->nullable();
             $table->string("state")->default(1);
             $table->timestamps();

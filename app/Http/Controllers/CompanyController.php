@@ -63,9 +63,17 @@ class CompanyController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $this->companyRepository->store($request->except(["arrayDetails"]));
+            $data = $this->companyRepository->store($request->except(["arrayDetails","image_principal"]));
 
-            $arrayDetails = $request->input(["arrayDetails"]);
+            if ($request->file('image_principal')) {
+                $file = $request->file('image_principal');
+                $image_principal = $request->root() . '/storage/' . $file->store('/banners/banner_' . $data->id  . $request->input('image_principal'), 'public');
+                $data->image_principal = $image_principal;
+            }
+            $data->save();
+
+
+            $arrayDetails = json_decode($request->input(["arrayDetails"]),1);
             if (count($arrayDetails) > 0) {
                 foreach ($arrayDetails as $key => $value) {
                     if ($value["delete"] == 1) {

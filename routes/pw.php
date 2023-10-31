@@ -1,11 +1,7 @@
 <?php
 
 use App\Http\Controllers\PwController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\TenantController;
-use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*

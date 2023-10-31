@@ -20,7 +20,7 @@ class PwController extends Controller
     public function dataPrincipal()
     {
         $banners = $this->bannerRepository->list(["typeData" => "all", "company_id" => null], select: ["id", "path"]);
-        $companies = $this->companyRepository->list(["typeData" => "all"], select: ["id", "name"]);
+        $companies = $this->companyRepository->list(["typeData" => "all"], select: ["id", "name","image_principal"]);
 
         return response()->json([
             "banners" => $banners,
