@@ -18,7 +18,7 @@ class CompanyPwSchoolResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slogan' => $this->slogan,
-            'iframeGoogleMap' => $this->slogan,
+            'iframeGoogleMap' => $this->iframeGoogleMap,
             'social_networks' => $this->details->whereIn("type_detail_id", [1,2,3,4,5])->map(function ($value) {
                 return [
                     "type_detail_name" => $value->typeDetail?->name,
