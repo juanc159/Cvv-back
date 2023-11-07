@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Resources\Company\CompanyPwSchoolResource;
 use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
+use App\Repositories\TypeEducationRepository;
 
 class PwController extends Controller
 {
     private $companyRepository;
     private $bannerRepository;
+    private $typeEducationRepository;
 
-    public function __construct(CompanyRepository $companyRepository, BannerRepository $bannerRepository)
+    public function __construct(CompanyRepository $companyRepository, BannerRepository $bannerRepository,TypeEducationRepository $typeEducationRepository)
     {
         $this->companyRepository = $companyRepository;
         $this->bannerRepository = $bannerRepository;
+        $this->typeEducationRepository = $typeEducationRepository;
     }
 
     public function dataPrincipal()
@@ -31,10 +34,12 @@ class PwController extends Controller
     public function dataSchool($id)
     {
         $company = $this->companyRepository->find($id);
+        $typeEducations = $this->typeEducationRepository->selectList();
 
         $company = new CompanyPwSchoolResource($company);
         return response()->json([
             "company" => $company,
+            "typeEducations" => $typeEducations,
         ]);
     }
 }

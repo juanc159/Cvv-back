@@ -18,4 +18,9 @@ class Company extends Model
     {
         return $this->hasMany(Banner::class, "company_id", "id");
     }
+
+    public function teachers()
+    {
+        return $this->hasMany(Teacher::class, "company_id", "id");
+    }
 }

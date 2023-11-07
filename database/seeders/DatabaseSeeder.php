@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Teacher;
 use Illuminate\Database\Seeder;
 use Laravel\Passport\ClientRepository;
 
@@ -26,10 +28,19 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class,
             PermissionSeeder::class,
             UserSeeder::class,
-            CountrySeeder::class,
+            // CountrySeeder::class,
             // DepartmentSeeder::class,
             // CitySeeder::class,
+
+            JobPositionSeeder::class,
+            TypeEducationSeeder::class,
+            GradeSeeder::class,
+            SectionSeeder::class,
+            SubjectSeeder::class,
         ]);
+
+        Teacher::factory(20)->create();
+
 
         $client = new ClientRepository();
 

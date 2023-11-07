@@ -40,6 +40,19 @@ class CompanyPwSchoolResource extends JsonResource
                     "path" => $value->path
                 ];
             }),
+            "typeEducations" =>[],
+            'teachers' => $this->teachers->map(function ($value) {
+                return [
+                    "fullName" => $value->name.' '. $value->last_name,
+                    "photo" => $value->photo,
+                    "type_education_id" => $value->type_education_id,
+                    "type_education_name" => $value->typeEducation?->name,
+                    "email" => $value->email,
+                    "phone" => $value->phone,
+                    "jobPosition" => $value->jobPosition?->name,
+                    "backgroundColor" => generarColorPastelAleatorio(70),
+                ];
+            })->groupBy('type_education_name'),
         ];
     }
 }

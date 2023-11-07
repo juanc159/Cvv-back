@@ -144,7 +144,7 @@ class CompanyController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Usuario ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 

@@ -4,37 +4,11 @@ function getSubdomain($post)
 {
     $host = $post->getHost(); // Obtiene el nombre de host completo
     $subdomain = explode('.', $host, 2)[0]; // Extrae el subdominio
-    $subdomain = $subdomain == 'localhost' || $subdomain == '127' ? $subdomain = 'storage' : 'storage_'.$subdomain;
+    $subdomain = $subdomain == 'localhost' || $subdomain == '127' ? $subdomain = 'storage' : 'storage_' . $subdomain;
 
-    return $subdomain.'/';
+    return $subdomain . '/';
 }
 
-function getPermissionsList($query, $request, $branchRepository, $modules=[])
-{
-    $user = auth()->user();
-    $query->where('user_created_id', $user->id);
-
-    if (! empty($request['status'])) {
-        $query->where('status', $request['status']);
-    }
-
-    $permissions = $user->permissions->pluck('name')->toArray();
-    $arrayPermissions = collect();
-
-    $branches = $branchRepository->list(['typeData' => 'all']);
-    foreach ($branches as $branch) {
-        foreach ($modules as $module_id) {
-            $permissionName = $module_id.'.list.branch_'.$branch->id;
-            if (in_array($permissionName, $permissions) || in_array($module_id.'.branch.list.national', $permissions)) {
-                $arrayPermissions->push($branch->id);
-            }
-        }
-    }
-
-    $query->orWhereHas('userCreated.staff', function ($staffQuery) use ($arrayPermissions) {
-        $staffQuery->whereIn('branch_id', $arrayPermissions);
-    });
-}
 function filterComponent($query, $request)
 {
     $query->where(function ($query) use ($request) {
@@ -54,4 +28,19 @@ function filterComponent($query, $request)
             }
         }
     });
+}
+
+
+function generarColorPastelAleatorio($intensidad = 0) {
+    $min = 150 + $intensidad; // Rango mínimo ajustado por la intensidad
+    $max = 255; // Rango máximo invariable
+
+    $r = mt_rand($min, $max); // Rango para el canal rojo
+    $g = mt_rand($min, $max); // Rango para el canal verde
+    $b = mt_rand($min, $max); // Rango para el canal azul
+
+    // Formatear los valores RGB como una cadena hexadecimal
+    $color = sprintf("#%02X%02X%02X", $r, $g, $b);
+
+    return $color;
 }

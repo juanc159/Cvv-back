@@ -63,10 +63,8 @@ class BannerController extends Controller
             $data->save();
 
             $msg = 'agregado';
-            $action = 'create';
             if (!empty($request['id'])) {
                 $msg = 'modificado';
-                $action = 'update';
             }
 
             DB::commit();
@@ -116,7 +114,7 @@ class BannerController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Usuario ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
