@@ -15,9 +15,9 @@ class Teacher extends Model
         'job_position_id' => 'integer',
     ];
 
-    public function subjects()
+    public function complementaries()
     {
-        return $this->belongsToMany(Subject::class, "teacher_subjects", "teacher_id", "subject_id");
+        return $this->hasMany(TeacherComplementary::class, "teacher_id", "id");
     }
 
     public function typeEducation()

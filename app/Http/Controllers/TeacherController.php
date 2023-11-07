@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
+use App\Repositories\GradeRepository;
 use App\Repositories\JobPositionRepository;
+use App\Repositories\SectionRepository;
 use App\Repositories\SubjectRepository;
+use App\Repositories\TeacherComplementaryRepository;
 use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Exception;
@@ -21,17 +24,26 @@ class TeacherController extends Controller
     private $jobPositionRepository;
     private $typeEducationRepository;
     private $subjectRepository;
+    private $sectionRepository;
+    private $gradeRepository;
+    private $teacherComplementaryRepository;
 
     public function __construct(
         TeacherRepository $teacherRepository,
         JobPositionRepository $jobPositionRepository,
         TypeEducationRepository $typeEducationRepository,
         SubjectRepository $subjectRepository,
+        SectionRepository $sectionRepository,
+        GradeRepository $gradeRepository,
+        TeacherComplementaryRepository $teacherComplementaryRepository,
     ) {
         $this->teacherRepository = $teacherRepository;
         $this->jobPositionRepository = $jobPositionRepository;
         $this->typeEducationRepository = $typeEducationRepository;
         $this->subjectRepository = $subjectRepository;
+        $this->sectionRepository = $sectionRepository;
+        $this->gradeRepository = $gradeRepository;
+        $this->teacherComplementaryRepository = $teacherComplementaryRepository;
     }
 
     public function list(Request $request)
@@ -59,12 +71,16 @@ class TeacherController extends Controller
         $jobPositions = $this->jobPositionRepository->selectList();
         $typeEducations = $this->typeEducationRepository->selectList();
         $subjects = $this->subjectRepository->selectList();
+        $sections = $this->sectionRepository->selectList();
+        $grades = $this->gradeRepository->selectList();
 
         return response()->json([
             "form" => $data,
             "jobPositions" => $jobPositions,
             "typeEducations" => $typeEducations,
             "subjects" => $subjects,
+            "sections" => $sections,
+            "grades" => $grades,
         ]);
     }
 
@@ -73,7 +89,7 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->teacherRepository->store($request->except("photo","subjects"));
+           $data = $this->teacherRepository->store($request->except(["photo","complementaries"]));
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
@@ -83,10 +99,24 @@ class TeacherController extends Controller
 
             $data->save();
 
-            $subjects = $request->input("subjects");
-            $subjects = explode(",",$subjects);
-            if(count($subjects)>0){
-                $data->subjects()->sync($subjects);
+             $complementaries = json_decode($request->input("complementaries"),1);
+            if(count($complementaries)>0){
+                foreach ($complementaries as $key => $value) {
+                    if($value["delete"]==1){
+                        $this->teacherComplementaryRepository->delete($value["id"]);
+                    }else{
+                        $subjectsArray = collect($value["subjects"])->pluck("value")->toArray();
+
+                        $this->teacherComplementaryRepository->store([
+                            "id" => $value["id"],
+                            "grade_id" => $value["grade_id"],
+                            "teacher_id" => $data->id,
+                            "section_id" => $value["section_id"],
+                            "subject_ids" => implode(', ', $subjectsArray),
+                            "id" => $value["id"],
+                        ]);
+                    }
+                }
             }
 
             $data = new TeacherFormResource($data);

@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class TeacherComplementary extends Model
+{
+    use HasFactory;
+
+    public function grade(){
+        return $this->hasOne(Grade::class,"id","grade_id");
+    }
+
+    public function section(){
+        return $this->hasOne(Section::class,"id","section_id");
+    }
+}
