@@ -58,7 +58,8 @@ class TypeEducationRepository extends BaseRepository
 
     public function selectList($request = [])
     {
-        $data = $this->model->where(function ($request) {
+        $data = $this->model->where(function ($query) use ($request){
+
         })->get()->map(function ($value) {
             return [
                 "value" => $value->id,

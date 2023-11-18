@@ -14,11 +14,16 @@ class TeacherComplementaryRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
-            if (!empty($request['name'])) {
-                $query->where('name', 'like', '%' . $request['name'] . '%');
+            if (!empty($request['grade_id'])) {
+                $query->where('grade_id', $request['grade_id']);
             }
-            if (!empty($request['state'])) {
-                $query->where('state', $request['state']);
+            if (!empty($request['section_id'])) {
+                $query->where('section_id', $request['section_id']);
+            }
+            if (!empty($request['company_id'])) {
+                $query->whereHas('teacher', function($x)  use ($request){
+                    $x->where("company_id",$request['company_id']);
+                });
             }
         })
             ->where(function ($query) use ($request) {

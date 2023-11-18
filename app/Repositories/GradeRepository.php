@@ -66,4 +66,37 @@ class GradeRepository extends BaseRepository
         });
         return $data;
     }
+
+    public function teachers($request = [])
+    {
+        $data = $this->model->where(function ($query) use ($request) {
+            $query->whereHas("teachers");
+        })->get()->map(function ($value) {
+            return [
+                "grade_id" => $value->id,
+                "grade_name" => $value->name,
+                "teachers" => $value->teachers->map(function ($val) {
+                    return [
+                        "section_id" => $val->section_id,
+                        "section_name" => $val->section->name,
+                    ];
+                }),
+            ];
+        })->groupBy(function ($item) {
+            // Agrupa por section_name
+            return $item['teachers'][0]['section_name'];
+        })->map(function ($group) {
+            // Construye la estructura final
+            return [
+                "section_name" => $group[0]['teachers'][0]['section_name'],
+                "grades" => $group->map(function ($item) {
+                    return [
+                        "grade_id" => $item['grade_id'],
+                        "grade_name" => $item['grade_name'],
+                    ];
+                })->toArray(),
+            ];
+        });
+        return $data;
+    }
 }

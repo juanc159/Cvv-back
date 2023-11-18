@@ -46,6 +46,7 @@ class TeacherFormResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'photo' => $this->photo,
+            'files' => [],
         ];
     }
 }

@@ -16,4 +16,7 @@ class TeacherComplementary extends Model
     public function section(){
         return $this->hasOne(Section::class,"id","section_id");
     }
+    public function teacher(){
+        return $this->hasOne(Teacher::class,"id","teacher_id");
+    }
 }
