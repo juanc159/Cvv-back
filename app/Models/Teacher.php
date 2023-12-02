@@ -17,16 +17,16 @@ class Teacher extends Model
 
     public function complementaries()
     {
-        return $this->hasMany(TeacherComplementary::class, "teacher_id", "id");
+        return $this->hasMany(TeacherComplementary::class, 'teacher_id', 'id');
     }
 
     public function typeEducation()
     {
-        return $this->hasOne(TypeEducation::class, "id", "type_education_id");
+        return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
     }
 
     public function jobPosition()
     {
-        return $this->hasOne(JobPosition::class, "id", "job_position_id");
+        return $this->hasOne(JobPosition::class, 'id', 'job_position_id');
     }
 }

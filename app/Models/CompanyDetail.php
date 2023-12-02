@@ -9,7 +9,8 @@ class CompanyDetail extends Model
 {
     use HasFactory;
 
-    public function typeDetail(){
-        return $this->hasOne(TypeDetail::class,"id","type_detail_id");
+    public function typeDetail()
+    {
+        return $this->hasOne(TypeDetail::class, 'id', 'type_detail_id');
     }
 }

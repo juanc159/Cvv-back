@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\User\AssignPermissionRequest;
 use App\Http\Requests\User\UserStoreRequest;
-use App\Http\Resources\User\MenuCheckBoxResource;
-use App\Http\Resources\User\AssignPermission\RoleSelectResource;
 use App\Http\Resources\User\UserFormResource;
 use App\Http\Resources\User\UserListResource;
-use App\Repositories\UserRepository;
-use App\Repositories\RoleRepository;
 use App\Repositories\MenuRepository;
+use App\Repositories\RoleRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -18,7 +15,9 @@ use Throwable;
 class UserController extends Controller
 {
     private $userRepository;
+
     private $roleRepository;
+
     private $menuRepository;
 
     public function __construct(UserRepository $userRepository, RoleRepository $roleRepository, MenuRepository $menuRepository)
@@ -43,7 +42,7 @@ class UserController extends Controller
         ];
     }
 
-    public function dataForm($action = "create", $id = null)
+    public function dataForm($action = 'create', $id = null)
     {
         $data = null;
         if ($id) {
@@ -52,7 +51,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            "form" => $data
+            'form' => $data,
         ]);
     }
 
@@ -60,12 +59,12 @@ class UserController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $this->userRepository->store($request->except(["photo"]));
+            $data = $this->userRepository->store($request->except(['photo']));
 
             if ($request->file('photo')) {
                 $subdomain = getSubdomain($request);
                 $file = $request->file('photo');
-                $path = $request->root() . '/' . $subdomain . '/' . $file->store('users/user_' . $data->id . $request->input('photo'), 'public');
+                $path = $request->root().'/'.$subdomain.'/'.$file->store('users/user_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $path;
                 $data->save();
             }
@@ -73,17 +72,17 @@ class UserController extends Controller
             DB::commit();
 
             $msg = 'agregado';
-            if (!empty($request['id'])) {
+            if (! empty($request['id'])) {
                 $msg = 'modificado';
             }
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
         } catch (Throwable $th) {
             DB::rollBack();
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -109,7 +108,7 @@ class UserController extends Controller
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -127,7 +126,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 

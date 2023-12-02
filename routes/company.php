@@ -19,4 +19,3 @@ Route::get('/company-dataForm/{action}/{id?}', [CompanyController::class, 'dataF
 Route::post('/company-create', [CompanyController::class, 'store'])->name('company.store');
 
 Route::put('/company-update', [CompanyController::class, 'store'])->name('company.update');
-

@@ -23,7 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/pw-dataPrincipal', [PwController::class, 'dataPrincipal'])->name('pw.dataPrincipal');
 // Principal
 
-
 // School
 Route::get('/pw-dataSchool/{id}', [PwController::class, 'dataSchool'])->name('pw.dataSchool');
 // School
@@ -31,4 +30,3 @@ Route::get('/pw-dataSchool/{id}', [PwController::class, 'dataSchool'])->name('pw
 // School
 Route::get('/pw-dataGradeSection/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSection'])->name('pw.dataGradeSection');
 // School
-

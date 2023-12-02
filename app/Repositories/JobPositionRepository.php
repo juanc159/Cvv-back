@@ -14,16 +14,16 @@ class JobPositionRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
-            if (!empty($request['name'])) {
-                $query->where('name', 'like', '%' . $request['name'] . '%');
+            if (! empty($request['name'])) {
+                $query->where('name', 'like', '%'.$request['name'].'%');
             }
-            if (!empty($request['state'])) {
+            if (! empty($request['state'])) {
                 $query->where('state', $request['state']);
             }
         })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -41,7 +41,7 @@ class JobPositionRepository extends BaseRepository
     {
         $request = $this->clearNull($request);
 
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
@@ -61,7 +61,7 @@ class JobPositionRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select) {
+        })->get()->map(function ($value) use ($select) {
             $data = [
                 'value' => $value->id,
                 'title' => $value->name,

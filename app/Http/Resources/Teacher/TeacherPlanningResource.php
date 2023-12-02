@@ -19,39 +19,40 @@ class TeacherPlanningResource extends JsonResource
         return [
             'id' => $this->id,
             'job_position_id' => $this->job_position_id,
-            'complementaries' => $this->complementaries->map(function($value){
+            'complementaries' => $this->complementaries->map(function ($value) {
                 $dataSub = [];
-                $subject_ids =explode(",",$value->subject_ids);
+                $subject_ids = explode(',', $value->subject_ids);
                 foreach ($subject_ids as $key => $sub) {
                     $x = Subject::find($sub);
 
-                    $files = TeacherPlanning::where(function($query) use ($value,$x){
-                        $query->where("teacher_id",$value->teacher_id);
-                        $query->where("grade_id",$value->grade_id);
-                        $query->where("section_id",$value->section_id);
-                        $query->where("subject_id",$x->id);
-                    })->get()->map(function($f){
+                    $files = TeacherPlanning::where(function ($query) use ($value, $x) {
+                        $query->where('teacher_id', $value->teacher_id);
+                        $query->where('grade_id', $value->grade_id);
+                        $query->where('section_id', $value->section_id);
+                        $query->where('subject_id', $x->id);
+                    })->get()->map(function ($f) {
                         return [
-                            "id" => $f->id,
-                            "name" => $f->name,
-                            "file" => $f->path,
-                            "delete" => 0,
+                            'id' => $f->id,
+                            'name' => $f->name,
+                            'file' => $f->path,
+                            'delete' => 0,
                         ];
                     });
 
                     $dataSub[] = [
-                        "value" =>  intval($sub),
-                        "title" =>  $x->name,
-                        "files" =>  $files,
+                        'value' => intval($sub),
+                        'title' => $x->name,
+                        'files' => $files,
                     ];
                 }
+
                 return [
-                    "id" => $value->id,
-                    "grade_id" => $value->grade_id,
-                    "grade_name" => $value->grade?->name,
-                    "section_id" =>  $value->section_id,
-                    "section_name" => $value->section?->name,
-                    "subjects" => $dataSub,
+                    'id' => $value->id,
+                    'grade_id' => $value->grade_id,
+                    'grade_name' => $value->grade?->name,
+                    'section_id' => $value->section_id,
+                    'section_name' => $value->section?->name,
+                    'subjects' => $dataSub,
                 ];
             }),
             'name' => $this->name,

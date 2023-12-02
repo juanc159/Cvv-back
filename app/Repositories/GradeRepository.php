@@ -14,16 +14,16 @@ class GradeRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
-            if (!empty($request['name'])) {
-                $query->where('name', 'like', '%' . $request['name'] . '%');
+            if (! empty($request['name'])) {
+                $query->where('name', 'like', '%'.$request['name'].'%');
             }
-            if (!empty($request['state'])) {
+            if (! empty($request['state'])) {
                 $query->where('state', $request['state']);
             }
         })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -41,7 +41,7 @@ class GradeRepository extends BaseRepository
     {
         $request = $this->clearNull($request);
 
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
@@ -61,7 +61,7 @@ class GradeRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select) {
+        })->get()->map(function ($value) use ($select) {
             $data = [
                 'value' => $value->id,
                 'title' => $value->name,
@@ -85,16 +85,16 @@ class GradeRepository extends BaseRepository
 
     public function teachers($request = [])
     {
-        $data = $this->model->where(function ($query) use ($request) {
-            $query->whereHas("teachers");
+        $data = $this->model->where(function ($query) {
+            $query->whereHas('teachers');
         })->get()->map(function ($value) {
             return [
-                "grade_id" => $value->id,
-                "grade_name" => $value->name,
-                "teachers" => $value->teachers->map(function ($val) {
+                'grade_id' => $value->id,
+                'grade_name' => $value->name,
+                'teachers' => $value->teachers->map(function ($val) {
                     return [
-                        "section_id" => $val->section_id,
-                        "section_name" => $val->section->name,
+                        'section_id' => $val->section_id,
+                        'section_name' => $val->section->name,
                     ];
                 }),
             ];
@@ -104,15 +104,16 @@ class GradeRepository extends BaseRepository
         })->map(function ($group) {
             // Construye la estructura final
             return [
-                "section_name" => $group[0]['teachers'][0]['section_name'],
-                "grades" => $group->map(function ($item) {
+                'section_name' => $group[0]['teachers'][0]['section_name'],
+                'grades' => $group->map(function ($item) {
                     return [
-                        "grade_id" => $item['grade_id'],
-                        "grade_name" => $item['grade_name'],
+                        'grade_id' => $item['grade_id'],
+                        'grade_name' => $item['grade_name'],
                     ];
                 })->toArray(),
             ];
         });
+
         return $data;
     }
 }

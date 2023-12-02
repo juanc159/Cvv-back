@@ -16,7 +16,6 @@ return new class extends Migration
 
             $table->foreignId('teacher_id')->nullable()->constrained('teachers');
 
-
             $table->foreignId('grade_id')->nullable()->constrained('grades');
             $table->foreignId('section_id')->nullable()->constrained('sections');
             $table->foreignId('subject_id')->nullable()->constrained('subjects');

@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Config;
 use App\Models\Tenant;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ Route::get('/linkstorage', function () {
     $data[public_path('storage')] = storage_path('app/public');
 
     foreach ($tenants as $tenant) {
-        $data[public_path('storage_' . $tenant['id'])] = storage_path('storage_' . $tenant['id'] . '/app/public');
+        $data[public_path('storage_'.$tenant['id'])] = storage_path('storage_'.$tenant['id'].'/app/public');
     }
 
     Config::set('filesystems.links', $data);

@@ -11,16 +11,16 @@ class Company extends Model
 
     public function details()
     {
-        return $this->hasMany(CompanyDetail::class, "company_id", "id");
+        return $this->hasMany(CompanyDetail::class, 'company_id', 'id');
     }
 
     public function banners()
     {
-        return $this->hasMany(Banner::class, "company_id", "id");
+        return $this->hasMany(Banner::class, 'company_id', 'id');
     }
 
     public function teachers()
     {
-        return $this->hasMany(Teacher::class, "company_id", "id");
+        return $this->hasMany(Teacher::class, 'company_id', 'id');
     }
 }

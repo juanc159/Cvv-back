@@ -14,11 +14,11 @@ use Throwable;
 
 class SubjectController extends Controller
 {
-
     private $subjectRepository;
+
     private $typeEducationRepository;
 
-    public function __construct(SubjectRepository $subjectRepository,TypeEducationRepository $typeEducationRepository)
+    public function __construct(SubjectRepository $subjectRepository, TypeEducationRepository $typeEducationRepository)
     {
         $this->subjectRepository = $subjectRepository;
         $this->typeEducationRepository = $typeEducationRepository;
@@ -38,7 +38,7 @@ class SubjectController extends Controller
         ];
     }
 
-    public function dataForm($action = "create", $id = null)
+    public function dataForm($action = 'create', $id = null)
     {
         $data = null;
         if ($id) {
@@ -49,8 +49,8 @@ class SubjectController extends Controller
         $typeEducations = $this->typeEducationRepository->selectList();
 
         return response()->json([
-            "form" => $data,
-            "typeEducations" => $typeEducations,
+            'form' => $data,
+            'typeEducations' => $typeEducations,
         ]);
     }
 
@@ -59,24 +59,24 @@ class SubjectController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->subjectRepository->store($request->except("path"));
+            $data = $this->subjectRepository->store($request->except('path'));
 
             $data->save();
 
             $msg = 'agregado';
-            if (!empty($request['id'])) {
+            if (! empty($request['id'])) {
                 $msg = 'modificado';
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
         } catch (Exception $th) {
             DB::rollBack();
+
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
         }
     }
-
 
     public function delete($id)
     {
@@ -97,7 +97,7 @@ class SubjectController extends Controller
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -115,7 +115,7 @@ class SubjectController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 

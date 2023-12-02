@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
-            $table->string("slogan")->nullable();
-            $table->longText("image_principal")->nullable();
-            $table->string("iframeGoogleMap")->nullable();
-            $table->string("state")->default(1);
+            $table->string('name');
+            $table->string('slogan')->nullable();
+            $table->longText('image_principal')->nullable();
+            $table->string('iframeGoogleMap')->nullable();
+            $table->string('state')->default(1);
             $table->timestamps();
         });
     }

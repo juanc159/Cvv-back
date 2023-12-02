@@ -19,4 +19,3 @@ Route::get('/user-dataForm/{action}/{id?}', [Usercontroller::class, 'dataForm'])
 Route::post('/user-create', [Usercontroller::class, 'store'])->name('user.store');
 
 Route::put('/user-update', [Usercontroller::class, 'store'])->name('user.update');
-

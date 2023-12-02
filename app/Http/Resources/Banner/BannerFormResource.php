@@ -16,7 +16,7 @@ class BannerFormResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'path' => $this->path
+            'path' => $this->path,
         ];
     }
 }

@@ -69,7 +69,7 @@ class TeacherRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select) {
+        })->get()->map(function ($value) use ($select) {
             $data = [
                 'value' => $value->id,
                 'title' => $value->name,

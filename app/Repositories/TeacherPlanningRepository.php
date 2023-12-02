@@ -14,21 +14,21 @@ class TeacherPlanningRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
-            if (!empty($request['grade_id'])) {
+            if (! empty($request['grade_id'])) {
                 $query->where('grade_id', $request['grade_id']);
             }
-            if (!empty($request['section_id'])) {
+            if (! empty($request['section_id'])) {
                 $query->where('section_id', $request['section_id']);
             }
-            if (!empty($request['company_id'])) {
-                $query->whereHas('teacher', function($x)  use ($request){
-                    $x->where("company_id",$request['company_id']);
+            if (! empty($request['company_id'])) {
+                $query->whereHas('teacher', function ($x) use ($request) {
+                    $x->where('company_id', $request['company_id']);
                 });
             }
         })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -46,7 +46,7 @@ class TeacherPlanningRepository extends BaseRepository
     {
         $request = $this->clearNull($request);
 
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
@@ -66,7 +66,7 @@ class TeacherPlanningRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select) {
+        })->get()->map(function ($value) use ($select) {
             $data = [
                 'value' => $value->id,
                 'title' => $value->name,

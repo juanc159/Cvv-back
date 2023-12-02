@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('job_positions', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
+            $table->string('name');
             $table->boolean('state')->default(1);
             $table->timestamps();
         });

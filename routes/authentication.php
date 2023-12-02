@@ -9,6 +9,6 @@ Route::post('/login', [PassportAuthController::class, 'login'])->name('login');
 
 Route::post('/permission-list', [PermissionController::class, 'list'])->name('permission.list');
 
-Route::get('/prueba',function(){
-    return [1,2,3,4];
+Route::get('/prueba', function () {
+    return [1, 2, 3, 4];
 });

@@ -19,14 +19,14 @@ class CompanyFormResource extends JsonResource
             'name' => $this->name,
             'slogan' => $this->slogan,
             'image_principal' => $this->image_principal,
-            'arrayDetails' => $this->details->map(function($value){
+            'arrayDetails' => $this->details->map(function ($value) {
                 return [
-                    "id" => $value->id,
-                    "type_detail_id" => $value->type_detail_id,
-                    "icon" => $value->icon,
-                    "color" => $value->color,
-                    "content" => $value->content,
-                    "delete" => 0,
+                    'id' => $value->id,
+                    'type_detail_id' => $value->type_detail_id,
+                    'icon' => $value->icon,
+                    'color' => $value->color,
+                    'content' => $value->content,
+                    'delete' => 0,
                 ];
             }),
         ];

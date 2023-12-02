@@ -18,7 +18,7 @@ class TeacherListResource extends JsonResource
             'id' => $this->id,
             'type_education_name' => $this->typeEducation?->name,
             'job_position_name' => $this->jobPosition?->name,
-            'subjects' => $this->subjects ? $this->subjects->pluck("name") : [],
+            'subjects' => $this->subjects ? $this->subjects->pluck('name') : [],
             'name' => $this->name,
             'last_name' => $this->last_name,
             'email' => $this->email,

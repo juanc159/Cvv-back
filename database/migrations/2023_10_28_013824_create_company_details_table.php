@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies');
             $table->foreignId('type_detail_id')->constrained('type_details');
-            $table->string("icon");
-            $table->string("color");
-            $table->string("content");
+            $table->string('icon');
+            $table->string('color');
+            $table->string('content');
             $table->timestamps();
         });
     }

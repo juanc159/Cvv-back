@@ -24,28 +24,28 @@ class TeacherStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => "required",
-            'type_education_id' => "required",
-            'job_position_id' => "required",
-            'name' => "required",
-            'last_name' => "required",
-            'email' => "required",
-            'phone' => "required",
-            'photo' => "required",
+            'company_id' => 'required',
+            'type_education_id' => 'required',
+            'job_position_id' => 'required',
+            'name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required',
+            'phone' => 'required',
+            'photo' => 'required',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'company_id' => "El campo es obligatorio",
-            'type_education_id' => "El campo es obligatorio",
-            'job_position_id' => "El campo es obligatorio",
-            'name' => "El campo es obligatorio",
-            'last_name' => "El campo es obligatorio",
-            'email' => "El campo es obligatorio",
-            'phone' => "El campo es obligatorio",
-            'photo' => "El campo es obligatorio",
+            'company_id' => 'El campo es obligatorio',
+            'type_education_id' => 'El campo es obligatorio',
+            'job_position_id' => 'El campo es obligatorio',
+            'name' => 'El campo es obligatorio',
+            'last_name' => 'El campo es obligatorio',
+            'email' => 'El campo es obligatorio',
+            'phone' => 'El campo es obligatorio',
+            'photo' => 'El campo es obligatorio',
         ];
     }
 

@@ -28,12 +28,13 @@ class UserStoreRequest extends FormRequest
         $rules = [
             'name' => 'required',
             'last_name' => 'required',
-            'email' => 'email|required|unique:users,email,' . $userId,
+            'email' => 'email|required|unique:users,email,'.$userId,
         ];
 
-        if (!$userId) {
-            $rules["password"] = 'required';
+        if (! $userId) {
+            $rules['password'] = 'required';
         }
+
         return $rules;
     }
 

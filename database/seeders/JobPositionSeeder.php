@@ -14,23 +14,23 @@ class JobPositionSeeder extends Seeder
     {
         $dataArray = [
             [
-                "id" => 1,
-                "name" => "Director(a)",
+                'id' => 1,
+                'name' => 'Director(a)',
             ],
             [
-                "id" => 2,
-                "name" => "Coordinador(a)",
+                'id' => 2,
+                'name' => 'Coordinador(a)',
             ],
             [
-                "id" => 3,
-                "name" => "Profesor(a)",
+                'id' => 3,
+                'name' => 'Profesor(a)',
             ],
         ];
 
         foreach ($dataArray as $key => $value) {
             $data = new JobPosition();
-            $data->id = $value["id"];
-            $data->name = $value["name"];
+            $data->id = $value['id'];
+            $data->name = $value['name'];
             $data->save();
         }
     }

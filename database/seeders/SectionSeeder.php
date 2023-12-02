@@ -14,27 +14,27 @@ class SectionSeeder extends Seeder
     {
         $dataArray = [
             [
-                "id" => 1,
-                "name" => "A",
+                'id' => 1,
+                'name' => 'A',
             ],
             [
-                "id" => 2,
-                "name" => "B",
+                'id' => 2,
+                'name' => 'B',
             ],
             [
-                "id" => 3,
-                "name" => "C",
+                'id' => 3,
+                'name' => 'C',
             ],
             [
-                "id" => 4,
-                "name" => "D",
+                'id' => 4,
+                'name' => 'D',
             ],
         ];
 
         foreach ($dataArray as $key => $value) {
             $data = new Section();
-            $data->id = $value["id"];
-            $data->name = $value["name"];
+            $data->id = $value['id'];
+            $data->name = $value['name'];
             $data->save();
         }
     }

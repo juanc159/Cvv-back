@@ -15,15 +15,15 @@ class CompanyRepository extends BaseRepository
     {
         $data = $this->model->select($select)
             ->with($with)
-            ->where(function ($query) use ($request, $idsAllowed, $idsNotAllowed) {
-                if (!empty($request['name'])) {
-                    $query->where('name', 'like', '%' . $request['name'] . '%');
+            ->where(function ($query) use ($request) {
+                if (! empty($request['name'])) {
+                    $query->where('name', 'like', '%'.$request['name'].'%');
                 }
 
             })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             });
         if (empty($request['typeData'])) {
@@ -39,7 +39,7 @@ class CompanyRepository extends BaseRepository
     {
         $request = $this->clearNull($request);
 
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();

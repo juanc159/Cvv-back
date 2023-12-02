@@ -20,25 +20,26 @@ class TeacherFormResource extends JsonResource
             'company_id' => $this->company_id,
             'type_education_id' => $this->type_education_id,
             'job_position_id' => $this->job_position_id,
-            'complementaries' => $this->complementaries->map(function($value){
+            'complementaries' => $this->complementaries->map(function ($value) {
 
                 $dataSub = [];
-                $subject_ids =explode(",",$value->subject_ids);
+                $subject_ids = explode(',', $value->subject_ids);
                 foreach ($subject_ids as $key => $sub) {
                     $x = Subject::find($sub);
                     $dataSub[] = [
-                        "value" =>  intval($sub),
-                        "title" =>  $x->name,
+                        'value' => intval($sub),
+                        'title' => $x->name,
                     ];
                 }
+
                 return [
-                    "id" => $value->id,
-                    "grade_id" => $value->grade_id,
-                    "grade_name" => $value->grade?->name,
-                    "section_id" =>  $value->section_id,
-                    "section_name" => $value->section?->name,
-                    "subjects" => $dataSub,
-                    "delete" => 0,
+                    'id' => $value->id,
+                    'grade_id' => $value->grade_id,
+                    'grade_name' => $value->grade?->name,
+                    'section_id' => $value->section_id,
+                    'section_name' => $value->section?->name,
+                    'subjects' => $dataSub,
+                    'delete' => 0,
                 ];
             }),
             'name' => $this->name,

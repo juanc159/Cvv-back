@@ -269,7 +269,7 @@ class CountrySeeder extends Seeder
             ['id' => '254', 'name' => 'Man (Isle of)', 'prefix' => 'XM', 'number' => '+44'],
             ['id' => '255', 'name' => 'Netherlands Antilles', 'prefix' => 'AN', 'number' => '+599'],
             ['id' => '256', 'name' => 'Smaller Territories of the UK', 'prefix' => 'XG', 'number' => '+44'],
-            ['id' => '257', 'name' => 'Yugoslavia', 'prefix' => 'YU', 'number' => '+38']
+            ['id' => '257', 'name' => 'Yugoslavia', 'prefix' => 'YU', 'number' => '+38'],
         ];
 
         foreach ($countries as $key => $value) {

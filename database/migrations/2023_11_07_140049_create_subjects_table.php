@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('type_education_id')->constrained('type_education');
-            $table->string("name");
-            $table->string("code")->unique();
+            $table->string('name');
+            $table->string('code')->unique();
             $table->timestamps();
         });
     }

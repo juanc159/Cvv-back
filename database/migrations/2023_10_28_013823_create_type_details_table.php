@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('type_details', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
-            $table->boolean("state")->default(1);
+            $table->string('name');
+            $table->boolean('state')->default(1);
             $table->timestamps();
         });
     }

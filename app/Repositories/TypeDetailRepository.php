@@ -15,14 +15,14 @@ class TypeDetailRepository extends BaseRepository
     {
         $data = $this->model->select($select)
             ->with($with)
-            ->where(function ($query) use ($request, $idsAllowed, $idsNotAllowed) {
-                if (!empty($request['name'])) {
-                    $query->where('name', 'like', '%' . $request['name'] . '%');
+            ->where(function ($query) use ($request) {
+                if (! empty($request['name'])) {
+                    $query->where('name', 'like', '%'.$request['name'].'%');
                 }
             })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             });
         if (empty($request['typeData'])) {
@@ -38,7 +38,7 @@ class TypeDetailRepository extends BaseRepository
     {
         $request = $this->clearNull($request);
 
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
@@ -58,7 +58,7 @@ class TypeDetailRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select) {
+        })->get()->map(function ($value) use ($select) {
             $data = [
                 'value' => $value->id,
                 'title' => $value->name,

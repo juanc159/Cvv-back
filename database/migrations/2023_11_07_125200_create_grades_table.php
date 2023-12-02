@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained('companies');
             $table->foreignId('type_education_id')->nullable()->constrained('type_education');
-            $table->string("name");
+            $table->string('name');
             $table->boolean('state')->default(1);
 
             ///agregar docente guia (id)

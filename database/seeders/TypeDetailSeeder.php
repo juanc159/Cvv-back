@@ -15,38 +15,38 @@ class TypeDetailSeeder extends Seeder
 
         $dataArray = [
             [
-                "name" => "Facebook",
+                'name' => 'Facebook',
             ],
             [
-                "name" => "instagram",
+                'name' => 'instagram',
             ],
             [
-                "name" => "tiktok",
+                'name' => 'tiktok',
             ],
             [
-                "name" => "twiter",
+                'name' => 'twiter',
             ],
             [
-                "name" => "youtube",
+                'name' => 'youtube',
             ],
             [
-                "name" => "Dirección",
+                'name' => 'Dirección',
             ],
             [
-                "name" => "Teléfonos",
+                'name' => 'Teléfonos',
             ],
             [
-                "name" => "Correos",
+                'name' => 'Correos',
             ],
             [
-                "name" => "Iframe GoogleMap",
+                'name' => 'Iframe GoogleMap',
             ],
 
         ];
 
         foreach ($dataArray as $key => $value) {
             $data = new TypeDetail();
-            $data->name = $value["name"];
+            $data->name = $value['name'];
             $data->save();
         }
     }

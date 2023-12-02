@@ -41,7 +41,6 @@ class DatabaseSeeder extends Seeder
 
         Teacher::factory(20)->create();
 
-
         $client = new ClientRepository();
 
         $client->createPasswordGrantClient(null, 'Laravel Personal Access Client', 'http://localhost');

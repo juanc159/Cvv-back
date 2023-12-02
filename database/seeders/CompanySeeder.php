@@ -15,23 +15,23 @@ class CompanySeeder extends Seeder
 
         $dataArray = [
             [
-                "name" => "U.E Colegio virgen del valle",
-                "slogan" => null,
+                'name' => 'U.E Colegio virgen del valle',
+                'slogan' => null,
             ],
             [
-                "name" => "Virgen del Valle International School",
-                "slogan" => null,
+                'name' => 'Virgen del Valle International School',
+                'slogan' => null,
             ],
             [
-                "name" => "U.E Colegio Lolita Robles de Mora",
-                "slogan" => null,
+                'name' => 'U.E Colegio Lolita Robles de Mora',
+                'slogan' => null,
             ],
         ];
 
         foreach ($dataArray as $key => $value) {
             $data = new Company();
-            $data->name = $value["name"];
-            $data->slogan = $value["slogan"];
+            $data->name = $value['name'];
+            $data->slogan = $value['slogan'];
             $data->save();
         }
     }

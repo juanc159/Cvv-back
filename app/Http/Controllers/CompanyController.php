@@ -15,7 +15,9 @@ use Throwable;
 class CompanyController extends Controller
 {
     private $companyRepository;
+
     private $companyDetailRepository;
+
     private $typeDetailRepository;
 
     public function __construct(
@@ -43,7 +45,7 @@ class CompanyController extends Controller
         ];
     }
 
-    public function dataForm($action = "create", $id = null)
+    public function dataForm($action = 'create', $id = null)
     {
         $data = null;
         if ($id) {
@@ -54,8 +56,8 @@ class CompanyController extends Controller
         $typeDetails = $this->typeDetailRepository->selectList();
 
         return response()->json([
-            "form" => $data,
-            "typeDetails" => $typeDetails,
+            'form' => $data,
+            'typeDetails' => $typeDetails,
         ]);
     }
 
@@ -63,24 +65,23 @@ class CompanyController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $this->companyRepository->store($request->except(["arrayDetails","image_principal"]));
+            $data = $this->companyRepository->store($request->except(['arrayDetails', 'image_principal']));
 
             if ($request->file('image_principal')) {
                 $file = $request->file('image_principal');
-                $image_principal = $request->root() . '/storage/' . $file->store('/banners/banner_' . $data->id  . $request->input('image_principal'), 'public');
+                $image_principal = $request->root().'/storage/'.$file->store('/banners/banner_'.$data->id.$request->input('image_principal'), 'public');
                 $data->image_principal = $image_principal;
             }
             $data->save();
 
-
-            $arrayDetails = json_decode($request->input(["arrayDetails"]),1);
+            $arrayDetails = json_decode($request->input(['arrayDetails']), 1);
             if (count($arrayDetails) > 0) {
                 foreach ($arrayDetails as $key => $value) {
-                    if ($value["delete"] == 1) {
-                        $this->companyDetailRepository->delete($value["id"]);
-                    }else{
-                        unset($value["delete"]);
-                        $value["company_id"] = $data->id;
+                    if ($value['delete'] == 1) {
+                        $this->companyDetailRepository->delete($value['id']);
+                    } else {
+                        unset($value['delete']);
+                        $value['company_id'] = $data->id;
                         $this->companyDetailRepository->store($value);
                     }
                 }
@@ -89,18 +90,18 @@ class CompanyController extends Controller
             DB::commit();
 
             $msg = 'agregado';
-            if (!empty($request['id'])) {
+            if (! empty($request['id'])) {
                 $msg = 'modificado';
             }
             $data = new CompanyFormResource($data);
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
         } catch (Throwable $th) {
             DB::rollBack();
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -126,7 +127,7 @@ class CompanyController extends Controller
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -144,7 +145,7 @@ class CompanyController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 

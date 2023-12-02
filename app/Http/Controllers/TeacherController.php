@@ -21,14 +21,20 @@ use Throwable;
 
 class TeacherController extends Controller
 {
-
     private $teacherRepository;
+
     private $jobPositionRepository;
+
     private $typeEducationRepository;
+
     private $subjectRepository;
+
     private $sectionRepository;
+
     private $gradeRepository;
+
     private $teacherComplementaryRepository;
+
     private $teacherPlanningRepository;
 
     public function __construct(
@@ -65,7 +71,7 @@ class TeacherController extends Controller
         ];
     }
 
-    public function dataForm($action = "create", $id = null)
+    public function dataForm($action = 'create', $id = null)
     {
         $data = null;
         if ($id) {
@@ -75,17 +81,17 @@ class TeacherController extends Controller
 
         $jobPositions = $this->jobPositionRepository->selectList();
         $typeEducations = $this->typeEducationRepository->selectList();
-        $subjects = $this->subjectRepository->selectList(select: ["type_education_id"]);
+        $subjects = $this->subjectRepository->selectList(select: ['type_education_id']);
         $sections = $this->sectionRepository->selectList();
-        $grades = $this->gradeRepository->selectList(select: ["type_education_id"]);
+        $grades = $this->gradeRepository->selectList(select: ['type_education_id']);
 
         return response()->json([
-            "form" => $data,
-            "jobPositions" => $jobPositions,
-            "typeEducations" => $typeEducations,
-            "subjects" => $subjects,
-            "sections" => $sections,
-            "grades" => $grades,
+            'form' => $data,
+            'jobPositions' => $jobPositions,
+            'typeEducations' => $typeEducations,
+            'subjects' => $subjects,
+            'sections' => $sections,
+            'grades' => $grades,
         ]);
     }
 
@@ -94,31 +100,31 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->teacherRepository->store($request->except(["photo", "complementaries"]));
+            $data = $this->teacherRepository->store($request->except(['photo', 'complementaries']));
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $request->root() . '/storage/' . $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id  . $request->input('photo'), 'public');
+                $photo = $request->root().'/storage/'.$file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $photo;
             }
 
             $data->save();
 
-            $complementaries = json_decode($request->input("complementaries"), 1);
+            $complementaries = json_decode($request->input('complementaries'), 1);
             if (count($complementaries) > 0) {
                 foreach ($complementaries as $key => $value) {
-                    if ($value["delete"] == 1) {
-                        $this->teacherComplementaryRepository->delete($value["id"]);
+                    if ($value['delete'] == 1) {
+                        $this->teacherComplementaryRepository->delete($value['id']);
                     } else {
-                        $subjectsArray = collect($value["subjects"])->pluck("value")->toArray();
+                        $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
 
                         $this->teacherComplementaryRepository->store([
-                            "id" => $value["id"],
-                            "grade_id" => $value["grade_id"],
-                            "teacher_id" => $data->id,
-                            "section_id" => $value["section_id"],
-                            "subject_ids" => implode(', ', $subjectsArray),
-                            "id" => $value["id"],
+                            'id' => $value['id'],
+                            'grade_id' => $value['grade_id'],
+                            'teacher_id' => $data->id,
+                            'section_id' => $value['section_id'],
+                            'subject_ids' => implode(', ', $subjectsArray),
+                            'id' => $value['id'],
                         ]);
                     }
                 }
@@ -127,19 +133,19 @@ class TeacherController extends Controller
             $data = new TeacherFormResource($data);
 
             $msg = 'agregado';
-            if (!empty($request['id'])) {
+            if (! empty($request['id'])) {
                 $msg = 'modificado';
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
         } catch (Exception $th) {
             DB::rollBack();
+
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
         }
     }
-
 
     public function delete($id)
     {
@@ -160,7 +166,7 @@ class TeacherController extends Controller
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -178,7 +184,7 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -186,53 +192,52 @@ class TeacherController extends Controller
         }
     }
 
-
     public function planning($id = null)
     {
-        $data = $this->teacherRepository->find($id, ["complementaries"]);
+        $data = $this->teacherRepository->find($id, ['complementaries']);
         $data = new TeacherPlanningResource($data);
 
         return response()->json([
-            "data" => $data,
+            'data' => $data,
         ]);
     }
+
     public function planningStore(Request $request)
     {
 
         try {
             DB::beginTransaction();
-            $teacher = $this->teacherRepository->find($request->input("teacher_id"),["complementaries"]);
+            $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
-            for ($i = 0; $i < $request->input("files_cant"); $i++) {
-                if ($request->input("file_delete_" . $i) == 1) {
-                    $this->teacherPlanningRepository->delete($request->input("file_id_" . $i));
+            for ($i = 0; $i < $request->input('files_cant'); $i++) {
+                if ($request->input('file_delete_'.$i) == 1) {
+                    $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
                 } else {
 
                     $teacherPlanning = $this->teacherPlanningRepository->store([
-                        "id" => $request->input("file_id_" . $i) === "null" ? null :  $request->input("file_id_" . $i),
-                        "teacher_id" => $teacher->id,
-                        "grade_id" =>  $request->input("file_grade_id_" . $i),
-                        "section_id" =>  $request->input("file_section_id_" . $i),
-                        "subject_id" =>  $request->input("file_subject_id_" . $i),
-                        "path" =>  $request->input("file_file_" . $i),
-                        "name" =>  $request->input("file_name_" . $i),
+                        'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
+                        'teacher_id' => $teacher->id,
+                        'grade_id' => $request->input('file_grade_id_'.$i),
+                        'section_id' => $request->input('file_section_id_'.$i),
+                        'subject_id' => $request->input('file_subject_id_'.$i),
+                        'path' => $request->input('file_file_'.$i),
+                        'name' => $request->input('file_name_'.$i),
                     ]);
 
-                    if ($request->file("file_file_" . $i)) {
-                        $file = $request->file("file_file_" . $i);
-                        $path = $request->root() . '/storage/' . $file->store('company_'.$teacher->company_id.'/teachers/teacher_' . $request->input("teacher_id").'/plannings' . $request->input("file_file_" . $i), 'public');
+                    if ($request->file('file_file_'.$i)) {
+                        $file = $request->file('file_file_'.$i);
+                        $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
                         $teacherPlanning->path = $path;
                     }
                     $teacherPlanning->save();
                 }
             }
 
-
             DB::commit();
 
             $data = new TeacherPlanningResource($teacher);
 
-            return response()->json(['code' => 200, 'message' => 'Registros actualizados con éxito',"data"=> $data]);
+            return response()->json(['code' => 200, 'message' => 'Registros actualizados con éxito', 'data' => $data]);
         } catch (Throwable $th) {
             DB::rollback();
 

@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('company_id')->nullable()->constrained('companies');
             $table->foreignId('type_education_id')->nullable()->constrained('type_education');
             $table->foreignId('job_position_id')->nullable()->constrained('job_positions');
-            $table->string("name");
-            $table->string("last_name");
-            $table->string("email");
-            $table->string("phone");
-            $table->string("photo")->nullable();
+            $table->string('name');
+            $table->string('last_name');
+            $table->string('email');
+            $table->string('phone');
+            $table->string('photo')->nullable();
             $table->boolean('state')->default(1);
             $table->timestamps();
         });

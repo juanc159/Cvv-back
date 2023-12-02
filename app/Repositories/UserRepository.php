@@ -17,15 +17,15 @@ class UserRepository extends BaseRepository
         $data = $this->model->select($select)
             ->with($with)
             ->where(function ($query) use ($request, $idsAllowed, $idsNotAllowed) {
-                if (!empty($request['name'])) {
-                    $query->where('name', 'like', '%' . $request['name'] . '%');
+                if (! empty($request['name'])) {
+                    $query->where('name', 'like', '%'.$request['name'].'%');
                 }
 
                 //idsAllowed
                 if (count($idsAllowed) > 0) {
                     $query->whereIn('id', $idsAllowed);
                 }
-                if (!empty($request['idsAllowed']) && count($request['idsAllowed']) > 0) {
+                if (! empty($request['idsAllowed']) && count($request['idsAllowed']) > 0) {
                     $query->whereIn('id', $request['idsAllowed']);
                 }
 
@@ -33,13 +33,13 @@ class UserRepository extends BaseRepository
                 if (count($idsNotAllowed) > 0) {
                     $query->whereNotIn('id', $idsNotAllowed);
                 }
-                if (!empty($request['idsNotAllowed']) && count($request['idsNotAllowed']) > 0) {
+                if (! empty($request['idsNotAllowed']) && count($request['idsNotAllowed']) > 0) {
                     $query->whereNotIn('id', $request['idsNotAllowed']);
                 }
             })
             ->where(function ($query) use ($request) {
-                if (!empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
+                if (! empty($request['searchQuery'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
                 }
             });
         if (empty($request['typeData'])) {
@@ -55,7 +55,7 @@ class UserRepository extends BaseRepository
     {
 
         $request = $this->clearNull($request);
-        if (!empty($request['id'])) {
+        if (! empty($request['id'])) {
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();

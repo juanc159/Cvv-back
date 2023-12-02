@@ -69,7 +69,7 @@ class BaseRepository
 
         if (count($data) > 0) {
             foreach ($data as $key => $value) {
-                $clone["key"] = $value;
+                $clone['key'] = $value;
             }
         }
 
@@ -108,7 +108,7 @@ class BaseRepository
         }
         // dd('pasí');
 
-        $nombre = $nombre . '.pdf';
+        $nombre = $nombre.'.pdf';
         if ($is_stream) {
             return $pdf->stream($nombre);
         } else {
@@ -144,5 +144,4 @@ class BaseRepository
         // Retornar $this permite encadenar métodos si es necesario
         return $this->model->getConnection()->getName();
     }
-
 }

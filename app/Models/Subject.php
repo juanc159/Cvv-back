@@ -13,9 +13,8 @@ class Subject extends Model
         'type_education_id' => 'integer',
     ];
 
-
     public function typeEducation()
     {
-        return $this->hasOne(TypeEducation::class, "id", "type_education_id");
+        return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
     }
 }

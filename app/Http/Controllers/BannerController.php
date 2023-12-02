@@ -13,7 +13,6 @@ use Throwable;
 
 class BannerController extends Controller
 {
-
     private $bannerRepository;
 
     public function __construct(BannerRepository $bannerRepository)
@@ -35,7 +34,7 @@ class BannerController extends Controller
         ];
     }
 
-    public function dataForm($action = "create", $id = null)
+    public function dataForm($action = 'create', $id = null)
     {
         $data = null;
         if ($id) {
@@ -44,7 +43,7 @@ class BannerController extends Controller
         }
 
         return response()->json([
-            "form" => $data,
+            'form' => $data,
         ]);
     }
 
@@ -53,29 +52,29 @@ class BannerController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->bannerRepository->store($request->except("path"));
+            $data = $this->bannerRepository->store($request->except('path'));
 
             if ($request->file('path')) {
                 $file = $request->file('path');
-                $path = $request->root() . '/storage/' . $file->store('/banners/banner_' . $data->id  . $request->input('path'), 'public');
+                $path = $request->root().'/storage/'.$file->store('/banners/banner_'.$data->id.$request->input('path'), 'public');
                 $data->path = $path;
             }
             $data->save();
 
             $msg = 'agregado';
-            if (!empty($request['id'])) {
+            if (! empty($request['id'])) {
                 $msg = 'modificado';
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
         } catch (Exception $th) {
             DB::rollBack();
+
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
         }
     }
-
 
     public function delete($id)
     {
@@ -96,7 +95,7 @@ class BannerController extends Controller
 
             return response()->json([
                 'code' => 500,
-                'message' => "Algo Ocurrio, Comunicate Con El Equipo De Desarrollo",
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
             ], 500);
@@ -114,7 +113,7 @@ class BannerController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -122,10 +121,9 @@ class BannerController extends Controller
         }
     }
 
-
     public function pw_list()
     {
-        $data = $this->bannerRepository->list(["typeData" => "all", "state" => 1]);
+        $data = $this->bannerRepository->list(['typeData' => 'all', 'state' => 1]);
         $banners = BannerListResource::collection($data);
 
         return [

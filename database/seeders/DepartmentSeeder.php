@@ -4156,7 +4156,7 @@ class DepartmentSeeder extends Seeder
             ['id' => '4179', 'name' => 'Wielkopolskie', 'country_id' => '185'],
             ['id' => '4180', 'name' => 'Wroclaw', 'country_id' => '185'],
             ['id' => '4181', 'name' => 'Zachodnio-Pomorskie', 'country_id' => '185'],
-            ['id' => '4182', 'name' => 'Zukowo', 'country_id' => '185']
+            ['id' => '4182', 'name' => 'Zukowo', 'country_id' => '185'],
         ];
 
         foreach ($departments as $key => $value) {

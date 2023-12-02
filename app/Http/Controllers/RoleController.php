@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Roles\RoleStoreRequest;
 use App\Http\Resources\Roles\MenuCheckBoxResource;
 use App\Http\Resources\Roles\RoleFormResource;
