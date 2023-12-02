@@ -56,16 +56,31 @@ class TypeEducationRepository extends BaseRepository
         return $data;
     }
 
-    public function selectList($request = [])
+    public function selectList($request = [], $with = [], $select = [])
     {
-        $data = $this->model->where(function ($query) use ($request){
-
-        })->get()->map(function ($value) {
-            return [
-                "value" => $value->id,
-                "title" => $value->name,
+        $data = $this->model->with($with)->where(function ($query) use ($request) {
+            if (! empty($request['idsAllowed'])) {
+                $query->whereIn('id', $request['idsAllowed']);
+            }
+        })->get()->map(function ($value) use ($with, $select) {
+            $data = [
+                'value' => $value->id,
+                'title' => $value->name,
             ];
+
+            if (count($select) > 0) {
+                foreach ($select as $s) {
+                    $data[$s] = $value->$s;
+                }
+            }
+
+            // if (in_array('shortcuts', $with)) {
+            //     $data['shortcuts'] = $value->shortcuts;
+            // }
+
+            return $data;
         });
+
         return $data;
     }
 }

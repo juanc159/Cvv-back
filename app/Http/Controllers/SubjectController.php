@@ -6,6 +6,7 @@ use App\Http\Requests\Subject\SubjectStoreRequest;
 use App\Http\Resources\Subject\SubjectFormResource;
 use App\Http\Resources\Subject\SubjectListResource;
 use App\Repositories\SubjectRepository;
+use App\Repositories\TypeEducationRepository;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +16,12 @@ class SubjectController extends Controller
 {
 
     private $subjectRepository;
+    private $typeEducationRepository;
 
-    public function __construct(SubjectRepository $subjectRepository)
+    public function __construct(SubjectRepository $subjectRepository,TypeEducationRepository $typeEducationRepository)
     {
         $this->subjectRepository = $subjectRepository;
+        $this->typeEducationRepository = $typeEducationRepository;
     }
 
     public function list(Request $request)
@@ -43,8 +46,11 @@ class SubjectController extends Controller
             $data = new SubjectFormResource($data);
         }
 
+        $typeEducations = $this->typeEducationRepository->selectList();
+
         return response()->json([
             "form" => $data,
+            "typeEducations" => $typeEducations,
         ]);
     }
 

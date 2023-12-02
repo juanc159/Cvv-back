@@ -13,10 +13,14 @@ Route::post('/teacher-list', [TeacherController::class, 'list'])->name('teacher.
 
 Route::delete('/teacher-delete/{id}', [TeacherController::class, 'delete'])->name('teacher.delete');
 
-Route::post('/teacher-changeState', [TeacherController::class, 'changeState'])->name('api.banner.changeState');
+Route::post('/teacher-changeState', [TeacherController::class, 'changeState'])->name('teacherr.changeState');
 
-Route::get('/teacher-dataForm/{action}/{id?}', [TeacherController::class, 'dataForm'])->name('api.permission.dataForm');
+Route::get('/teacher-dataForm/{action}/{id?}', [TeacherController::class, 'dataForm'])->name('teacher.dataForm');
 
 Route::post('/teacher-create', [TeacherController::class, 'store'])->name('teacher.store');
 
 Route::put('/teacher-update', [TeacherController::class, 'store'])->name('teacher.update');
+
+
+Route::get('/teacher-planning/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');
+Route::post('/teacher-planningStore', [TeacherController::class, 'planningStore'])->name('teacher.planningStore');

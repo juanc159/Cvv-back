@@ -16,6 +16,7 @@ class SubjectListResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'type_education_name' => $this->typeEducation->name,
             'name' => $this->name,
             'code' => $this->code,
             'state' => $this->state,

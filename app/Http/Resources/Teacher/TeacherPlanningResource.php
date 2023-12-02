@@ -3,10 +3,11 @@
 namespace App\Http\Resources\Teacher;
 
 use App\Models\Subject;
+use App\Models\TeacherPlanning;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TeacherFormResource extends JsonResource
+class TeacherPlanningResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,18 +18,31 @@ class TeacherFormResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'company_id' => $this->company_id,
-            'type_education_id' => $this->type_education_id,
             'job_position_id' => $this->job_position_id,
             'complementaries' => $this->complementaries->map(function($value){
-
                 $dataSub = [];
                 $subject_ids =explode(",",$value->subject_ids);
                 foreach ($subject_ids as $key => $sub) {
                     $x = Subject::find($sub);
+
+                    $files = TeacherPlanning::where(function($query) use ($value,$x){
+                        $query->where("teacher_id",$value->teacher_id);
+                        $query->where("grade_id",$value->grade_id);
+                        $query->where("section_id",$value->section_id);
+                        $query->where("subject_id",$x->id);
+                    })->get()->map(function($f){
+                        return [
+                            "id" => $f->id,
+                            "name" => $f->name,
+                            "file" => $f->path,
+                            "delete" => 0,
+                        ];
+                    });
+
                     $dataSub[] = [
                         "value" =>  intval($sub),
                         "title" =>  $x->name,
+                        "files" =>  $files,
                     ];
                 }
                 return [
@@ -38,14 +52,10 @@ class TeacherFormResource extends JsonResource
                     "section_id" =>  $value->section_id,
                     "section_name" => $value->section?->name,
                     "subjects" => $dataSub,
-                    "delete" => 0,
                 ];
             }),
             'name' => $this->name,
             'last_name' => $this->last_name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'photo' => $this->photo,
         ];
     }
 }

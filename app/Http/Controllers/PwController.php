@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\Company\CompanyPwSchoolResource;
+use App\Models\TeacherPlanning;
 use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
 use App\Repositories\GradeRepository;
@@ -111,6 +112,20 @@ class PwController extends Controller
             foreach ($subjects as $sub) {
                 $subject = $this->subjectRepository->find($sub);
 
+                $files = TeacherPlanning::where(function($query) use ($value,$subject){
+                    $query->where("teacher_id",$value->teacher_id);
+                    $query->where("grade_id",$value->grade_id);
+                    $query->where("section_id",$value->section_id);
+                    $query->where("subject_id",$subject->id);
+                })->get()->map(function($f){
+                    return [
+                        "name" => $f->name,
+                        "file" => $f->path,
+                        "id" => $f->id,
+                    ];
+                });
+
+
                 $teachers[] = [
                     "subject_name" => $subject->name,
                     "fullName" => $value["teacher"]["name"] . ' ' . $value["teacher"]["last_name"],
@@ -118,7 +133,7 @@ class PwController extends Controller
                     "email" => $value["teacher"]["email"],
                     "phone" => $value["teacher"]["phone"],
                     "jobPosition" => $value["teacher"]["jobPosition"]["name"],
-                    "files" => [1,2,3],
+                    "files" => $files,
                     "backgroundColor" => $color,
                 ];
             }

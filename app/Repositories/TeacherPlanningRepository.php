@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Models\TeacherComplementary;
+use App\Models\TeacherPlanning;
 
-class TeacherComplementaryRepository extends BaseRepository
+class TeacherPlanningRepository extends BaseRepository
 {
-    public function __construct(TeacherComplementary $modelo)
+    public function __construct(TeacherPlanning $modelo)
     {
         parent::__construct($modelo);
     }
