@@ -67,58 +67,40 @@ class NoteController extends Controller
                 }
 
                 foreach ($formattedData as $row) {
-                    $grade = Grade::where("name", trim($row["AÑO"]))->first();
-                    $section = Section::where("name", trim($row["SECCIÓN"]))->first();
-                    $model = [
-                        "company_id" => $request->input("company_id"),
-                        "type_education_id" => $request->input("type_education_id"),
-                        "grade_id" => $grade?->id,
-                        "section_id" => $section?->id,
-                        "identity_document" => trim($row["CÉDULA"]),
-                        "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
-                    ];
-                    // return $model;
-                    $student = $this->studentRepository->store($model);
-
-                    $typeEducation = TypeEducation::with(["subjects"])->find($request->input('type_education_id'));
-
-                    $subjects = $typeEducation->subjects;
-
-                    // return $row;
-                    foreach ($subjects as $key => $sub) {
-                        $model2 = [
-                            "student_id" => $student->id,
-                            "subject_id" => $sub->id,
-                            "value1" => isset($row[$sub->code . "1"]) ?  trim($row[$sub->code . "1"]) : null,
-                            "value2" => isset($row[$sub->code . "2"]) ?  trim($row[$sub->code . "2"]) : null,
-                            "value3" => isset($row[$sub->code . "3"]) ? trim($row[$sub->code . "3"]) : null,
-                            "value4" => isset($row[$sub->code . "4"]) ?  trim($row[$sub->code . "4"]) : null,
+                    if(!empty(trim($row["CÉDULA"]))){
+                        $grade = Grade::where("name", trim($row["AÑO"]))->first();
+                        $section = Section::where("name", trim($row["SECCIÓN"]))->first();
+                        $model = [
+                            "company_id" => $request->input("company_id"),
+                            "type_education_id" => $request->input("type_education_id"),
+                            "grade_id" => $grade?->id,
+                            "section_id" => $section?->id,
+                            "identity_document" => trim($row["CÉDULA"]),
+                            "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
                         ];
+                        // return $model;
+                        $student = $this->studentRepository->store($model);
 
-                        $note = $this->noteRepository->store($model2);
+                        $typeEducation = TypeEducation::with(["subjects"])->find($request->input('type_education_id'));
+
+                        $subjects = $typeEducation->subjects;
+
+                        // return $row;
+                        foreach ($subjects as $key => $sub) {
+                            $model2 = [
+                                "student_id" => $student->id,
+                                "subject_id" => $sub->id,
+                                "value1" => isset($row[$sub->code . "1"]) ?  trim($row[$sub->code . "1"]) : null,
+                                "value2" => isset($row[$sub->code . "2"]) ?  trim($row[$sub->code . "2"]) : null,
+                                "value3" => isset($row[$sub->code . "3"]) ? trim($row[$sub->code . "3"]) : null,
+                                "value4" => isset($row[$sub->code . "4"]) ?  trim($row[$sub->code . "4"]) : null,
+                            ];
+
+                            $note = $this->noteRepository->store($model2);
+                        }
                     }
                 }
-
-
-                // return $formattedData;
             }
-
-
-            //     // $data contiene los datos del archivo Excel
-            //     // Puedes recorrer $data para procesar la información como desees
-
-            //     // Ejemplo de cómo recorrer los datos
-            //     // foreach ($data as $row) {
-            //     //     foreach ($row as $cell) {
-            //     //         // Hacer algo con cada celda
-            //     //         echo $cell . " ";
-            //     //     }
-            //     //     echo "<br>";
-            //     // }
-
-
-            // $data = $this->noteRepository->store($request->all());
-
 
             DB::commit();
 

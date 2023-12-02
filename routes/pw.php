@@ -34,3 +34,6 @@ Route::get('/pw-dataGradeSection/{school_id}/{grade_id}/{section_id}', [PwContro
 // School
 Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSectionNotes'])->name('pw.dataGradeSectionNotes');
 // School
+
+
+Route::get('/pw-pdfNote/{id}', [PwController::class, 'pdfPNote'])->name('pw.pdfPNote');

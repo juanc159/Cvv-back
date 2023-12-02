@@ -128,7 +128,7 @@ class PwController extends Controller
 
                 $teachers[] = [
                     'subject_name' => $subject->name,
-                    'fullName' => $value['teacher']['name'].' '.$value['teacher']['last_name'],
+                    'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
                     'photo' => $value['teacher']['photo'],
                     'email' => $value['teacher']['email'],
                     'phone' => $value['teacher']['phone'],
@@ -142,7 +142,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'teachers' => $teachers,
@@ -156,7 +156,7 @@ class PwController extends Controller
             'grade_id' => $grade_id,
             'section_id' => $section_id,
             'company_id' => $school_id,
-        ],["notes"])->map(function($value){
+        ], ["notes"])->map(function ($value) {
             return [
                 "id" => $value->id,
                 "full_name" => $value->full_name,
@@ -168,11 +168,37 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'students' => $students,
             'title' => $title,
         ]);
+    }
+
+    public function pdfPNote($id)
+    {
+        try {
+             $rutaImagen = public_path('/img/firma.png');
+            if (file_exists($rutaImagen)) {
+                $contenidoImagen = file_get_contents($rutaImagen);
+                 $firma = base64_encode($contenidoImagen);
+            }
+
+            $student = $this->studentRepository->find($id, ["typeEducation", "notes.subject", "grade", "section"]);
+            if ($student) {
+                $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
+                    'student' => $student,
+                    "firma" => $firma
+                ], 'Notas');
+
+                $pdf = base64_encode($pdf);
+            }
+
+            return response()->json(['code' => 200, 'pdf' => $pdf]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
     }
 }
