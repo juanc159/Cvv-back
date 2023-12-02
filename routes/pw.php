@@ -30,3 +30,7 @@ Route::get('/pw-dataSchool/{id}', [PwController::class, 'dataSchool'])->name('pw
 // School
 Route::get('/pw-dataGradeSection/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSection'])->name('pw.dataGradeSection');
 // School
+
+// School
+Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSectionNotes'])->name('pw.dataGradeSectionNotes');
+// School

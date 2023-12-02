@@ -8,27 +8,20 @@ use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
 use App\Repositories\GradeRepository;
 use App\Repositories\SectionRepository;
+use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
-use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 
 class PwController extends Controller
 {
     private $companyRepository;
-
     private $bannerRepository;
-
     private $typeEducationRepository;
-
     private $gradeRepository;
-
     private $sectionRepository;
-
-    private $teacherRepository;
-
+    private $studentRepository;
     private $teacherComplementaryRepository;
-
     private $subjectRepository;
 
     public function __construct(
@@ -37,7 +30,7 @@ class PwController extends Controller
         TypeEducationRepository $typeEducationRepository,
         GradeRepository $gradeRepository,
         SectionRepository $sectionRepository,
-        TeacherRepository $teacherRepository,
+        StudentRepository $studentRepository,
         TeacherComplementaryRepository $teacherComplementaryRepository,
         SubjectRepository $subjectRepository,
     ) {
@@ -46,7 +39,7 @@ class PwController extends Controller
         $this->typeEducationRepository = $typeEducationRepository;
         $this->gradeRepository = $gradeRepository;
         $this->sectionRepository = $sectionRepository;
-        $this->teacherRepository = $teacherRepository;
+        $this->studentRepository = $studentRepository;
         $this->teacherComplementaryRepository = $teacherComplementaryRepository;
         $this->subjectRepository = $subjectRepository;
     }
@@ -153,6 +146,32 @@ class PwController extends Controller
 
         return response()->json([
             'teachers' => $teachers,
+            'title' => $title,
+        ]);
+    }
+    public function dataGradeSectionNotes($school_id, $grade_id, $section_id)
+    {
+        $students = $this->studentRepository->list([
+            'typeData' => 'all',
+            'grade_id' => $grade_id,
+            'section_id' => $section_id,
+            'company_id' => $school_id,
+        ],["notes"])->map(function($value){
+            return [
+                "id" => $value->id,
+                "full_name" => $value->full_name,
+                "identity_document" => $value->identity_document,
+            ];
+        });
+
+
+        $grade = $this->gradeRepository->find($grade_id);
+        $section = $this->sectionRepository->find($section_id);
+
+        $title = $grade->name.' '.$section->name;
+
+        return response()->json([
+            'students' => $students,
             'title' => $title,
         ]);
     }

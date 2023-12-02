@@ -55,6 +55,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Módulo Docente',
                 'menu_id' => 7,
             ],
+            [
+                'id' => 8,
+                'name' => 'note.index',
+                'description' => 'Visualizar Módulo Notas',
+                'menu_id' => 8,
+            ],
         ];
 
         foreach ($array as $key => $value) {
