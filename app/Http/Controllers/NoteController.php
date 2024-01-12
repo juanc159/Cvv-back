@@ -88,16 +88,17 @@ class NoteController extends Controller
 
                             $subjects = $typeEducation->subjects;
 
-                            // return $row;
                             foreach ($subjects as $key => $sub) {
 
                                 $model2 = [
                                     "student_id" => $student->id,
                                     "subject_id" => $sub->id,
                                 ];
+                                $json = null;
                                 for ($i = 1; $i <= $typeEducation->cantNotes; $i++) {
-                                    $model2["value".$i] = isset($row[$sub->code . $i]) ?  trim($row[$sub->code .  $i]) : null ;
+                                    $json[$i] = isset($row[$sub->code . $i]) ?  trim($row[$sub->code .  $i]) : null ;
                                 }
+                                $model2["json"] = json_encode($json);
 
                                 $this->noteRepository->store($model2);
                             }

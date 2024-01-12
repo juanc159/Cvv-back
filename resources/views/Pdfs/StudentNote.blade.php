@@ -36,7 +36,8 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
@@ -55,8 +56,6 @@
             text-align: center;
             margin-top: 20px;
         }
-
-
     </style>
 </head>
 
@@ -77,18 +76,18 @@
                 <thead>
                     <tr>
                         <th>Materia</th>
-                        <th>Nota 1</th>
-                        <th>Nota 2</th>
-                        <th>Nota 3</th>
+                        @for ($i = 1; $i <= $data['student']["typeEducation"]["cantNotes"]; $i++)
+                            <th>Nota {{$i}}</th>
+                        @endfor
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($data['student']['notes'] as $note)
                         <tr>
                             <td>{{ $note['subject']['name'] }}</td>
-                            <td>{{ $note['value1'] ?? "-" }}</td>
-                            <td>{{ $note['value2'] ?? "-" }}</td>
-                            <td>{{ $note['value3'] ?? "-" }}</td>
+                            @foreach (json_decode($note['json']) as $val)
+                                <td>{{ $val ?? '-' }}</td>
+                            @endforeach
                         </tr>
                     @endforeach
                 </tbody>
