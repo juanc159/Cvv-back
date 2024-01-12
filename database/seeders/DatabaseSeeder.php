@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
             SubjectSeeder::class,
         ]);
 
-        Teacher::factory(20)->create();
+        // Teacher::factory(20)->create();
 
         $client = new ClientRepository();
 

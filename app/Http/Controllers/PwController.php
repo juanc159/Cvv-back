@@ -71,7 +71,7 @@ class PwController extends Controller
             })->map(function ($sections) use ($id) {
                 $info = $sections->first();
                 // Filtrar por type_education_id == 3
-                if ($info->teacher->type_education_id == 3 && $info->teacher->company_id == $id) {
+                if ($info->teacher?->type_education_id == 3 && $info->teacher?->company_id == $id) {
                     return [
                         'grade_id' => $info->grade->id,
                         'grade_name' => $info->grade->name,
