@@ -13,12 +13,9 @@ return new class extends Migration
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->nullable()->constrained('students');
+            $table->foreignId('student_id')->nullable()->constrained('students')->onDelete('cascade');
             $table->foreignId('subject_id')->nullable()->constrained('subjects');
-            $table->string("value1")->nullable();
-            $table->string("value2")->nullable();
-            $table->string("value3")->nullable();
-            $table->string("value4")->nullable();
+            $table->json("json")->nullable();
             $table->timestamps();
         });
     }

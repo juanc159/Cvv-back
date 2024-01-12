@@ -16,6 +16,7 @@ class SubjectFormResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'type_education_id' => $this->type_education_id,
             'name' => $this->name,
             'code' => $this->code,
         ];

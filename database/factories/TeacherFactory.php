@@ -22,7 +22,7 @@ class TeacherFactory extends Factory
         $filename = Str::random(10).'.jpg';
 
         // Genera la imagen y guárdala en la carpeta de almacenamiento
-        Storage::put('public/fake_images/'.$filename, file_get_contents($this->faker->image()));
+        // Storage::put('public/fake_images/'.$filename, file_get_contents($this->faker->image()));
 
         return [
             'company_id' => 1,

@@ -42,61 +42,65 @@ class NoteController extends Controller
     {
         try {
 
-            $this->studentRepository->truncate();
-            $this->noteRepository->truncate();
+            $this->studentRepository->deleteData();
+
             DB::beginTransaction();
 
             if ($request->hasFile('archive')) {
                 $file = $request->file('archive');
                 $import = Excel::toArray([], $file);
 
-                // Suponiendo que solo hay una hoja en el archivo Excel
-                $data = $import[0];
+                $typeEducation = $this->typeEducationRepository->find($request->input("type_education_id"), ["subjects"]);
 
-                // Obtener las claves y eliminarlas de $data
-                $keys = array_shift($data);
-                $formattedData = [];
+                for ($i = 0; $i < $typeEducation->cantNotes; $i++) {
+                    // Suponiendo que solo hay una hoja en el archivo Excel
+                    $data = $import[$i];
+
+                    // Obtener las claves y eliminarlas de $data
+                    $keys = array_shift($data);
+                    $formattedData = [];
 
 
-                foreach ($data as $row) {
-                    $formattedRow = [];
-                    foreach ($keys as $index => $key) {
-                        $formattedRow[$key] = $row[$index] ?? null;
+                    foreach ($data as $row) {
+                        $formattedRow = [];
+                        foreach ($keys as $index => $key) {
+                            $formattedRow[$key] = $row[$index] ?? null;
+                        }
+                        $formattedData[] = $formattedRow;
                     }
-                    $formattedData[] = $formattedRow;
-                }
 
-                foreach ($formattedData as $row) {
-                    if(!empty(trim($row["CÉDULA"]))){
-                        $grade = Grade::where("name", trim($row["AÑO"]))->first();
-                        $section = Section::where("name", trim($row["SECCIÓN"]))->first();
-                        $model = [
-                            "company_id" => $request->input("company_id"),
-                            "type_education_id" => $request->input("type_education_id"),
-                            "grade_id" => $grade?->id,
-                            "section_id" => $section?->id,
-                            "identity_document" => trim($row["CÉDULA"]),
-                            "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
-                        ];
-                        // return $model;
-                        $student = $this->studentRepository->store($model);
-
-                        $typeEducation = TypeEducation::with(["subjects"])->find($request->input('type_education_id'));
-
-                        $subjects = $typeEducation->subjects;
-
-                        // return $row;
-                        foreach ($subjects as $key => $sub) {
-                            $model2 = [
-                                "student_id" => $student->id,
-                                "subject_id" => $sub->id,
-                                "value1" => isset($row[$sub->code . "1"]) ?  trim($row[$sub->code . "1"]) : null,
-                                "value2" => isset($row[$sub->code . "2"]) ?  trim($row[$sub->code . "2"]) : null,
-                                "value3" => isset($row[$sub->code . "3"]) ? trim($row[$sub->code . "3"]) : null,
-                                "value4" => isset($row[$sub->code . "4"]) ?  trim($row[$sub->code . "4"]) : null,
+                    foreach ($formattedData as $row) {
+                        if (!empty(trim($row["CÉDULA"]))) {
+                            $grade = Grade::where("name", trim($row["AÑO"]))->first();
+                            $section = Section::where("name", trim($row["SECCIÓN"]))->first();
+                            $model = [
+                                "company_id" => $request->input("company_id"),
+                                "type_education_id" => $request->input("type_education_id"),
+                                "grade_id" => $grade?->id,
+                                "section_id" => $section?->id,
+                                "identity_document" => trim($row["CÉDULA"]),
+                                "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
                             ];
+                            // return $model;
+                            $student = $this->studentRepository->store($model);
 
-                            $note = $this->noteRepository->store($model2);
+                            // $typeEducation = TypeEducation::with(["subjects"])->find($request->input('type_education_id'));
+
+                            $subjects = $typeEducation->subjects;
+
+                            // return $row;
+                            foreach ($subjects as $key => $sub) {
+
+                                $model2 = [
+                                    "student_id" => $student->id,
+                                    "subject_id" => $sub->id,
+                                ];
+                                for ($i = 1; $i <= $typeEducation->cantNotes; $i++) {
+                                    $model2["value".$i] = isset($row[$sub->code . $i]) ?  trim($row[$sub->code .  $i]) : null ;
+                                }
+
+                                $this->noteRepository->store($model2);
+                            }
                         }
                     }
                 }

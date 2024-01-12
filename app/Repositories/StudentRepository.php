@@ -96,4 +96,12 @@ class StudentRepository extends BaseRepository
 
         return $data;
     }
+    public function deleteData($request = [])
+    {
+        $data = $this->model->where(function($query) use ($request){
+            if(!empty($request["type_education_id"])){
+                $query->where("type_education_id",$request["type_education_id"]);
+            }
+        })->delete();
+    }
 }
