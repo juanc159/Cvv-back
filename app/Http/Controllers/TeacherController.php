@@ -224,11 +224,11 @@ class TeacherController extends Controller
                         'name' => $request->input('file_name_'.$i),
                     ]);
 
-                    if ($request->file('file_file_'.$i)) {
-                        $file = $request->file('file_file_'.$i);
-                        $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
-                        $teacherPlanning->path = $path;
-                    }
+                    // if ($request->file('file_file_'.$i)) {
+                    //     $file = $request->file('file_file_'.$i);
+                    //     $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
+                    //     $teacherPlanning->path = $path;
+                    // }
                     $teacherPlanning->save();
                 }
             }
