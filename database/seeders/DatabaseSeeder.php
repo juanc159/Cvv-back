@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
             TypeEducationSeeder::class,
             GradeSeeder::class,
             SectionSeeder::class,
-            SubjectSeeder::class,
+            // SubjectSeeder::class,
         ]);
 
         // Teacher::factory(20)->create();
