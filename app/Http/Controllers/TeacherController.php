@@ -208,7 +208,7 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
             $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
- return $request->input('files_cant');
+ return $request->all();
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
                 if ($request->input('file_delete_'.$i) == 1) {
                     return 1;
