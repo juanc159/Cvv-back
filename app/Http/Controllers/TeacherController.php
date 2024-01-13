@@ -207,14 +207,14 @@ class TeacherController extends Controller
 
         try {
             DB::beginTransaction();
-           return $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
+            $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
                 if ($request->input('file_delete_'.$i) == 1) {
                     $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
                 } else {
 
-                    $teacherPlanning = $this->teacherPlanningRepository->store([
+                  return  $teacherPlanning = $this->teacherPlanningRepository->store([
                         'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
                         'teacher_id' => $teacher->id,
                         'grade_id' => $request->input('file_grade_id_'.$i),
