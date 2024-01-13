@@ -211,9 +211,10 @@ class TeacherController extends Controller
 
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
                 if ($request->input('file_delete_'.$i) == 1) {
+                    return 1;
                     $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
                 } else {
-
+                    return 2;
                   return  $teacherPlanning = $this->teacherPlanningRepository->store([
                         'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
                         'teacher_id' => $teacher->id,
