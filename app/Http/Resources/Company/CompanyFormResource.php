@@ -19,6 +19,7 @@ class CompanyFormResource extends JsonResource
             'name' => $this->name,
             'slogan' => $this->slogan,
             'image_principal' => $this->image_principal,
+            'iframeGoogleMap' => $this->iframeGoogleMap,
             'arrayDetails' => $this->details->map(function ($value) {
                 return [
                     'id' => $value->id,
