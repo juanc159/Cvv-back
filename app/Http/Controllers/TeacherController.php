@@ -208,14 +208,13 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
             $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
- return $request->all();
+
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
                 if ($request->input('file_delete_'.$i) == 1) {
-                    return 1;
                     $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
                 } else {
-                    return 2;
-                  return  $teacherPlanning = $this->teacherPlanningRepository->store([
+
+                    $teacherPlanning = $this->teacherPlanningRepository->store([
                         'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
                         'teacher_id' => $teacher->id,
                         'grade_id' => $request->input('file_grade_id_'.$i),
@@ -225,11 +224,11 @@ class TeacherController extends Controller
                         'name' => $request->input('file_name_'.$i),
                     ]);
 
-                    // if ($request->file('file_file_'.$i)) {
-                    //     $file = $request->file('file_file_'.$i);
-                    //     $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
-                    //     $teacherPlanning->path = $path;
-                    // }
+                    if ($request->file('file_file_'.$i)) {
+                        $file = $request->file('file_file_'.$i);
+                        $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
+                        $teacherPlanning->path = $path;
+                    }
                     $teacherPlanning->save();
                 }
             }
