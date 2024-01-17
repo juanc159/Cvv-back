@@ -69,6 +69,13 @@ class MenuSeeder extends Seeder
                 'icon' => 'mdi-account-lock-outline',
                 'requiredPermission' => 'note.index',
             ],
+            [
+                'id' => 9,
+                'title' => 'Grados',
+                'to' => 'Grade-Index',
+                'icon' => 'mdi-account-lock-outline',
+                'requiredPermission' => 'grade.index',
+            ],
         ];
         foreach ($arrayData as $key => $value) {
             $data = new Menu();
