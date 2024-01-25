@@ -9,8 +9,18 @@ class Grade extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'type_education_id' => 'integer',
+    ];
+
     public function teachers()
     {
         return $this->hasMany(TeacherComplementary::class, 'grade_id', 'id');
+    }
+
+
+    public function typeEducation()
+    {
+        return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
     }
 }

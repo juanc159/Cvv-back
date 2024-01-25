@@ -74,6 +74,7 @@ class RouteServiceProvider extends ServiceProvider
             'routes/subject.php',
             'routes/teacher.php',
             'routes/note.php',
+            'routes/grade.php',
         ];
 
         //este es para el o los centrales
