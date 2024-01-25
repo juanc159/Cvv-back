@@ -113,7 +113,7 @@ class TeacherController extends Controller
             $complementaries = json_decode($request->input('complementaries'), 1);
             if (count($complementaries) > 0) {
                 foreach ($complementaries as $key => $value) {
-                    if ($value['delete'] == 1 && isset($value['id'])) {
+                    if ($value['delete'] == 1) {
                         $this->teacherComplementaryRepository->delete($value['id']);
                     } else {
                         $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
