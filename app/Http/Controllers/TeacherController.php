@@ -80,18 +80,37 @@ class TeacherController extends Controller
         }
 
         $jobPositions = $this->jobPositionRepository->selectList();
-        $typeEducations = $this->typeEducationRepository->selectList();
-        $subjects = $this->subjectRepository->selectList(select: ['type_education_id']);
+        $typeEducations = $this->typeEducationRepository->list(
+            request: [
+                "typeData" => "all",
+            ],
+            with: ["grades.subjects"]
+        )->map(function ($value) {
+            return [
+                "value" => $value->id,
+                "title" => $value->name,
+                "grades" => $value->grades->map(function ($value2) {
+                    return [
+                        "value" => $value2->id,
+                        "title" => $value2->name,
+                        "subjects" => $value2->subjects->map(function ($value3) {
+                            return [
+                                "value" => $value3->id,
+                                "title" => $value3->name,
+                            ];
+                        }),
+                    ];
+                }),
+            ];
+        });
+
         $sections = $this->sectionRepository->selectList();
-        $grades = $this->gradeRepository->selectList(select: ['type_education_id']);
 
         return response()->json([
             'form' => $data,
             'jobPositions' => $jobPositions,
             'typeEducations' => $typeEducations,
-            'subjects' => $subjects,
             'sections' => $sections,
-            'grades' => $grades,
         ]);
     }
 
@@ -104,7 +123,7 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $request->root().'/storage/'.$file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
+                $photo = $request->root() . '/storage/' . $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
             }
 
@@ -133,13 +152,13 @@ class TeacherController extends Controller
             $data = new TeacherFormResource($data);
 
             $msg = 'agregado';
-            if (! empty($request['id'])) {
+            if (!empty($request['id'])) {
                 $msg = 'modificado';
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
         } catch (Exception $th) {
             DB::rollBack();
 
@@ -184,7 +203,7 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -210,23 +229,23 @@ class TeacherController extends Controller
             $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
-                if ($request->input('file_delete_'.$i) == 1) {
-                    $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
+                if ($request->input('file_delete_' . $i) == 1) {
+                    $this->teacherPlanningRepository->delete($request->input('file_id_' . $i));
                 } else {
 
                     $teacherPlanning = $this->teacherPlanningRepository->store([
-                        'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
+                        'id' => $request->input('file_id_' . $i) === 'null' ? null : $request->input('file_id_' . $i),
                         'teacher_id' => $teacher->id,
-                        'grade_id' => $request->input('file_grade_id_'.$i),
-                        'section_id' => $request->input('file_section_id_'.$i),
-                        'subject_id' => $request->input('file_subject_id_'.$i),
-                        'path' => $request->input('file_file_'.$i),
-                        'name' => $request->input('file_name_'.$i),
+                        'grade_id' => $request->input('file_grade_id_' . $i),
+                        'section_id' => $request->input('file_section_id_' . $i),
+                        'subject_id' => $request->input('file_subject_id_' . $i),
+                        'path' => $request->input('file_file_' . $i),
+                        'name' => $request->input('file_name_' . $i),
                     ]);
 
-                    if ($request->file('file_file_'.$i)) {
-                        $file = $request->file('file_file_'.$i);
-                        $path = $request->root().'/storage/'.$file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
+                    if ($request->file('file_file_' . $i)) {
+                        $file = $request->file('file_file_' . $i);
+                        $path = $request->root() . '/storage/' . $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_' . $i), 'public');
                         $teacherPlanning->path = $path;
                     }
                     $teacherPlanning->save();
@@ -243,6 +262,5 @@ class TeacherController extends Controller
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
-
     }
 }

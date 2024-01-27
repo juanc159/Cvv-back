@@ -50,7 +50,7 @@ class NoteController extends Controller
                 $file = $request->file('archive');
                 $import = Excel::toArray([], $file);
 
-                $typeEducation = $this->typeEducationRepository->find($request->input("type_education_id"), ["subjects"]);
+                $typeEducation = $this->typeEducationRepository->find($request->input("type_education_id"), ["grades.subjects"]);
 
                 for ($i = 0; $i < $typeEducation->cantNotes; $i++) {
                     // Suponiendo que solo hay una hoja en el archivo Excel
@@ -81,12 +81,10 @@ class NoteController extends Controller
                                 "identity_document" => trim($row["CÉDULA"]),
                                 "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
                             ];
-                            // return $model;
                             $student = $this->studentRepository->store($model);
 
-                            // $typeEducation = TypeEducation::with(["subjects"])->find($request->input('type_education_id'));
-
-                            $subjects = $typeEducation->subjects;
+                            $grade = $typeEducation->grades->where("id", $grade->id)->first();
+                            $subjects = $grade->subjects;
 
                             foreach ($subjects as $key => $sub) {
 
@@ -96,7 +94,7 @@ class NoteController extends Controller
                                 ];
                                 $json = null;
                                 for ($i = 1; $i <= $typeEducation->cantNotes; $i++) {
-                                    $json[$i] = isset($row[$sub->code . $i]) ?  trim($row[$sub->code .  $i]) : null ;
+                                    $json[$i] = isset($row[$sub->code . $i]) ?  trim($row[$sub->code .  $i]) : null;
                                 }
                                 $model2["json"] = json_encode($json);
 

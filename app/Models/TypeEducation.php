@@ -12,4 +12,7 @@ class TypeEducation extends Model
     public function subjects(){
         return $this->hasMany(Subject::class,"type_education_id","id");
     }
+    public function grades(){
+        return $this->hasMany(Grade::class,"type_education_id","id");
+    }
 }
