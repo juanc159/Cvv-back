@@ -161,6 +161,8 @@ class PwController extends Controller
                 "id" => $value->id,
                 "full_name" => $value->full_name,
                 "identity_document" => $value->identity_document,
+                "pdf" => $value->pdf,
+                "photo" => $value->photo,
             ];
         });
 

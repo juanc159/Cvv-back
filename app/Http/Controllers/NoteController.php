@@ -80,6 +80,8 @@ class NoteController extends Controller
                                 "section_id" => $section?->id,
                                 "identity_document" => trim($row["CÉDULA"]),
                                 "full_name" => trim($row["NOMBRES Y APELLIDOS ESTUDIANTE"]),
+                                "pdf" => trim($row["PDF"]) == 1  ? 1 : 0,
+                                "photo" => trim($row["PHOTO"]),
                             ];
                             $student = $this->studentRepository->store($model);
 
