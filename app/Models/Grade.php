@@ -23,4 +23,9 @@ class Grade extends Model
     {
         return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
     }
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'grade_subjects', 'grade_id', "subject_id");
+    }
 }

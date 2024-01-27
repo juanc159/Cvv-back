@@ -70,7 +70,11 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($array as $key => $value) {
-            $data = new Permission();
+            $data =  Permission::find($value["id"]);
+            if(!$data){
+                $data = new Permission();
+            }
+
             $data->id = $value['id'];
             $data->name = $value['name'];
             $data->description = $value['description'];

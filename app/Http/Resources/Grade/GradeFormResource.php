@@ -18,6 +18,7 @@ class GradeFormResource extends JsonResource
             'id' => $this->id,
             'type_education_id' => $this->type_education_id,
             'name' => $this->name,
+            'subjects' => $this->subjects->pluck("id"),
         ];
     }
 }

@@ -78,7 +78,10 @@ class MenuSeeder extends Seeder
             ],
         ];
         foreach ($arrayData as $key => $value) {
-            $data = new Menu();
+            $data =  Menu::find($value["id"]);
+            if(!$data){
+                $data = new Menu();
+            }
             $data->id = $value['id'];
             $data->title = $value['title'];
             $data->to = $value['to'] ?? null;

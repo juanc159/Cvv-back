@@ -20,7 +20,7 @@ class GradeController extends Controller
     private $typeEducationRepository;
     private $subjectRepository;
 
-    public function __construct(GradeRepository $gradeRepository, TypeEducationRepository $typeEducationRepository,SubjectRepository $subjectRepository)
+    public function __construct(GradeRepository $gradeRepository, TypeEducationRepository $typeEducationRepository, SubjectRepository $subjectRepository)
     {
         $this->gradeRepository = $gradeRepository;
         $this->typeEducationRepository = $typeEducationRepository;
@@ -49,7 +49,7 @@ class GradeController extends Controller
             $data = new GradeFormResource($data);
         }
 
-        $typeEducations = $this->typeEducationRepository->selectList(with:["subjects"]);
+        $typeEducations = $this->typeEducationRepository->selectList(with: ["subjects"]);
 
 
         return response()->json([
@@ -63,18 +63,34 @@ class GradeController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->gradeRepository->store($request->except('path'));
+            $data = $this->gradeRepository->store($request->except(["subjects"]));
 
             $data->save();
 
+
+            $subjects = $request->input("subjects");
+            if (count($subjects) > 0) {
+                $newSubjects = [];
+                foreach ($subjects as $key => $value) {
+                    $newSubjects[$value] = [
+                        "company_id" => $request->input("company_id"),
+                    ];
+                }
+                $data->subjects()->sync($newSubjects);
+            }
+
+
+            $data = new GradeFormResource($data);
+
+
             $msg = 'agregado';
-            if (! empty($request['id'])) {
+            if (!empty($request['id'])) {
                 $msg = 'modificado';
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' correctamente', 'data' => $data]);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
         } catch (Exception $th) {
             DB::rollBack();
 
@@ -119,7 +135,7 @@ class GradeController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
