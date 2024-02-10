@@ -12,6 +12,7 @@ use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
 use App\Repositories\TypeEducationRepository;
+use Carbon\Carbon;
 
 class PwController extends Controller
 {
@@ -181,17 +182,20 @@ class PwController extends Controller
     public function pdfPNote($id)
     {
         try {
-             $rutaImagen = public_path('/img/firma.png');
+            $rutaImagen = public_path('/img/firma.png');
             if (file_exists($rutaImagen)) {
                 $contenidoImagen = file_get_contents($rutaImagen);
-                 $firma = base64_encode($contenidoImagen);
+                $firma = base64_encode($contenidoImagen);
             }
 
-             $student = $this->studentRepository->find($id, ["typeEducation", "notes.subject", "grade", "section"]);
+            $fecha = Carbon::now();
+            $fecha->setLocale('es');
+
+            $student = $this->studentRepository->find($id, ["typeEducation", "notes.subject", "grade", "section"]);
             if ($student) {
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,
-                    "firma" => $firma
+                    "date" => $fecha->translatedFormat('l, j \\de F \\de Y')
                 ], 'Notas');
 
                 $pdf = base64_encode($pdf);

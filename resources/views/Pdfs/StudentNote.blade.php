@@ -154,11 +154,11 @@
                 <tr>
                     <td align="center">
                         @php
-                            $fecha = \Carbon\Carbon::now();
+
                         @endphp
 
 
-                        <span>{{ $fecha->translatedFormat('l, j \\de F \\de Y') }}</span>
+                        <span>{{ $data["date"] }}</span>
                     </td>
                 </tr>
             </table>
