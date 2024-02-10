@@ -117,8 +117,8 @@
 
                 <tr>
                     <th>&nbsp;</th>
-                    @for ($i = 0; $i<$data['student']['typeEducation']["cantNotes"]; $i++)
-                    <th>NOTA {{ $I + 1 }}</th>
+                    @for ($i = 1; $i <= $data['student']['typeEducation']['cantNotes']; $i++)
+                        <th>NOTA {{ $i }}</th>
                     @endfor
                 </tr>
                 @foreach ($data['student']['notes'] as $key => $nota)
