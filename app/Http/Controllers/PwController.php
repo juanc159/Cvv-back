@@ -187,7 +187,7 @@ class PwController extends Controller
                  $firma = base64_encode($contenidoImagen);
             }
 
-            return $student = $this->studentRepository->find($id, ["typeEducation", "notes.subject", "grade", "section"]);
+             $student = $this->studentRepository->find($id, ["typeEducation", "notes.subject", "grade", "section"]);
             if ($student) {
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,
