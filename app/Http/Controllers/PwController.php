@@ -195,7 +195,7 @@ class PwController extends Controller
             if ($student) {
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,
-                    "date" => $fecha->translatedFormat('l, j \\de F \\de Y')
+                    "date" => $fecha->translatedFormat('l, j \\de F \\de Y'),
                 ], 'Notas');
 
                 $pdf = base64_encode($pdf);

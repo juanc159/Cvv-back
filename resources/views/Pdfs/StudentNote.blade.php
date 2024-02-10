@@ -147,8 +147,9 @@
             <table style="500px">
                 <tr>
                     <td align="center">
-                        <img src="https://quwonh.stripocdn.email/content/guids/CABINET_9f6aac012eefaebdd0a78bd7310efde25b299a63237f8900b2018ccd3e36252a/images/captura_de_pantalla_20240128_225603.png"
-                            style="max-width: 150px !important;">
+                        <img src="{{ public_path('img/firma.png') }}" style="max-width: 150px !important;">
+                        {{-- <img src="https://quwonh.stripocdn.email/content/guids/CABINET_9f6aac012eefaebdd0a78bd7310efde25b299a63237f8900b2018ccd3e36252a/images/captura_de_pantalla_20240128_225603.png"
+                            style="max-width: 150px !important;"> --}}
                     </td>
                 </tr>
                 <tr>
@@ -158,7 +159,7 @@
                         @endphp
 
 
-                        <span>{{ $data["date"] }}</span>
+                        <span>{{ $data['date'] }}</span>
                     </td>
                 </tr>
             </table>
