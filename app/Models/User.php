@@ -51,4 +51,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Company::class, 'id', 'company_id');
     }
+
+      // Accesor para obtener el nombre completo
+      public function getFullNameAttribute()
+      {
+          return $this->name . ' ' . $this->last_name;
+      }
 }

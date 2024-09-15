@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\StudentAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [PassportAuthController::class, 'register'])->name('register');
@@ -12,3 +13,9 @@ Route::post('/permission-list', [PermissionController::class, 'list'])->name('pe
 Route::get('/prueba', function () {
     return [1, 2, 3, 4];
 });
+
+
+
+/** authenticacion basica para estudiantes */
+
+Route::post('/loginStudent', [StudentAuthController::class, 'login']);

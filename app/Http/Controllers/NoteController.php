@@ -8,6 +8,7 @@ use App\Models\TypeEducation;
 use App\Repositories\NoteRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\TypeEducationRepository;
+use App\Repositories\UserRepository;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,18 +16,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class NoteController extends Controller
 {
-    private $typeEducationRepository;
-    private $studentRepository;
-    private $noteRepository;
-
     public function __construct(
-        TypeEducationRepository $typeEducationRepository,
-        StudentRepository $studentRepository,
-        NoteRepository $noteRepository,
+        private TypeEducationRepository $typeEducationRepository,
+        private StudentRepository $studentRepository,
+        private NoteRepository $noteRepository,
+        private UserRepository $userRepository,
     ) {
         $this->typeEducationRepository = $typeEducationRepository;
         $this->studentRepository = $studentRepository;
         $this->noteRepository = $noteRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function dataForm()
@@ -84,6 +83,13 @@ class NoteController extends Controller
                                 "photo" => isset($row["PHOTO"]) ? trim($row["PHOTO"]) : null,
                             ];
                             $student = $this->studentRepository->store($model);
+
+
+                            // $userData= [
+                            //     "name" => "",
+                            //     "last_name" => "",
+                            // ];
+                            // $user = $this->userRepository->store($userData);
 
                             $grade = $typeEducation->grades->where("id", $grade->id)->first();
                             $subjects = $grade->subjects;

@@ -82,7 +82,7 @@ class CompanyPwSchoolResource extends JsonResource
             // }),
 
 
-            'teachers' => $this->teachers->whereIn('type_education_id', [1, 2])->map(function ($value) {
+            'teachers' => $this->teachers->map(function ($value) {
                 $grade_name = '';
                 $section_name = '';
 

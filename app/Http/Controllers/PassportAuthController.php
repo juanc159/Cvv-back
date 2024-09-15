@@ -46,7 +46,8 @@ class PassportAuthController extends Controller
 
         if ($user) {
             $obj['id'] = $user->id;
-            $obj['name'] = $user->name;
+            $obj['full_name'] = $user->full_name;
+            $obj['photo'] = $user->photo;
             $obj['email'] = $user->email;
             $obj['company_id'] = $user->company_id;
             $obj['company'] = $user->company;
