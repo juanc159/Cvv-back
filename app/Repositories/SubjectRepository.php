@@ -17,8 +17,10 @@ class SubjectRepository extends BaseRepository
             if (! empty($request['name'])) {
                 $query->where('name', 'like', '%'.$request['name'].'%');
             }
-            if (! empty($request['state'])) {
-                $query->where('state', $request['state']);
+            if (isset($request['state'])) {
+                if ($request['state'] === '0' || $request['state'] === '1') {
+                    $query->where('state', $request['state']);
+                }
             }
         })
             ->where(function ($query) use ($request) {

@@ -23,4 +23,8 @@ class Company extends Model
     {
         return $this->hasMany(Teacher::class, 'company_id', 'id');
     }
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'company_id', 'id');
+    }
 }

@@ -76,6 +76,13 @@ class MenuSeeder extends Seeder
                 'icon' => 'mdi-account-lock-outline',
                 'requiredPermission' => 'grade.index',
             ],
+            [
+                'id' => 10,
+                'title' => 'Servicios',
+                'to' => 'Service-Index',
+                'icon' => 'mdi-account-lock-outline',
+                'requiredPermission' => 'service.index',
+            ],
         ];
         foreach ($arrayData as $key => $value) {
             $data =  Menu::find($value["id"]);

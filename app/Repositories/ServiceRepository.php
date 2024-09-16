@@ -2,11 +2,11 @@
 
 namespace App\Repositories;
 
-use App\Models\Section;
+use App\Models\Service;
 
-class SectionRepository extends BaseRepository
+class ServiceRepository extends BaseRepository
 {
-    public function __construct(Section $modelo)
+    public function __construct(Service $modelo)
     {
         parent::__construct($modelo);
     }
@@ -14,9 +14,16 @@ class SectionRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
-            if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+            if (! empty($request['title'])) {
+                $query->where('title', 'like', '%'.$request['title'].'%');
             }
+
+            if (! empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            } else {
+                $query->whereNull('company_id');
+            }
+
             if (isset($request['state'])) {
                 if ($request['state'] === '0' || $request['state'] === '1') {
                     $query->where('state', $request['state']);
@@ -53,34 +60,6 @@ class SectionRepository extends BaseRepository
             $data[$key] = $request[$key];
         }
         $data->save();
-
-        return $data;
-    }
-
-    public function selectList($request = [], $with = [], $select = [])
-    {
-        $data = $this->model->with($with)->where(function ($query) use ($request) {
-            if (! empty($request['idsAllowed'])) {
-                $query->whereIn('id', $request['idsAllowed']);
-            }
-        })->get()->map(function ($value) use ($select) {
-            $data = [
-                'value' => $value->id,
-                'title' => $value->name,
-            ];
-
-            if (count($select) > 0) {
-                foreach ($select as $s) {
-                    $data[$s] = $value->$s;
-                }
-            }
-
-            // if (in_array('shortcuts', $with)) {
-            //     $data['shortcuts'] = $value->shortcuts;
-            // }
-
-            return $data;
-        });
 
         return $data;
     }

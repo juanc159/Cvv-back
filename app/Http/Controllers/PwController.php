@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\Company\CompanyPwSchoolResource;
+use App\Models\Banner;
+use App\Models\Company;
+use App\Models\CompanyDetail;
+use App\Models\Service;
+use App\Models\Teacher;
 use App\Models\TeacherPlanning;
 use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
 use App\Repositories\GradeRepository;
 use App\Repositories\SectionRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
@@ -16,24 +22,17 @@ use Carbon\Carbon;
 
 class PwController extends Controller
 {
-    private $companyRepository;
-    private $bannerRepository;
-    private $typeEducationRepository;
-    private $gradeRepository;
-    private $sectionRepository;
-    private $studentRepository;
-    private $teacherComplementaryRepository;
-    private $subjectRepository;
 
     public function __construct(
-        CompanyRepository $companyRepository,
-        BannerRepository $bannerRepository,
-        TypeEducationRepository $typeEducationRepository,
-        GradeRepository $gradeRepository,
-        SectionRepository $sectionRepository,
-        StudentRepository $studentRepository,
-        TeacherComplementaryRepository $teacherComplementaryRepository,
-        SubjectRepository $subjectRepository,
+        private CompanyRepository $companyRepository,
+        private BannerRepository $bannerRepository,
+        private TypeEducationRepository $typeEducationRepository,
+        private GradeRepository $gradeRepository,
+        private SectionRepository $sectionRepository,
+        private StudentRepository $studentRepository,
+        private TeacherComplementaryRepository $teacherComplementaryRepository,
+        private SubjectRepository $subjectRepository,
+        private ServiceRepository $serviceRepository,
     ) {
         $this->companyRepository = $companyRepository;
         $this->bannerRepository = $bannerRepository;
@@ -43,6 +42,7 @@ class PwController extends Controller
         $this->studentRepository = $studentRepository;
         $this->teacherComplementaryRepository = $teacherComplementaryRepository;
         $this->subjectRepository = $subjectRepository;
+        $this->serviceRepository = $serviceRepository;
     }
 
     public function dataPrincipal()
@@ -202,6 +202,136 @@ class PwController extends Controller
             }
 
             return response()->json(['code' => 200, 'pdf' => $pdf]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+    public function socialNetworks($company_id)
+    {
+        try {
+            $social_networks = CompanyDetail::where("company_id", $company_id)->whereIn("type_detail_id", [1, 2, 3, 4, 5])->get()->map(function ($value) {
+                return [
+                    'type_detail_name' => $value->typeDetail?->name,
+                    'icon' => $value->icon,
+                    'color' => $value->color,
+                    'content' => $value->content,
+                ];
+            });
+
+            return response()->json(['code' => 200, 'social_networks' => $social_networks]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+    public function banners($company_id)
+    {
+        try {
+            $banners = Banner::select("path")->where("company_id", $company_id)->where("state", 1)->get();
+
+            return response()->json(['code' => 200, 'banners' => $banners]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+
+    public function teachers($company_id)
+    {
+        try {
+            $typeEducations = $this->typeEducationRepository->selectList();
+
+
+            $teachers = Teacher::where("company_id", $company_id)->where("state", 1)->get()->map(function ($value) {
+                $grade_name = '';
+                $section_name = '';
+
+                $info = $value->complementaries->first();
+                if ($info) {
+                    $grade_name = $info->grade?->name;
+                    $section_name = $info->section?->name;
+                }
+
+                return [
+                    // 'info' => $info,
+                    'fullName' => $value->name . ' ' . $value->last_name,
+                    'photo' => $value->photo,
+                    'type_education_id' => $value->type_education_id,
+                    'type_education_name' => $value->typeEducation?->name,
+                    'email' => $value->email,
+                    'phone' => $value->phone,
+                    'jobPosition' => $value->jobPosition?->name,
+                    'backgroundColor' => generarColorPastelAleatorio(70),
+                    'grade_name' => $grade_name,
+                    'section_name' => $section_name,
+                ];
+            })->groupBy('type_education_name')->toArray();
+
+            return response()->json(['code' => 200, 'teachers' => $teachers, 'typeEducations' => $typeEducations]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+
+    public function contactData($company_id)
+    {
+        try {
+            $company = Company::with([
+                "details" => function ($q) {
+                    $q->whereIn("type_detail_id", [6, 7, 8]);
+                }
+            ])->find($company_id);
+
+            $contactData["details"] = $company->details?->map(function ($value) {
+                return [
+                    'type_detail_name' => $value->typeDetail?->name,
+                    'icon' => $value->icon,
+                    'color' => $value->color,
+                    'content' => $value->content,
+                ];
+            });
+
+            $contactData["iframeGoogleMap"] = $company->iframeGoogleMap;
+
+
+            return response()->json(['code' => 200, 'contactData' => $contactData]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+    public function services($company_id)
+    {
+        try {
+             $company = Company::with([
+                "services" => function ($q) {
+                    $q->where("state", 1);
+                }
+            ])->find($company_id);
+
+            $services = $company->services?->map(function ($value) {
+                return [
+                    'id' => $value->id,
+                    'title' => $value->title,
+                    'image' => $value->image,
+                    'html' => $value->html,
+                ];
+            }) ?? [];
+
+            return response()->json(['code' => 200, 'services' => $services]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+    public function service($service_id)
+    {
+        try {
+               $service = $this->serviceRepository->find($service_id);
+
+            return response()->json(['code' => 200, 'service' => $service]);
         } catch (\Throwable $th) {
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);

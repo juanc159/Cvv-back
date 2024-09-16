@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -67,6 +68,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Módulo Grados',
                 'menu_id' => 9,
             ],
+            [
+                'id' => 10,
+                'name' => 'service.index',
+                'description' => 'Visualizar Módulo Servicios',
+                'menu_id' => 10,
+            ],
         ];
 
         foreach ($array as $key => $value) {
@@ -80,6 +87,11 @@ class PermissionSeeder extends Seeder
             $data->description = $value['description'];
             $data->menu_id = $value['menu_id'];
             $data->save();
+
         }
+
+        $user = User::find(1);
+        $permissions = Permission::all();
+        $user->syncPermissions($permissions);
     }
 }

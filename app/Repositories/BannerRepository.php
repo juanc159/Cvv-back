@@ -24,8 +24,10 @@ class BannerRepository extends BaseRepository
                 $query->whereNull('company_id');
             }
 
-            if (! empty($request['state'])) {
-                $query->where('state', $request['state']);
+            if (isset($request['state'])) {
+                if ($request['state'] === '0' || $request['state'] === '1') {
+                    $query->where('state', $request['state']);
+                }
             }
         })
             ->where(function ($query) use ($request) {
