@@ -51,6 +51,8 @@ class PassportAuthController extends Controller
             $obj['email'] = $user->email;
             $obj['company_id'] = $user->company_id;
             $obj['company'] = $user->company;
+            $obj['type_user'] = "admin";
+
 
             if (count($user->all_permissions) > 0) {
                 $menu = $this->menuRepository->list([

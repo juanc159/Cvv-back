@@ -14,6 +14,12 @@ class TeacherComplementaryRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+
+            $query->whereHas('teacher', function ($q) {
+                $q->where("name", "!=", "Materia");
+                $q->where("last_name", "!=", "Pendiente");
+            });
+
             if (! empty($request['grade_id'])) {
                 $query->where('grade_id', $request['grade_id']);
             }
@@ -28,7 +34,7 @@ class TeacherComplementaryRepository extends BaseRepository
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
+                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');

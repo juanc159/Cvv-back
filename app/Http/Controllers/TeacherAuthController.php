@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StudentAuth\StudentAuthLoginRequest;
+use App\Http\Requests\TeacherAuth\TeacherAuthLoginRequest;
 use App\Repositories\MenuRepository;
 use App\Repositories\UserRepository;
 use App\Services\MailService;
 use Illuminate\Support\Facades\Auth;
 
-class StudentAuthController extends Controller
+class TeacherAuthController extends Controller
 {
     private $userRepository;
 
@@ -23,16 +23,16 @@ class StudentAuthController extends Controller
         $this->mailService = $mailService;
     }
 
-    public function login(StudentAuthLoginRequest $request)
+    public function login(TeacherAuthLoginRequest $request)
     {
         $credentials = [
-            'identity_document' => $request->input('identity_document'),
+            'email' => $request->input('email'),
             'password' => $request->input('password'),
         ];
 
-        Auth::guard('students')->attempt($credentials);
+        Auth::guard('teachers')->attempt($credentials);
 
-        $user = Auth::guard('students')->user();
+        $user = Auth::guard('teachers')->user();
 
         if ($user) {
             //datos personales
@@ -43,23 +43,7 @@ class StudentAuthController extends Controller
             //colegio
             $obj['company_id'] = $user->company_id;
             $obj['company'] = $user->company;
-
-            //informacion año, grado y seccion
-            $obj['type_education_id'] = $user->type_education_id;
-            $obj['type_education_name'] = $user->typeEducation->name;
-            $obj['grade_id'] = $user->grade_id;
-            $obj['grade_name'] = $user->grade->name;
-            $obj['section_id'] = $user->section_id;
-            $obj['section_name'] = $user->section->name;
-
-            // Obtener las planificaciones del estudiante
-            $obj['teacherPlannings'] = $user->teacherPlannings;
-
-            $obj['pdf'] = $user->pdf;
-            $obj['type_user'] = "student";
-
-
-
+            $obj['type_user'] = "teacher";
 
 
             return response()->json([

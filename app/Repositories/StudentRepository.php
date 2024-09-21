@@ -15,7 +15,7 @@ class StudentRepository extends BaseRepository
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+                $query->where('name', 'like', '%' . $request['name'] . '%');
             }
 
             if (! empty($request['company_id'])) {
@@ -31,13 +31,10 @@ class StudentRepository extends BaseRepository
             if (! empty($request['section_id'])) {
                 $query->where('section_id', $request['section_id']);
             }
-
-
-
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
+                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -98,10 +95,23 @@ class StudentRepository extends BaseRepository
     }
     public function deleteData($request = [])
     {
-        $data = $this->model->where(function($query) use ($request){
-            if(!empty($request["type_education_id"])){
-                $query->where("type_education_id",$request["type_education_id"]);
+        $data = $this->model->where(function ($query) use ($request) {
+            if (!empty($request["type_education_id"])) {
+                $query->where("type_education_id", $request["type_education_id"]);
             }
         })->delete();
+    }
+
+    public function searchOne($request = [], $with = [], $select = ['*'])
+    {
+        $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            if (! empty($request['identity_document'])) {
+                $query->where('identity_document', $request['identity_document']);
+            }
+        });
+
+        $data = $data->first();
+
+        return $data;
     }
 }

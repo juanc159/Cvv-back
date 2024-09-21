@@ -44,3 +44,7 @@ Route::get('/pw-teachers/{company_id}', [PwController::class, 'teachers'])->name
 Route::get('/pw-contactData/{company_id}', [PwController::class, 'contactData'])->name('pw.contactData');
 Route::get('/pw-services/{company_id}', [PwController::class, 'services'])->name('pw.services');
 Route::get('/pw-service/{service_id}', [PwController::class, 'service'])->name('pw.service');
+
+
+
+Route::get('/pw-materiaPendiente', [PwController::class, 'materiaPendiente']);

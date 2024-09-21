@@ -17,6 +17,7 @@ use App\Repositories\ServiceRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
+use App\Repositories\TeacherPlanningRepository;
 use App\Repositories\TypeEducationRepository;
 use Carbon\Carbon;
 
@@ -33,6 +34,7 @@ class PwController extends Controller
         private TeacherComplementaryRepository $teacherComplementaryRepository,
         private SubjectRepository $subjectRepository,
         private ServiceRepository $serviceRepository,
+        private TeacherPlanningRepository $teacherPlanningRepository,
     ) {
         $this->companyRepository = $companyRepository;
         $this->bannerRepository = $bannerRepository;
@@ -43,6 +45,7 @@ class PwController extends Controller
         $this->teacherComplementaryRepository = $teacherComplementaryRepository;
         $this->subjectRepository = $subjectRepository;
         $this->serviceRepository = $serviceRepository;
+        $this->teacherPlanningRepository = $teacherPlanningRepository;
     }
 
     public function dataPrincipal()
@@ -305,7 +308,7 @@ class PwController extends Controller
     public function services($company_id)
     {
         try {
-             $company = Company::with([
+            $company = Company::with([
                 "services" => function ($q) {
                     $q->where("state", 1);
                 }
@@ -329,9 +332,25 @@ class PwController extends Controller
     public function service($service_id)
     {
         try {
-               $service = $this->serviceRepository->find($service_id);
+            $service = $this->serviceRepository->find($service_id);
 
             return response()->json(['code' => 200, 'service' => $service]);
+        } catch (\Throwable $th) {
+
+            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        }
+    }
+
+
+    public function materiaPendiente()
+    {
+        try {
+            $plannings = TeacherPlanning::with(["subject", "grade", "section"])->whereHas("subject", function ($q) {
+                $q->where("code", "MATPEN");
+            })->get()->groupBy(["grade.name", "section.name"]);
+
+
+            return response()->json(['code' => 200, 'plannings' => $plannings]);
         } catch (\Throwable $th) {
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);

@@ -11,6 +11,10 @@ class Student extends Authenticatable
 {
     use HasFactory, HasApiTokens;
 
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
     public function notes()
     {
         return $this->hasMany(Note::class, "student_id", "id");

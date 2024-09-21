@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,3 +46,7 @@ Route::delete('/role-delete/{id}', [RoleController::class, 'delete'])->name('set
 Route::get('/linkstorage', function () {
     Artisan::call('storage:link');
 });
+
+
+
+Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');

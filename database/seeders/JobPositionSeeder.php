@@ -25,6 +25,10 @@ class JobPositionSeeder extends Seeder
                 'id' => 3,
                 'name' => 'Profesor(a)',
             ],
+            [
+                'id' => 4,
+                'name' => 'Especialista',
+            ],
         ];
 
         foreach ($dataArray as $key => $value) {

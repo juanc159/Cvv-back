@@ -93,4 +93,17 @@ class UserRepository extends BaseRepository
     {
         return $this->model::where('email', $email)->first();
     }
+
+    public function searchOne($request = [], $with = [], $select = ['*'])
+    {
+        $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            if (! empty($request['teacher_id'])) {
+                $query->where('teacher_id', $request['teacher_id']);
+            }
+        });
+
+        $data = $data->first();
+
+        return $data;
+    }
 }

@@ -49,6 +49,11 @@ return [
             'driver' => 'session',
             'provider' => 'students',
         ],
+        // Nuevo guard para profesores
+        'teachers' => [
+            'driver' => 'session',
+            'provider' => 'teachers',
+        ],
     ],
 
     /*
@@ -77,6 +82,11 @@ return [
         'students' => [
             'driver' => 'eloquent',
             'model' => App\Models\Student::class,
+        ],
+        // Nuevo provider para profesores
+        'teachers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Teacher::class,
         ],
 
         // 'users' => [

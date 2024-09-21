@@ -41,7 +41,7 @@ class NoteController extends Controller
     {
         try {
 
-            $this->studentRepository->deleteData();
+            // $this->studentRepository->deleteData();
 
             DB::beginTransaction();
 
@@ -70,8 +70,10 @@ class NoteController extends Controller
 
                     foreach ($formattedData as $row) {
                         if (!empty(trim($row["CÉDULA"]))) {
+                            // $grade = Grade::where("type_education_id",3)->get();
                             $grade = Grade::where("name", trim($row["AÑO"]))->first();
                             $section = Section::where("name", trim($row["SECCIÓN"]))->first();
+
                             $model = [
                                 "company_id" => $request->input("company_id"),
                                 "type_education_id" => $request->input("type_education_id"),
@@ -82,6 +84,11 @@ class NoteController extends Controller
                                 "pdf" => isset($row["PDF"]) ? trim($row["PDF"]) == 1  ? 1 : 0 : 0,
                                 "photo" => isset($row["PHOTO"]) ? trim($row["PHOTO"]) : null,
                             ];
+
+                            // return $student = $this->studentRepository->searchOne([
+                            //     "identity_document" => $model["identity_document"]
+                            // ]);
+
                             $student = $this->studentRepository->store($model);
 
 
