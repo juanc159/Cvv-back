@@ -119,7 +119,11 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->teacherRepository->store($request->except(['photo', 'complementaries']));
+            $post = $request->except(['photo', 'complementaries']);
+            if(empty($post["password"])){
+                unset($post["password"]);
+            }
+            $data = $this->teacherRepository->store($post);
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
