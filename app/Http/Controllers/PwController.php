@@ -345,9 +345,11 @@ class PwController extends Controller
     public function materiaPendiente()
     {
         try {
-            $plannings = TeacherPlanning::with(["subject", "grade", "section"])->whereHas("subject", function ($q) {
-                $q->where("code", "MATPEN");
-            })->get()->groupBy(["grade.name", "section.name"]);
+            $plannings = TeacherPlanning::with([
+                "subject", "grade", "section"])->whereHas("teacher", function ($q) {
+                    $q->where("name","Materia");
+                    $q->where("last_name","Pendiente");
+            })->get();
 
 
             return response()->json(['code' => 200, 'plannings' => $plannings]);
