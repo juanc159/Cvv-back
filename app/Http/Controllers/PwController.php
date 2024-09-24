@@ -349,7 +349,7 @@ class PwController extends Controller
                 "subject", "grade", "section"])->whereHas("teacher", function ($q) {
                     $q->where("name","Materia");
                     $q->where("last_name","Pendiente");
-            })->get()->groupBy(["grade.name", "section.name"]);
+            })->get()->groupBy(["grade.name", "section.name","subject.name"]);
 
 
 
