@@ -24,3 +24,7 @@ Route::put('/teacher-update', [TeacherController::class, 'store'])->name('teache
 Route::get('/teacher-planning/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');
 
 Route::post('/teacher-planningStore', [TeacherController::class, 'planningStore'])->name('teacher.planningStore');
+
+
+
+Route::put('/teachers/order', [TeacherController::class, 'updateOrder']);

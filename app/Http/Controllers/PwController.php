@@ -246,7 +246,7 @@ class PwController extends Controller
             $typeEducations = $this->typeEducationRepository->selectList();
 
 
-            $teachers = Teacher::where("company_id", $company_id)->where("state", 1)->get()->map(function ($value) {
+            $teachers = Teacher::where("company_id", $company_id)->where("state", 1)->orderBy('order')->get()->map(function ($value) {
                 $grade_name = '';
                 $section_name = '';
 
@@ -258,6 +258,7 @@ class PwController extends Controller
 
                 return [
                     // 'info' => $info,
+                    'id' => $value->id,
                     'fullName' => $value->name . ' ' . $value->last_name,
                     'photo' => $value->photo,
                     'type_education_id' => $value->type_education_id,

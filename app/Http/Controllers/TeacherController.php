@@ -6,6 +6,7 @@ use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
 use App\Http\Resources\Teacher\TeacherPlanningResource;
+use App\Models\Teacher;
 use App\Repositories\GradeRepository;
 use App\Repositories\JobPositionRepository;
 use App\Repositories\SectionRepository;
@@ -266,5 +267,18 @@ class TeacherController extends Controller
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
+    }
+
+
+    public function updateOrder(Request $request)
+    {
+        $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
+
+        
+        foreach ($teachers as $index => $teacher) {
+            Teacher::where('id', $teacher['id'])->update(['order' => $index]);
+        }
+
+        return response()->json(['message' => 'Order updated successfully']);
     }
 }
