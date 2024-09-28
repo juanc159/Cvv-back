@@ -274,11 +274,11 @@ class TeacherController extends Controller
     {
         $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
 
-        
+
         foreach ($teachers as $index => $teacher) {
             Teacher::where('id', $teacher['id'])->update(['order' => $index]);
         }
 
-        return response()->json(['message' => 'Order updated successfully']);
+        return response()->json(['message' => 'Orden actualizado correctamente']);
     }
 }
