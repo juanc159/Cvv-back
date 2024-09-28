@@ -93,11 +93,23 @@ class StudentRepository extends BaseRepository
 
         return $data;
     }
-    public function deleteData($request = [])
+    public function deleteDataArray($request = [])
     {
-        $data = $this->model->where(function ($query) use ($request) {
-            if (!empty($request["type_education_id"])) {
-                $query->where("type_education_id", $request["type_education_id"]);
+        return $data = $this->model->where(function ($query) use ($request) {
+            if (! empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            }
+            if (! empty($request['type_education_id'])) {
+                $query->where('type_education_id', $request['type_education_id']);
+            }
+            if (! empty($request['grade_id'])) {
+                $query->where('grade_id', $request['grade_id']);
+            }
+            if (! empty($request['section_id'])) {
+                $query->where('section_id', $request['section_id']);
+            }
+            if (! empty($request['identity_document'])) {
+                $query->whereNotIn('identity_document', $request['identity_document']);
             }
         })->delete();
     }
@@ -105,8 +117,20 @@ class StudentRepository extends BaseRepository
     public function searchOne($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            if (! empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            }
             if (! empty($request['identity_document'])) {
                 $query->where('identity_document', $request['identity_document']);
+            }
+            if (! empty($request['type_education_id'])) {
+                $query->where('type_education_id', $request['type_education_id']);
+            }
+            if (! empty($request['grade_id'])) {
+                $query->where('grade_id', $request['grade_id']);
+            }
+            if (! empty($request['section_id'])) {
+                $query->where('section_id', $request['section_id']);
             }
         });
 

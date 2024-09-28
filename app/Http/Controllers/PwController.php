@@ -199,7 +199,7 @@ class PwController extends Controller
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,
                     "date" => $fecha->translatedFormat('l, j \\de F \\de Y'),
-                ], 'Notas');
+                ], 'Notas', false);
 
                 $pdf = base64_encode($pdf);
             }
@@ -346,10 +346,13 @@ class PwController extends Controller
     {
         try {
             $plannings = TeacherPlanning::with([
-                "subject", "grade", "section"])->whereHas("teacher", function ($q) {
-                    $q->where("name","Materia");
-                    $q->where("last_name","Pendiente");
-            })->get()->groupBy(["grade.name", "section.name","subject.name"]);
+                "subject",
+                "grade",
+                "section"
+            ])->whereHas("teacher", function ($q) {
+                $q->where("name", "Materia");
+                $q->where("last_name", "Pendiente");
+            })->get()->groupBy(["grade.name", "section.name", "subject.name"]);
 
 
 

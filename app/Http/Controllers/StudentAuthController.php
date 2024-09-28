@@ -55,6 +55,7 @@ class StudentAuthController extends Controller
             // Obtener las planificaciones del estudiante
             $obj['teacherPlannings'] = $user->teacherPlannings;
 
+            $obj['first_time'] = $user->first_time;
             $obj['pdf'] = $user->pdf;
             $obj['type_user'] = "student";
 

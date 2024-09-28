@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Authentication\PassportAuthLoginRequest;
+use App\Http\Requests\Authentication\PassportAuthPasswordRequest;
+use App\Models\Student;
+use App\Models\User;
 use App\Repositories\MenuRepository;
 use App\Repositories\UserRepository;
 use App\Services\MailService;
 use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class PassportAuthController extends Controller
 {
@@ -104,5 +111,20 @@ class PassportAuthController extends Controller
         $user = Auth::user();
 
         return response()->json(['user' => $user], 200);
+    }
+
+
+    public function changePassword(PassportAuthPasswordRequest $request)
+    { 
+
+        // Obtener el usuario autenticado
+        $user = Student::find($request->input("id"));
+
+        // Cambiar la contraseña
+        $user->password = $request->input("new_password");
+        $user->first_time = 0;
+        $user->save();
+
+        return response()->json(["code" => 200, 'message' => 'Contraseña cambiada exitosamente.']);
     }
 }

@@ -50,7 +50,7 @@
 
     td {
         border-radius: 5px;
-        padding: 10px;
+        padding: 5px;
         /* Agrega un relleno para separar el contenido de los bordes */
     }
 

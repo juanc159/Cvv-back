@@ -87,4 +87,20 @@ class NoteRepository extends BaseRepository
 
         return $data;
     }
+
+    public function searchOne($request = [], $with = [], $select = ['*'])
+    {
+        $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            if (! empty($request['student_id'])) {
+                $query->where('student_id', $request['student_id']);
+            }
+            if (! empty($request['subject_id'])) {
+                $query->where('subject_id', $request['subject_id']);
+            }
+        });
+
+        $data = $data->first();
+
+        return $data;
+    }
 }

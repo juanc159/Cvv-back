@@ -24,3 +24,6 @@ Route::post('/loginStudent', [StudentAuthController::class, 'login']);
 /** authenticacion basica para profesores */
 
 Route::post('/loginTeacher', [TeacherAuthController::class, 'login']);
+
+
+
