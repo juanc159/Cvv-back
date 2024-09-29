@@ -46,11 +46,11 @@ class StudentAuthController extends Controller
 
             //informacion año, grado y seccion
             $obj['type_education_id'] = $user->type_education_id;
-            $obj['type_education_name'] = $user->typeEducation->name;
+            $obj['type_education_name'] = $user->typeEducation?->name;
             $obj['grade_id'] = $user->grade_id;
-            $obj['grade_name'] = $user->grade->name;
+            $obj['grade_name'] = $user->grade?->name;
             $obj['section_id'] = $user->section_id;
-            $obj['section_name'] = $user->section->name;
+            $obj['section_name'] = $user->section?->name;
 
             // Obtener las planificaciones del estudiante
             $obj['teacherPlannings'] = $user->teacherPlannings;
