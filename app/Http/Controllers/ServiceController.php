@@ -26,7 +26,7 @@ class ServiceController extends Controller
         $services = ServiceListResource::collection($data);
 
         return [
-            'services' => $services,
+            'tableData' => $services,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),

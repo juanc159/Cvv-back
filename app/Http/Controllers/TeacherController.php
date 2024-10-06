@@ -59,12 +59,12 @@ class TeacherController extends Controller
     }
 
     public function list(Request $request)
-    {
+    { 
         $data = $this->teacherRepository->list($request->all());
         $teachers = TeacherListResource::collection($data);
 
         return [
-            'teachers' => $teachers,
+            'tableData' => $teachers,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),

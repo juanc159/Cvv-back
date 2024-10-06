@@ -17,10 +17,15 @@ class UserRepository extends BaseRepository
         $data = $this->model->select($select)
             ->with($with)
             ->where(function ($query) use ($request, $idsAllowed, $idsNotAllowed) {
+                filterComponent($query, $request);
+
                 if (! empty($request['name'])) {
-                    $query->where('name', 'like', '%'.$request['name'].'%');
+                    $query->where('name', 'like', '%' . $request['name'] . '%');
                 }
 
+                if (! empty($request['company_id'])) { 
+                    $query->where('company_id', $request['company_id']);
+                } 
                 //idsAllowed
                 if (count($idsAllowed) > 0) {
                     $query->whereIn('id', $idsAllowed);
@@ -36,12 +41,16 @@ class UserRepository extends BaseRepository
                 if (! empty($request['idsNotAllowed']) && count($request['idsNotAllowed']) > 0) {
                     $query->whereNotIn('id', $request['idsNotAllowed']);
                 }
-            })
-            ->where(function ($query) use ($request) {
-                if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
-                }
             });
+
+
+        if (isset($request["sortBy"])) {
+            $sortBy = json_decode($request["sortBy"], 1);
+            foreach ($sortBy as $key => $value) {
+                $data = $data->orderBy($value['key'], $value['order']);
+            }
+        }
+
         if (empty($request['typeData'])) {
             $data = $data->paginate($request['perPage'] ?? 10);
         } else {

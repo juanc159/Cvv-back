@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 | User
 |--------------------------------------------------------------------------
 */
-Route::post('/user-list', [Usercontroller::class, 'list'])->name('user.list');
+Route::get('/user-list', [Usercontroller::class, 'list'])->name('user.list');
 
 Route::delete('/user-delete/{id}', [Usercontroller::class, 'delete'])->name('user.delete');
 

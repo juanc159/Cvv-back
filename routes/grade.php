@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::post('/grade-list', [GradeController::class, 'list'])->name('grade.list');
+Route::get('/grade-list', [GradeController::class, 'list'])->name('grade.list');
 
 Route::delete('/grade-delete/{id}', [GradeController::class, 'delete'])->name('grade.delete');
 

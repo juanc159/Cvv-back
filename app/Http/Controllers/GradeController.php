@@ -33,7 +33,7 @@ class GradeController extends Controller
         $grades = GradeListResource::collection($data);
 
         return [
-            'grades' => $grades,
+            'tableData' => $grades,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),

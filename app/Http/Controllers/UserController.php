@@ -29,12 +29,12 @@ class UserController extends Controller
 
     public function list(Request $request)
     {
-        $data = $this->userRepository->list($request->all());
+         $data = $this->userRepository->list($request->all());
         $users = UserListResource::collection($data);
 
         return [
             'code' => 200,
-            'users' => $users,
+            'tableData' => $users,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),

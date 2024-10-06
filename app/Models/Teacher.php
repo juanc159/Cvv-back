@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -11,7 +12,7 @@ use Laravel\Passport\HasApiTokens;
 
 class Teacher extends Authenticatable
 {
-    use HasFactory,SoftDeletes,HasApiTokens;
+    use HasFactory,SoftDeletes,HasApiTokens,Searchable;
 
     protected $casts = [
         'company_id' => 'integer',

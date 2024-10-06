@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::post('/subject-list', [SubjectController::class, 'list'])->name('subject.list');
+Route::get('/subject-list', [SubjectController::class, 'list'])->name('subject.list');
 
 Route::delete('/subject-delete/{id}', [SubjectController::class, 'delete'])->name('subject.delete');
 

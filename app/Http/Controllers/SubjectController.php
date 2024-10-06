@@ -30,7 +30,7 @@ class SubjectController extends Controller
         $subjects = SubjectListResource::collection($data);
 
         return [
-            'subjects' => $subjects,
+            'tableData' => $subjects,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),

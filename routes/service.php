@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::post('/service-list', [ServiceController::class, 'list'])->name('service.list');
+Route::get('/service-list', [ServiceController::class, 'list'])->name('service.list');
 
 Route::delete('/service-delete/{id}', [ServiceController::class, 'delete'])->name('service.delete');
 
