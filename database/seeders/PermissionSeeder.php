@@ -74,6 +74,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Módulo Servicios',
                 'menu_id' => 10,
             ],
+            [
+                'id' => 11,
+                'name' => 'student.index',
+                'description' => 'Visualizar Módulo Estudiantes',
+                'menu_id' => 11,
+            ],
         ];
 
         foreach ($array as $key => $value) {
