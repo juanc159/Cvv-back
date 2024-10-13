@@ -297,6 +297,8 @@ class TeacherController extends Controller
                     "section_id" => $value->section_id,
                 ], ["notes"]);
 
+
+                return $value;
                 $subjectIds = explode(',', $value->subject_ids);
 
                 $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
