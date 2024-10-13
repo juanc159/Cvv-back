@@ -37,7 +37,7 @@ class ConsolidatedExport implements WithMultipleSheets
         $groupedStudentsArray = $groupedStudents->toArray();
 
         foreach ($groupedStudentsArray as $key => $value) {
-            // $sheets[] = new StudentExport($this->headers[$key],$value,$key);
+            $sheets[] = new StudentExport($this->headers[$key],$value,$key);
         }
 
         return $sheets;

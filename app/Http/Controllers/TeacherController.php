@@ -359,6 +359,7 @@ class TeacherController extends Controller
             }
 
 
+            return $headers;
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
