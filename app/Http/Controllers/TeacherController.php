@@ -342,11 +342,11 @@ class TeacherController extends Controller
                                             $studentData["{$subject->code}{$i}"] = $notesArray[$i]; // Asigna la nota si no existe
                                         }
                                     } else {
-                                        $studentData["{$subject->code}{$i}"] = null; // O cualquier valor predeterminado
+                                        $studentData["{$subject->code}{$i}"] = "-"; // O cualquier valor predeterminado
                                     }
                                 } else {
                                     // Si no se encontraron notas, asigna null
-                                    $studentData["{$subject->code}{$i}"] = null;
+                                    $studentData["{$subject->code}{$i}"] = "-";
                                 }
                             }
                         }
