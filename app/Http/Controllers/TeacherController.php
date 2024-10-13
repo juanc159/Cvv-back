@@ -351,9 +351,9 @@ class TeacherController extends Controller
                             }
                         }
 
-                        if (!in_array($studentData["identity_document"], $students)) {
+                        // if (!in_array($studentData["identity_document"], $students)) {
                             $students[] = $studentData; // Agrega el estudiante completo al array
-                        }
+                        // }
                     }
                 }
             }
