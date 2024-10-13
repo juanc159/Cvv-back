@@ -2,14 +2,14 @@
     <table>
         <thead>
             <tr>
-                <th>NRO</th>
-                <th>AÑO</th>
-                <th>SECCIÓN</th>
-                <th>CÉDULA</th>
-                <th>NOMBRES Y APELLIDOS ESTUDIANTE</th>
+                <th style="border: 1px solid black">NRO</th>
+                <th style="border: 1px solid black">AÑO</th>
+                <th style="border: 1px solid black">SECCIÓN</th>
+                <th style="border: 1px solid black">CÉDULA</th>
+                <th style="border: 1px solid black">NOMBRES Y APELLIDOS ESTUDIANTE</th>
 
                 @foreach ($headers as $header)
-                    <th>{{ $header }}</th>
+                    <th style="border: 1px solid black">{{ $header }}</th>
                 @endforeach
             </tr>
 
@@ -24,7 +24,7 @@
                 @if ($row['section'] !== $previousSection)
                     @if ($previousSection !== null)
                         <tr>
-                            <td colspan="7" style="background-color: #203864;"></td>
+                            <td colspan="7" style="background-color: #203864; border: 1px solid black"></td>
                         </tr>
                     @endif
                     @php
@@ -34,15 +34,17 @@
                 @endif
 
                 <tr>
-                    <td>{{ $nro++ }}</td> <!-- Incrementa el contador en cada fila -->
-                    <td>{{ $row['grade'] }}</td>
-                    <td>{{ $row['section'] }}</td>
-                    <td>{{ $row['identity_document'] }}</td>
-                    <td>{{ $row['full_name'] }}</td>
+                    <td style="border: 1px solid black">{{ $nro++ }}</td>
+                    <!-- Incrementa el contador en cada fila -->
+                    <td style="border: 1px solid black">{{ $row['grade'] }}</td>
+                    <td style="border: 1px solid black">{{ $row['section'] }}</td>
+                    <td style="border: 1px solid black">{{ $row['identity_document'] }}</td>
+                    <td style="border: 1px solid black">{{ $row['full_name'] }}</td>
 
                     @foreach ($headers as $header)
                         <!-- Aquí asumes que el valor está en $row y está mapeado a cada header -->
-                        <td>{{ $row[$header] ?? null }}</td> <!-- Usa null como valor predeterminado si no existe -->
+                        <td style="border: 1px solid black">{{ $row[$header] ?? null }}</td>
+                        <!-- Usa null como valor predeterminado si no existe -->
                     @endforeach
                 </tr>
             @endforeach
