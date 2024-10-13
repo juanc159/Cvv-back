@@ -306,7 +306,7 @@ class TeacherController extends Controller
                         // Inicializa un array para los códigos de materias
                         $studentData = [
                             "nro" => $nro++,
-                            "grade" => $value->grade->name,
+                            "grade" => $value->grade?->name,
                             "section" => $value->section->name,
                             "identity_document" => $value2->identity_document,
                             "full_name" => $value2->full_name,
@@ -319,13 +319,13 @@ class TeacherController extends Controller
                                 $code = "{$subject->code}{$i}";
 
                                 // Verifica si ya existe un array para este grado
-                                if (!isset($headers[$value->grade->name])) {
-                                    $headers[$value->grade->name] = []; // Inicializa el array si no existe
+                                if (!isset($headers[$value->grade?->name])) {
+                                    $headers[$value->grade?->name] = []; // Inicializa el array si no existe
                                 }
 
                                 // Agrega el código si no existe
-                                if (!in_array($code, $headers[$value->grade->name])) {
-                                    $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
+                                if (!in_array($code, $headers[$value->grade?->name])) {
+                                    $headers[$value->grade?->name][] = $code; // Agrega el código al grado correspondiente
                                 }
 
                                 // Intenta obtener las notas para el subject_id correspondiente
