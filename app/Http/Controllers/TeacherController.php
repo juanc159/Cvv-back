@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ConsolidatedExport;
 use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
@@ -10,6 +11,7 @@ use App\Models\Teacher;
 use App\Repositories\GradeRepository;
 use App\Repositories\JobPositionRepository;
 use App\Repositories\SectionRepository;
+use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
 use App\Repositories\TeacherPlanningRepository;
@@ -19,47 +21,26 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class TeacherController extends Controller
 {
-    private $teacherRepository;
-
-    private $jobPositionRepository;
-
-    private $typeEducationRepository;
-
-    private $subjectRepository;
-
-    private $sectionRepository;
-
-    private $gradeRepository;
-
-    private $teacherComplementaryRepository;
-
-    private $teacherPlanningRepository;
 
     public function __construct(
-        TeacherRepository $teacherRepository,
-        JobPositionRepository $jobPositionRepository,
-        TypeEducationRepository $typeEducationRepository,
-        SubjectRepository $subjectRepository,
-        SectionRepository $sectionRepository,
-        GradeRepository $gradeRepository,
-        TeacherComplementaryRepository $teacherComplementaryRepository,
-        TeacherPlanningRepository $teacherPlanningRepository,
-    ) {
-        $this->teacherRepository = $teacherRepository;
-        $this->jobPositionRepository = $jobPositionRepository;
-        $this->typeEducationRepository = $typeEducationRepository;
-        $this->subjectRepository = $subjectRepository;
-        $this->sectionRepository = $sectionRepository;
-        $this->gradeRepository = $gradeRepository;
-        $this->teacherComplementaryRepository = $teacherComplementaryRepository;
-        $this->teacherPlanningRepository = $teacherPlanningRepository;
-    }
+        private TeacherRepository $teacherRepository,
+        private JobPositionRepository $jobPositionRepository,
+        private TypeEducationRepository $typeEducationRepository,
+        private SubjectRepository $subjectRepository,
+        private SectionRepository $sectionRepository,
+        private GradeRepository $gradeRepository,
+        private TeacherComplementaryRepository $teacherComplementaryRepository,
+        private TeacherPlanningRepository $teacherPlanningRepository,
+        private StudentRepository $studentRepository,
+    ) {}
 
     public function list(Request $request)
-    { 
+    {
         $data = $this->teacherRepository->list($request->all());
         $teachers = TeacherListResource::collection($data);
 
@@ -121,7 +102,7 @@ class TeacherController extends Controller
             DB::beginTransaction();
 
             $post = $request->except(['photo', 'complementaries']);
-            if(empty($post["password"])){
+            if (empty($post["password"])) {
                 unset($post["password"]);
             }
             $data = $this->teacherRepository->store($post);
@@ -280,5 +261,134 @@ class TeacherController extends Controller
         }
 
         return response()->json(['message' => 'Orden actualizado correctamente']);
+    }
+
+
+    public function downloadConsolidated(Request $request, $id)
+    {
+        try {
+            $teacherComplementaries = $this->teacherComplementaryRepository->list([
+                "typeData" => "all",
+                "teacher_id" => $id,
+            ], ["grade", "section"]);
+
+
+            $teacher = $this->teacherRepository->find($id);
+
+            $subjectsData = $this->subjectRepository->list([
+                "typeData" => "all",
+                "company_id" => $teacher->company_id,
+            ]);
+
+            $students = [];
+            $nro = 1;
+
+            // Construir los encabezados
+            $headers = [];
+
+
+            foreach ($teacherComplementaries as $key => $value) {
+
+                $list = $this->studentRepository->list([
+                    "typeData" => "all",
+                    "company_id" => $teacher->company_id,
+                    "type_education_id" => $teacher->type_education_id,
+                    "grade_id" => $value->grade_id,
+                    "section_id" => $value->section_id,
+                ], ["notes"]);
+
+                $subjectIds = explode(',', $value->subject_ids);
+
+                $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
+
+                if (count($list) > 0) {
+                    foreach ($list as $key2 => $value2) {
+                        // Inicializa un array para los códigos de materias
+                        $studentData = [
+                            "nro" => $nro++,
+                            "grade" => $value->grade->name,
+                            "section" => $value->section->name,
+                            "identity_document" => $value2->identity_document,
+                            "full_name" => $value2->full_name,
+                        ];
+
+                        // Agregar códigos como keys basadas en la cantidad de notas
+                        for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
+                            foreach ($filteredSubjects as $subject) {
+
+                                $code = "{$subject->code}{$i}";
+
+                                // Verifica si ya existe un array para este grado
+                                if (!isset($headers[$value->grade->name])) {
+                                    $headers[$value->grade->name] = []; // Inicializa el array si no existe
+                                }
+
+                                // Agrega el código si no existe
+                                if (!in_array($code, $headers[$value->grade->name])) {
+                                    $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
+                                }
+
+                                // Intenta obtener las notas para el subject_id correspondiente
+                                $notes = $value2->notes->where("subject_id", $subject->id)->first(); // Cambia aquí para usar el ID correcto
+
+                                // Verifica si se encontraron notas y decodifica
+                                if ($notes) {
+                                    $notesArray = json_decode($notes->json, true); // Cambia a `true` para obtener un array asociativo
+
+                                    // Asigna la nota correspondiente si existe
+                                    if (isset($notesArray[$i])) { // Ajustar índice
+                                        // Verifica si ya existe
+                                        if (!isset($studentData["{$subject->code}{$i}"])) {
+                                            $studentData["{$subject->code}{$i}"] = $notesArray[$i]; // Asigna la nota si no existe
+                                        }
+                                    } else {
+                                        $studentData["{$subject->code}{$i}"] = null; // O cualquier valor predeterminado
+                                    }
+                                } else {
+                                    // Si no se encontraron notas, asigna null
+                                    $studentData["{$subject->code}{$i}"] = null;
+                                }
+                            }
+                        }
+
+                        if (!in_array($studentData["identity_document"], $students)) {
+                            $students[] = $studentData; // Agrega el estudiante completo al array
+                        }
+                    }
+                }
+            }
+
+
+            // Convertir el array a una colección
+            $studentsCollection = collect($students);
+
+            // Eliminar duplicados por 'id'
+            $students = $studentsCollection->unique('identity_document')->values()->all();
+
+
+            // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
+            // $groupedStudents = collect($students)
+            //     ->groupBy('grade')
+            //     ->map(function ($gradeGroup) {
+            //         // Ordenar estudiantes por section alfabéticamente
+            //         return $gradeGroup->sortBy('section');
+            //     });
+
+            // // Si deseas convertirlo a un array
+            // return$groupedStudentsArray = $groupedStudents->toArray();
+
+
+            if (count($students) > 0) {
+                $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
+
+                $excelBase64 = base64_encode($excel);
+                return response()->json(['code' => 200, 'excel' => $excelBase64]);
+            } else {
+
+                return response()->json(['code' => 500, 'message' => "No se han cargado alumnos"]);
+            }
+        } catch (Throwable $th) {
+            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
     }
 }

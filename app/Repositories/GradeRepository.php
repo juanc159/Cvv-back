@@ -24,6 +24,10 @@ class GradeRepository extends BaseRepository
                     $query->where('state', $request['state']);
                 }
             }
+
+            if (! empty($request['company_id'])) {
+                $query->where('company_id',  $request['company_id']);
+            }
         });
 
 

@@ -149,37 +149,33 @@ class NoteController extends Controller
                                 }
                                 $student = $this->studentRepository->store($model);
 
-                                // $grade = $typeEducation->grades->where("id", $grade->id)->first();
+                                $grade = $typeEducation->grades->where("id", $grade->id)->first();
 
-                                // $subjects = $grade->subjects;
+                                $subjects = $grade->subjects;
 
-                                // foreach ($subjects as $key => $sub) {
+                                foreach ($subjects as $key => $sub) {
 
-                                //     $model2 = [
-                                //         "student_id" => $student->id,
-                                //         "subject_id" => $sub->id,
-                                //     ];
+                                    $model2 = [
+                                        "student_id" => $student->id,
+                                        "subject_id" => $sub->id,
+                                    ];
 
-                                //     $note = $this->noteRepository->searchOne($model2);
-                                //     $json = null;
+                                    $note = $this->noteRepository->searchOne($model2);
+                                    $json = null;
 
-                                //     // if ($note) {
-                                //     //     $model2 = $this->noteRepository->delete($note->id);
-                                //     // }
+                                    $model2 = [
+                                        "id" => $note ? $note->id : null,
+                                        "student_id" => $student->id,
+                                        "subject_id" => $sub->id,
+                                    ];
 
-                                //     $model2 = [
-                                //         "id" => $note ? $note->id : null,
-                                //         "student_id" => $student->id,
-                                //         "subject_id" => $sub->id,
-                                //     ];
+                                    for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
+                                        $json[$xx] = isset($row[$sub->code . $xx]) ?  trim($row[$sub->code .  $xx]) : null;
+                                    }
+                                    $model2["json"] = json_encode($json);
 
-                                //     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                //         $json[$xx] = isset($row[$sub->code . $xx]) ?  trim($row[$sub->code .  $xx]) : null;
-                                //     }
-                                //     $model2["json"] = json_encode($json);
-
-                                //     $this->noteRepository->store($model2);
-                                // }
+                                     $this->noteRepository->store($model2);
+                                }
                             }
                         }
                     }

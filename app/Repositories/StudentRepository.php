@@ -60,6 +60,7 @@ class StudentRepository extends BaseRepository
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
+            $data["password"] = $request["identity_document"];
         }
 
         foreach ($request as $key => $value) {

@@ -28,3 +28,6 @@ Route::post('/teacher-planningStore', [TeacherController::class, 'planningStore'
 
 
 Route::put('/teachers/order', [TeacherController::class, 'updateOrder']);
+
+
+Route::get('/teacher-downloadConsolidated/{id}', [TeacherController::class, 'downloadConsolidated']);

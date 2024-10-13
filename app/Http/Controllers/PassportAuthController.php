@@ -115,7 +115,7 @@ class PassportAuthController extends Controller
 
 
     public function changePassword(PassportAuthPasswordRequest $request)
-    { 
+    {
 
         // Obtener el usuario autenticado
         $user = Student::find($request->input("id"));

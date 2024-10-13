@@ -31,6 +31,10 @@ class TeacherComplementaryRepository extends BaseRepository
                     $x->where('company_id', $request['company_id']);
                 });
             }
+
+            if (! empty($request['teacher_id'])) {
+                $query->where('teacher_id', $request['teacher_id']);
+            }
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQuery'])) {
