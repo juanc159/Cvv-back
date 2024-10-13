@@ -318,6 +318,7 @@ class TeacherController extends Controller
 
                                 $code = "{$subject->code}{$i}";
 
+                                return $value;
                                 // Verifica si ya existe un array para este grado
                                 if (!isset($headers[$value->grade?->name])) {
                                     $headers[$value->grade?->name] = []; // Inicializa el array si no existe
