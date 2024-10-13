@@ -12,19 +12,19 @@
                     <th style="border: 1px solid black">{{ $header }}</th>
                 @endforeach
             </tr>
-
         </thead>
         <tbody>
             @php
                 $previousSection = null;
                 $nro = 1; // Inicializa el contador
+                $colspanValue = count($headers) + 5; // Calcula el colspan
             @endphp
 
             @foreach ($data as $row)
                 @if ($row['section'] !== $previousSection)
                     @if ($previousSection !== null)
                         <tr>
-                            <td colspan="7" style="background-color: #203864; border: 1px solid black"></td>
+                            <td colspan="{{ $colspanValue }}" style="background-color: #203864; border: 1px solid black"></td>
                         </tr>
                     @endif
                     @php
@@ -35,16 +35,13 @@
 
                 <tr>
                     <td style="border: 1px solid black">{{ $nro++ }}</td>
-                    <!-- Incrementa el contador en cada fila -->
                     <td style="border: 1px solid black">{{ $row['grade'] }}</td>
                     <td style="border: 1px solid black">{{ $row['section'] }}</td>
                     <td style="border: 1px solid black">{{ $row['identity_document'] }}</td>
                     <td style="border: 1px solid black">{{ $row['full_name'] }}</td>
 
                     @foreach ($headers as $header)
-                        <!-- Aquí asumes que el valor está en $row y está mapeado a cada header -->
                         <td style="border: 1px solid black">{{ $row[$header] ?? null }}</td>
-                        <!-- Usa null como valor predeterminado si no existe -->
                     @endforeach
                 </tr>
             @endforeach
