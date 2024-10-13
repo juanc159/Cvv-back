@@ -363,7 +363,7 @@ class TeacherController extends Controller
             $studentsCollection = collect($students);
 
             // Eliminar duplicados por 'id'
-            $students = $studentsCollection->unique('identity_document')->values()->all();
+          return  $students = $studentsCollection->unique('identity_document')->values()->all();
 
 
             // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
