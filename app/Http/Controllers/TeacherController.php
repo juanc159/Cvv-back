@@ -304,7 +304,7 @@ class TeacherController extends Controller
                 if (count($list) > 0) {
                     foreach ($list as $key2 => $value2) {
                         // Inicializa un array para los códigos de materias
-                      return  $studentData = [
+                        $studentData = [
                             "nro" => $nro++,
                             "grade" => $value->grade?->name,
                             "section" => $value->section->name,
@@ -314,6 +314,7 @@ class TeacherController extends Controller
 
                         // Agregar códigos como keys basadas en la cantidad de notas
                         for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
+                            return $filteredSubjects;
                             foreach ($filteredSubjects as $subject) {
 
                                 $code = "{$subject->code}{$i}";
