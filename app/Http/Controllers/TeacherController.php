@@ -297,9 +297,7 @@ class TeacherController extends Controller
                     "section_id" => $value->section_id,
                 ], ["notes"]);
 
-
                 $subjectIds = explode(',', $value->subject_ids);
-                return $subjectIds;
 
                 $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
 
@@ -308,7 +306,7 @@ class TeacherController extends Controller
                         // Inicializa un array para los códigos de materias
                         $studentData = [
                             "nro" => $nro++,
-                            "grade" => $value->grade?->name,
+                            "grade" => $value->grade->name,
                             "section" => $value->section->name,
                             "identity_document" => $value2->identity_document,
                             "full_name" => $value2->full_name,
@@ -316,20 +314,18 @@ class TeacherController extends Controller
 
                         // Agregar códigos como keys basadas en la cantidad de notas
                         for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
-                            return $filteredSubjects;
                             foreach ($filteredSubjects as $subject) {
 
                                 $code = "{$subject->code}{$i}";
 
-                                return $value;
                                 // Verifica si ya existe un array para este grado
-                                if (!isset($headers[$value->grade?->name])) {
-                                    $headers[$value->grade?->name] = []; // Inicializa el array si no existe
+                                if (!isset($headers[$value->grade->name])) {
+                                    $headers[$value->grade->name] = []; // Inicializa el array si no existe
                                 }
 
                                 // Agrega el código si no existe
-                                if (!in_array($code, $headers[$value->grade?->name])) {
-                                    $headers[$value->grade?->name][] = $code; // Agrega el código al grado correspondiente
+                                if (!in_array($code, $headers[$value->grade->name])) {
+                                    $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
                                 }
 
                                 // Intenta obtener las notas para el subject_id correspondiente
@@ -356,14 +352,13 @@ class TeacherController extends Controller
                         }
 
                         // if (!in_array($studentData["identity_document"], $students)) {
-                        $students[] = $studentData; // Agrega el estudiante completo al array
+                            $students[] = $studentData; // Agrega el estudiante completo al array
                         // }
                     }
                 }
             }
 
 
-            return $headers;
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
