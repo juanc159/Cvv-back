@@ -352,7 +352,7 @@ class TeacherController extends Controller
                         }
 
                         // if (!in_array($studentData["identity_document"], $students)) {
-                            $students[] = $studentData; // Agrega el estudiante completo al array
+                        $students[] = $studentData; // Agrega el estudiante completo al array
                         // }
                     }
                 }
@@ -363,7 +363,7 @@ class TeacherController extends Controller
             $studentsCollection = collect($students);
 
             // Eliminar duplicados por 'id'
-          return  $students = $studentsCollection->unique('identity_document')->values()->all();
+            $students = $studentsCollection->unique('identity_document')->values()->all();
 
 
             // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
