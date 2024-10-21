@@ -90,6 +90,13 @@ class MenuSeeder extends Seeder
                 'icon' => 'mdi-account-lock-outline',
                 'requiredPermission' => 'student.index',
             ],
+            [
+                'id' => 12,
+                'title' => 'Cargos',
+                'to' => 'JobPosition-Index',
+                'icon' => 'mdi-account-lock-outline',
+                'requiredPermission' => 'jobPosition.index',
+            ],
         ];
         foreach ($arrayData as $key => $value) {
             $data =  Menu::find($value["id"]);

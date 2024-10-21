@@ -39,7 +39,7 @@ Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwC
 
 Route::get('/pw-pdfNote/{id}', [PwController::class, 'pdfPNote'])->name('pw.pdfPNote');
 
-Route::get('/pw-socialNetworks/{company_id}', [PwController::class, 'socialNetworks'])->name('pw.socialNetworks');
+Route::get('/pw-linksMenu/{company_id}', [PwController::class, 'linksMenu'])->name('pw.linksMenu');
 Route::get('/pw-banners/{company_id}', [PwController::class, 'banners'])->name('pw.banners');
 Route::get('/pw-teachers/{company_id}', [PwController::class, 'teachers'])->name('pw.teachers');
 Route::get('/pw-contactData/{company_id}', [PwController::class, 'contactData'])->name('pw.contactData');
@@ -48,7 +48,7 @@ Route::get('/pw-service/{service_id}', [PwController::class, 'service'])->name('
 
 
 
-Route::get('/pw-materiaPendiente', [PwController::class, 'materiaPendiente']);
+Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
 
 
 

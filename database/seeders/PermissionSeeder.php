@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Helpers\Constants;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -80,6 +81,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Módulo Estudiantes',
                 'menu_id' => 11,
             ],
+            [
+                'id' => 12,
+                'name' => 'jobPosition.index',
+                'description' => 'Visualizar Módulo Cargos',
+                'menu_id' => 12,
+            ],
         ];
 
         foreach ($array as $key => $value) {
@@ -96,7 +103,7 @@ class PermissionSeeder extends Seeder
 
         }
 
-        $user = User::find(1);
+        $user = User::find(Constants::ID_ROL_SUPER_ADMINISTRADOR);
         $permissions = Permission::all();
         $user->syncPermissions($permissions);
     }

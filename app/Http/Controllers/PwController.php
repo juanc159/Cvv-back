@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Constants;
 use App\Http\Resources\Company\CompanyPwSchoolResource;
 use App\Models\Banner;
 use App\Models\Company;
@@ -210,11 +211,12 @@ class PwController extends Controller
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
         }
     }
-    public function socialNetworks($company_id)
+    public function linksMenu($company_id)
     {
         try {
-            $social_networks = CompanyDetail::where("company_id", $company_id)->whereIn("type_detail_id", [1, 2, 3, 4, 5])->get()->map(function ($value) {
+            $detalles = CompanyDetail::where("company_id", $company_id)->get()->map(function ($value) {
                 return [
+                    'type_detail_id' => $value->type_detail_id,
                     'type_detail_name' => $value->typeDetail?->name,
                     'icon' => $value->icon,
                     'color' => $value->color,
@@ -222,7 +224,14 @@ class PwController extends Controller
                 ];
             });
 
-            return response()->json(['code' => 200, 'social_networks' => $social_networks]);
+            $social_networks = $detalles->whereIn("type_detail_id", [1, 2, 3, 4, 5])->values();
+            $links = $detalles->whereIn("type_detail_id", [10, 11, 12])->values();
+
+            return response()->json([
+                'code' => 200,
+                'social_networks' => $social_networks,
+                'links' => $links,
+            ]);
         } catch (\Throwable $th) {
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
@@ -243,8 +252,6 @@ class PwController extends Controller
     public function teachers($company_id)
     {
         try {
-            $typeEducations = $this->typeEducationRepository->selectList();
-
 
             $teachers = Teacher::where("company_id", $company_id)->where("state", 1)->orderBy('order')->get()->map(function ($value) {
                 $grade_name = '';
@@ -257,7 +264,6 @@ class PwController extends Controller
                 }
 
                 return [
-                    // 'info' => $info,
                     'id' => $value->id,
                     'fullName' => $value->name . ' ' . $value->last_name,
                     'photo' => $value->photo,
@@ -265,14 +271,53 @@ class PwController extends Controller
                     'type_education_name' => $value->typeEducation?->name,
                     'email' => $value->email,
                     'phone' => $value->phone,
+                    'job_position_id' => $value->job_position_id,
                     'jobPosition' => $value->jobPosition?->name,
                     'backgroundColor' => generarColorPastelAleatorio(70),
                     'grade_name' => $grade_name,
                     'section_name' => $section_name,
                 ];
-            })->groupBy('type_education_name')->toArray();
+            });
 
-            return response()->json(['code' => 200, 'teachers' => $teachers, 'typeEducations' => $typeEducations]);
+
+            $tabsData = [];
+
+            $data = $teachers->whereIn("job_position_id", Constants::MANAGERS_AND_COORDINATORS);
+            $tabsData[] = [
+                "title" => "Directivos y coordinadores",
+                "number_records" => $data->count(),
+                "data" => $data->values(),
+            ];
+
+            $data = $teachers->whereIn("type_education_id", Constants::INITIAL_EDUCATION)->where("job_position_id", Constants::TEACHERS);
+            $tabsData[] = [
+                "title" => "Educación inicial",
+                "number_records" => $data->count(),
+                "data" => $data->values(),
+            ];
+
+            $data = $teachers->whereIn("type_education_id", Constants::PRIMARY_EDUCATION)->where("job_position_id", Constants::TEACHERS);
+            $tabsData[] = [
+                "title" => "Educación primaria",
+                "number_records" => $data->count(),
+                "data" => $data->values(),
+            ];
+
+            $data = $teachers->whereIn("type_education_id", Constants::HIGH_SCHOOL_EDUCATION)->where("job_position_id", Constants::TEACHERS);
+            $tabsData[] = [
+                "title" => "Educación media general",
+                "number_records" => $data->count(),
+                "data" => $data->values(),
+            ];
+
+            $data = $teachers->whereIn("job_position_id", Constants::SPECIALISTS);
+            $tabsData[] = [
+                "title" => "Especialistas",
+                "number_records" => $data->count(),
+                "data" => $data->values(),
+            ];
+
+            return response()->json(['code' => 200, 'tabsData' => $tabsData]);
         } catch (\Throwable $th) {
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
@@ -343,14 +388,15 @@ class PwController extends Controller
     }
 
 
-    public function materiaPendiente()
+    public function materiaPendiente($company_id)
     {
         try {
             $plannings = TeacherPlanning::with([
                 "subject",
                 "grade",
                 "section"
-            ])->whereHas("teacher", function ($q) {
+            ])->whereHas("teacher", function ($q) use ($company_id) {
+                $q->where("company_id", $company_id);
                 $q->where("name", "Materia");
                 $q->where("last_name", "Pendiente");
             })->get()->groupBy(["grade.name", "section.name", "subject.name"]);

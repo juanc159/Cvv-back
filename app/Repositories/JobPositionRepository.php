@@ -14,21 +14,26 @@ class JobPositionRepository extends BaseRepository
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            filterComponent($query, $request);
+
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+                $query->where('name', 'like', '%' . $request['name'] . '%');
             }
+
             if (isset($request['state'])) {
                 if ($request['state'] === '0' || $request['state'] === '1') {
                     $query->where('state', $request['state']);
                 }
             }
-        })
-            ->where(function ($query) use ($request) {
-                if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
-                }
-            })
-            ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
+        });
+
+
+        if (isset($request["sortBy"])) {
+            $sortBy = json_decode($request["sortBy"], 1);
+            foreach ($sortBy as $key => $value) {
+                $data = $data->orderBy($value['key'], $value['order']);
+            }
+        }
 
         if (empty($request['typeData'])) {
             $data = $data->paginate($request['perPage'] ?? 10);

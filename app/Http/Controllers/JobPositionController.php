@@ -2,32 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Student\StudentStoreRequest;
-use App\Http\Resources\Student\StudentFormResource;
-use App\Http\Resources\Student\StudentListResource;
-use App\Repositories\SectionRepository;
-use App\Repositories\StudentRepository;
-use App\Repositories\TypeEducationRepository;
+use App\Http\Requests\JobPosition\JobPositionStoreRequest;
+use App\Http\Resources\JobPosition\JobPositionFormResource;
+use App\Http\Resources\JobPosition\JobPositionListResource;
+use App\Repositories\JobPositionRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class StudentController extends Controller
+class JobPositionController extends Controller
 {
 
     public function __construct(
-        private StudentRepository $studentRepository,
-        private TypeEducationRepository $typeEducationRepository,
-        private SectionRepository $sectionRepository,
+        private JobPositionRepository $jobPositionRepository,
     ) {}
 
     public function list(Request $request)
     {
-        $data = $this->studentRepository->list($request->all());
-        $students = StudentListResource::collection($data);
+        $data = $this->jobPositionRepository->list($request->all());
+        $jobPositions = JobPositionListResource::collection($data);
 
         return [
-            'tableData' => $students,
+            'tableData' => $jobPositions,
             'lastPage' => $data->lastPage(),
             'totalData' => $data->total(),
             'totalPage' => $data->perPage(),
@@ -39,56 +35,25 @@ class StudentController extends Controller
     {
         $data = null;
         if ($id) {
-            $data = $this->studentRepository->find($id);
-            $data = new StudentFormResource($data);
+            $data = $this->jobPositionRepository->find($id);
+            $data = new JobPositionFormResource($data);
         }
-
-        $typeEducations = $this->typeEducationRepository->list(
-            request: [
-                "typeData" => "all",
-            ],
-            with: ["grades"]
-        )->map(function ($value) {
-            return [
-                "value" => $value->id,
-                "title" => $value->name,
-                "grades" => $value->grades->map(function ($value2) {
-                    return [
-                        "value" => $value2->id,
-                        "title" => $value2->name,
-                    ];
-                }),
-            ];
-        });
-
-        $sections = $this->sectionRepository->selectList();
 
         return response()->json([
             'form' => $data,
-            'typeEducations' => $typeEducations,
-            'sections' => $sections,
         ]);
     }
 
-    public function store(StudentStoreRequest $request)
+    public function store(JobPositionStoreRequest $request)
     {
         try {
             DB::beginTransaction();
 
-            $post = $request->except(['photo']);
+            $post = $request->all();
 
+            $data = $this->jobPositionRepository->store($post);
 
-            $data = $this->studentRepository->store($post);
-
-            if ($request->file('photo')) {
-                $file = $request->file('photo');
-                $photo = $request->root() . '/storage/' . $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
-                $data->photo = $photo;
-            }
-
-            $data->save();
-
-            $data = new StudentFormResource($data);
+            $data = new JobPositionFormResource($data);
 
             $msg = 'agregado';
             if (!empty($request['id'])) {
@@ -109,7 +74,7 @@ class StudentController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $this->studentRepository->find($id);
+            $data = $this->jobPositionRepository->find($id);
             if ($data) {
                 $data->delete();
                 $msg = 'Registro eliminado correctamente';
@@ -136,7 +101,7 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
-            $model = $this->studentRepository->changeState($request->input('id'), $request->input('value'), $request->input('field'));
+            $model = $this->jobPositionRepository->changeState($request->input('id'), $request->input('value'), $request->input('field'));
 
             ($model->state == 1) ? $msg = 'Activado' : $msg = 'Inactivado';
 

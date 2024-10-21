@@ -253,14 +253,22 @@ class TeacherController extends Controller
 
     public function updateOrder(Request $request)
     {
-        $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
+        try {
+
+            DB::beginTransaction();
+            $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
 
 
-        foreach ($teachers as $index => $teacher) {
-            Teacher::where('id', $teacher['id'])->update(['order' => $index]);
+            foreach ($teachers as $index => $teacher) {
+                Teacher::where('id', $teacher['id'])->update(['order' => $index]);
+            }
+
+            DB::commit();
+            return response()->json(["code" => 200, 'message' => 'Orden actualizado correctamente']);
+        } catch (Throwable $th) {
+            DB::rollBack();
+            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
         }
-
-        return response()->json(['message' => 'Orden actualizado correctamente']);
     }
 
 
@@ -352,7 +360,7 @@ class TeacherController extends Controller
                         }
 
                         // if (!in_array($studentData["identity_document"], $students)) {
-                            $students[] = $studentData; // Agrega el estudiante completo al array
+                        $students[] = $studentData; // Agrega el estudiante completo al array
                         // }
                     }
                 }
