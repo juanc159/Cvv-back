@@ -10,6 +10,7 @@ use App\Repositories\StudentRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Throwable;
 
 class StudentController extends Controller
@@ -143,6 +144,31 @@ class StudentController extends Controller
             DB::commit();
 
             return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function resetPassword($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Buscar al usuario por ID
+            $mdoel = $this->studentRepository->find($id);
+            if (!$mdoel) {
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
+
+            // Actualizar la contraseña
+            $mdoel->password = Hash::make($mdoel->identity_document);
+            $mdoel->save();
+
+            DB::commit();
+
+            return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
