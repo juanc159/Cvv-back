@@ -399,4 +399,137 @@ class TeacherController extends Controller
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
         }
     }
+
+    public function downloadAllConsolidated(Request $request)
+    {
+        try {
+
+
+
+            $teachers = $this->teacherRepository->get();
+
+            $subjectsData = $this->subjectRepository->list([
+                "typeData" => "all",
+                "company_id" => 1,
+            ]);
+
+            $students = [];
+            $nro = 1;
+
+            // Construir los encabezados
+            $headers = [];
+
+
+            foreach ($teachers as $key => $teacher) {
+
+                $teacherComplementaries = $this->teacherComplementaryRepository->list([
+                    "typeData" => "all",
+                    "teaher_id" => $teacher->id,
+                ], ["grade", "section"]);
+
+                foreach ($teacherComplementaries as $key => $value) {
+
+                    $list = $this->studentRepository->list([
+                        "typeData" => "all",
+                        "company_id" => $teacher->company_id,
+                        "type_education_id" => $teacher->type_education_id,
+                        "grade_id" => $value->grade_id,
+                        "section_id" => $value->section_id,
+                    ], ["notes"]);
+
+                    $subjectIds = explode(',', $value->subject_ids);
+
+                    $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
+
+                    if (count($list) > 0) {
+                        foreach ($list as $key2 => $value2) {
+                            // Inicializa un array para los códigos de materias
+                            $studentData = [
+                                "nro" => $nro++,
+                                "grade" => $value->grade->name,
+                                "section" => $value->section->name,
+                                "identity_document" => $value2->identity_document,
+                                "full_name" => $value2->full_name,
+                            ];
+
+                            // Agregar códigos como keys basadas en la cantidad de notas
+                            for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
+                                foreach ($filteredSubjects as $subject) {
+
+                                    $code = "{$subject->code}{$i}";
+
+                                    // Verifica si ya existe un array para este grado
+                                    if (!isset($headers[$value->grade->name])) {
+                                        $headers[$value->grade->name] = []; // Inicializa el array si no existe
+                                    }
+
+                                    // Agrega el código si no existe
+                                    if (!in_array($code, $headers[$value->grade->name])) {
+                                        $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
+                                    }
+
+                                    // Intenta obtener las notas para el subject_id correspondiente
+                                    $notes = $value2->notes->where("subject_id", $subject->id)->first(); // Cambia aquí para usar el ID correcto
+
+                                    // Verifica si se encontraron notas y decodifica
+                                    if ($notes) {
+                                        $notesArray = json_decode($notes->json, true); // Cambia a `true` para obtener un array asociativo
+
+                                        // Asigna la nota correspondiente si existe
+                                        if (isset($notesArray[$i])) { // Ajustar índice
+                                            // Verifica si ya existe
+                                            if (!isset($studentData["{$subject->code}{$i}"])) {
+                                                $studentData["{$subject->code}{$i}"] = $notesArray[$i]; // Asigna la nota si no existe
+                                            }
+                                        } else {
+                                            $studentData["{$subject->code}{$i}"] = null; // O cualquier valor predeterminado
+                                        }
+                                    } else {
+                                        // Si no se encontraron notas, asigna null
+                                        $studentData["{$subject->code}{$i}"] = null;
+                                    }
+                                }
+                            }
+
+                            // if (!in_array($studentData["identity_document"], $students)) {
+                            $students[] = $studentData; // Agrega el estudiante completo al array
+                            // }
+                        }
+                    }
+                }
+            }
+
+
+            // Convertir el array a una colección
+            $studentsCollection = collect($students);
+
+            // Eliminar duplicados por 'id'
+            $students = $studentsCollection->unique('identity_document')->values()->all();
+
+
+            // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
+            // $groupedStudents = collect($students)
+            //     ->groupBy('grade')
+            //     ->map(function ($gradeGroup) {
+            //         // Ordenar estudiantes por section alfabéticamente
+            //         return $gradeGroup->sortBy('section');
+            //     });
+
+            // // Si deseas convertirlo a un array
+            // return$groupedStudentsArray = $groupedStudents->toArray();
+
+
+            if (count($students) > 0) {
+                $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
+
+                $excelBase64 = base64_encode($excel);
+                return response()->json(['code' => 200, 'excel' => $excelBase64]);
+            } else {
+
+                return response()->json(['code' => 500, 'message' => "No se han cargado alumnos"]);
+            }
+        } catch (Throwable $th) {
+            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
+    }
 }
