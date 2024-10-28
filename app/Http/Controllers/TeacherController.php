@@ -445,12 +445,13 @@ class TeacherController extends Controller
 
             foreach ($teachers as $key => $teacher) {
 
+
                 // $teacherComplementaries = $this->teacherComplementaryRepository->list([
                 //     "typeData" => "all",
                 //     "teaher_id" => $teacher->id,
                 // ], ["grade", "section"]);
 
-                $teacherComplementaries = $teacherComplementariesAll->where("teaher_id", $teacher->id);
+                 $teacherComplementaries = $teacherComplementariesAll->where("teacher_id", $teacher->id);
 
                 foreach ($teacherComplementaries as $key => $value) {
 
@@ -462,7 +463,7 @@ class TeacherController extends Controller
                     //     "section_id" => $value->section_id,
                     // ], ["notes"]);
 
-                    $list = $listStudentAll->where("company_id", $teacher->company_id)
+                      $list = $listStudentAll->where("company_id", $teacher->company_id)
                         ->where("type_education_id", $teacher->type_education_id)
                         ->where("grade_id", $value->grade_id)
                         ->where("section_id", $value->section_id);
