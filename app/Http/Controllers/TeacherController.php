@@ -7,6 +7,7 @@ use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
 use App\Http\Resources\Teacher\TeacherPlanningResource;
+use App\Models\Subject;
 use App\Models\Teacher;
 use App\Repositories\GradeRepository;
 use App\Repositories\JobPositionRepository;
@@ -19,6 +20,7 @@ use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 use Maatwebsite\Excel\Facades\Excel;
@@ -405,6 +407,27 @@ class TeacherController extends Controller
         try {
 
 
+            // Cache::put('Cache_Teacher', Teacher::get(), now()->addMinutes(60));
+            // Cache::put('Cache_Subject', Subject::get(), now()->addMinutes(60));
+
+
+            $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
+                "typeData" => "all",
+                // "teaher_id" => $teacher->id,
+            ], ["grade", "section"]);
+
+            // Cache::put('Cache_Subject', $teacherComplementaries, now()->addMinutes(60));
+
+
+            $listStudentAll = $this->studentRepository->list([
+                "typeData" => "all",
+                // "company_id" => $teacher->company_id,
+                // "type_education_id" => $teacher->type_education_id,
+                // "grade_id" => $value->grade_id,
+                // "section_id" => $value->section_id,
+            ], ["notes"]);
+
+
 
             $teachers = $this->teacherRepository->get();
 
@@ -422,20 +445,27 @@ class TeacherController extends Controller
 
             foreach ($teachers as $key => $teacher) {
 
-                $teacherComplementaries = $this->teacherComplementaryRepository->list([
-                    "typeData" => "all",
-                    "teaher_id" => $teacher->id,
-                ], ["grade", "section"]);
+                // $teacherComplementaries = $this->teacherComplementaryRepository->list([
+                //     "typeData" => "all",
+                //     "teaher_id" => $teacher->id,
+                // ], ["grade", "section"]);
+
+                $teacherComplementaries = $teacherComplementariesAll->where("teaher_id", $teacher->id);
 
                 foreach ($teacherComplementaries as $key => $value) {
 
-                    $list = $this->studentRepository->list([
-                        "typeData" => "all",
-                        "company_id" => $teacher->company_id,
-                        "type_education_id" => $teacher->type_education_id,
-                        "grade_id" => $value->grade_id,
-                        "section_id" => $value->section_id,
-                    ], ["notes"]);
+                    // $list = $this->studentRepository->list([
+                    //     "typeData" => "all",
+                    //     "company_id" => $teacher->company_id,
+                    //     "type_education_id" => $teacher->type_education_id,
+                    //     "grade_id" => $value->grade_id,
+                    //     "section_id" => $value->section_id,
+                    // ], ["notes"]);
+
+                    $list = $listStudentAll->where("company_id", $teacher->company_id)
+                        ->where("type_education_id", $teacher->type_education_id)
+                        ->where("grade_id", $value->grade_id)
+                        ->where("section_id", $value->section_id);
 
                     $subjectIds = explode(',', $value->subject_ids);
 
