@@ -406,17 +406,10 @@ class TeacherController extends Controller
     {
         try {
 
-
-            // Cache::put('Cache_Teacher', Teacher::get(), now()->addMinutes(60));
-            // Cache::put('Cache_Subject', Subject::get(), now()->addMinutes(60));
-
-
             $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
                 "typeData" => "all",
                 // "teaher_id" => $teacher->id,
             ], ["grade", "section"]);
-
-            // Cache::put('Cache_Subject', $teacherComplementaries, now()->addMinutes(60));
 
 
             $listStudentAll = $this->studentRepository->list([
@@ -429,7 +422,10 @@ class TeacherController extends Controller
 
 
 
-            $teachers = $this->teacherRepository->get();
+            $teachers = $this->teacherRepository->list([
+                "typeData" => "all",
+                "type_education_id" => 3,
+            ]);
 
             $subjectsData = $this->subjectRepository->list([
                 "typeData" => "all",
@@ -451,7 +447,7 @@ class TeacherController extends Controller
                 //     "teaher_id" => $teacher->id,
                 // ], ["grade", "section"]);
 
-                 $teacherComplementaries = $teacherComplementariesAll->where("teacher_id", $teacher->id);
+                $teacherComplementaries = $teacherComplementariesAll->where("teacher_id", $teacher->id);
 
                 foreach ($teacherComplementaries as $key => $value) {
 
@@ -463,7 +459,7 @@ class TeacherController extends Controller
                     //     "section_id" => $value->section_id,
                     // ], ["notes"]);
 
-                      $list = $listStudentAll->where("company_id", $teacher->company_id)
+                    $list = $listStudentAll->where("company_id", $teacher->company_id)
                         ->where("type_education_id", $teacher->type_education_id)
                         ->where("grade_id", $value->grade_id)
                         ->where("section_id", $value->section_id);
