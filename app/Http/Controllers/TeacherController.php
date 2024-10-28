@@ -406,10 +406,23 @@ class TeacherController extends Controller
     {
         try {
 
+            // $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
+            //     "typeData" => "all",
+            //     // "teaher_id" => $teacher->id,
+            // ], ["grade", "section", "teacher" => function ($query) {
+            //     $query->where("type_education_id",3);
+            // }]);
+
             $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
                 "typeData" => "all",
-                // "teaher_id" => $teacher->id,
-            ], ["grade", "section"]);
+            ], [
+                "grade",
+                "section",
+                "teacher" => function ($query) {
+                    $query->where("type_education_id", 3);
+                }
+            ]);
+
 
 
             $listStudentAll = $this->studentRepository->list([
