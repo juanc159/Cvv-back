@@ -5,11 +5,11 @@ namespace App\Exports;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
-
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Protection;
 
 class StudentExport implements FromView, WithEvents, ShouldAutoSize, WithTitle
 {
@@ -28,17 +28,12 @@ class StudentExport implements FromView, WithEvents, ShouldAutoSize, WithTitle
 
     public function view(): View
     {
-
         return view('Exports.Student.StudentConsolidatedExport', [
             'headers' => $this->headers,
             'data' => $this->data,
         ]);
     }
 
-
-    /**
-     * @return string
-     */
     public function title(): string
     {
         return $this->nameExcel;
@@ -48,16 +43,22 @@ class StudentExport implements FromView, WithEvents, ShouldAutoSize, WithTitle
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                // Obtener el objeto hoja de cálculo
                 $sheet = $event->sheet;
 
                 // Obtener el rango de celdas con datos
                 $highestColumn = $sheet->getHighestColumn();
                 $highestRow = $sheet->getHighestRow();
-                $range = 'A1:' . $highestColumn . $highestRow;
 
-                // Establecer el filtro automático en el rango de celdas
-                $sheet->setAutoFilter($range);
+                // Proteger la hoja
+                $sheet->getProtection()->setSheet(true);
+                // $sheet->getProtection()->setPassword('tu_contraseña'); // Opcional
+
+                // Desbloquear todas las celdas
+                $sheet->getStyle('A1:' . $highestColumn . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
+
+                // Bloquear solo las columnas A a E y la primera fila de la F en adelante
+                $sheet->getStyle('A:E')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
+                $sheet->getStyle('F1:' . $highestColumn . '1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
             },
         ];
     }
