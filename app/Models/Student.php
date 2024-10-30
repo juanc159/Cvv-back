@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 class Student extends Authenticatable
 {
-    use HasFactory, HasApiTokens,Searchable;
+    use HasFactory, HasApiTokens, Searchable;
 
     protected $casts = [
         'password' => 'hashed',
@@ -45,17 +45,7 @@ class Student extends Authenticatable
         $photoUrl = $this->photo;
 
         if (!empty($photoUrl)) {
-            // Verificar si la URL es accesible
-            try {
-                $response = Http::head($photoUrl);
-
-                if ($response->successful()) {
-                    // La URL es accesible, devolverla
-                    return $photoUrl;
-                }
-            } catch (\Exception $e) {
-                // Manejar excepciones si es necesario
-            }
+            return $photoUrl;
         }
 
         // Si la URL está vacía o el archivo no es accesible, retornar null
@@ -66,6 +56,6 @@ class Student extends Authenticatable
     public function teacherPlannings()
     {
         return $this->hasMany(TeacherPlanning::class, 'grade_id', 'grade_id')
-                    ->where('section_id', $this->section_id);
+            ->where('section_id', $this->section_id);
     }
 }

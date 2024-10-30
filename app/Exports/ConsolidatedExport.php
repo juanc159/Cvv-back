@@ -11,11 +11,13 @@ class ConsolidatedExport implements WithMultipleSheets
 
     public $data;
     public $headers;
+    public $prueba;
 
-    public function __construct($data,$headers)
+    public function __construct($data, $headers, $prueba = null)
     {
         $this->data = $data;
         $this->headers = $headers;
+        $this->prueba = $prueba;
     }
 
     /**
@@ -37,7 +39,7 @@ class ConsolidatedExport implements WithMultipleSheets
         $groupedStudentsArray = $groupedStudents->toArray();
 
         foreach ($groupedStudentsArray as $key => $value) {
-            $sheets[] = new StudentExport($this->headers[$key],$value,$key);
+            $sheets[] = new StudentExport($this->headers[$key], $value, $key, $this->prueba);
         }
 
         return $sheets;

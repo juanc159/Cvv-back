@@ -3,6 +3,9 @@
         <thead>
             <tr>
                 <th style="border: 1px solid black">NRO</th>
+                @if ($prueba)
+                    <th style="border: 1px solid black">PDF</th>
+                @endif
                 <th style="border: 1px solid black">AÑO</th>
                 <th style="border: 1px solid black">SECCIÓN</th>
                 <th style="border: 1px solid black">CÉDULA</th>
@@ -24,7 +27,8 @@
                 @if ($row['section'] !== $previousSection)
                     @if ($previousSection !== null)
                         <tr>
-                            <td colspan="{{ $colspanValue }}" style="background-color: #203864; border: 1px solid black"></td>
+                            <td colspan="{{ $colspanValue }}" style="background-color: #203864; border: 1px solid black">
+                            </td>
                         </tr>
                     @endif
                     @php
@@ -35,6 +39,12 @@
 
                 <tr>
                     <td style="border: 1px solid black">{{ $nro++ }}</td>
+
+                    @if ($prueba)
+                        <td style="border: 1px solid black"></td>
+                    @endif
+
+
                     <td style="border: 1px solid black">{{ $row['grade'] }}</td>
                     <td style="border: 1px solid black">{{ $row['section'] }}</td>
                     <td style="border: 1px solid black">{{ $row['identity_document'] }}</td>

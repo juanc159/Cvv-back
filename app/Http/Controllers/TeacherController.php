@@ -290,6 +290,11 @@ class TeacherController extends Controller
                 "company_id" => $teacher->company_id,
             ]);
 
+
+            $listStudentAll = $this->studentRepository->list([
+                "typeData" => "all",
+            ], ["notes"]);
+
             $students = [];
             $nro = 1;
 
@@ -299,13 +304,13 @@ class TeacherController extends Controller
 
             foreach ($teacherComplementaries as $key => $value) {
 
-                $list = $this->studentRepository->list([
-                    "typeData" => "all",
-                    "company_id" => $teacher->company_id,
-                    "type_education_id" => $teacher->type_education_id,
-                    "grade_id" => $value->grade_id,
-                    "section_id" => $value->section_id,
-                ], ["notes"]);
+                $list = $listStudentAll->where("company_id", $teacher->company_id)
+                    ->where("type_education_id", $teacher->type_education_id)
+                    ->where("grade_id", $value->grade_id)
+                    ->where("section_id", $value->section_id);
+
+                $list = $list->sortBy('full_name');
+
 
                 $subjectIds = explode(',', $value->subject_ids);
 
@@ -361,32 +366,22 @@ class TeacherController extends Controller
                             }
                         }
 
-                        // if (!in_array($studentData["identity_document"], $students)) {
                         $students[] = $studentData; // Agrega el estudiante completo al array
-                        // }
                     }
                 }
             }
 
+            // Ordenando los header de las materias
+            $headers = collect($headers)->map(function ($subjects) {
+                sort($subjects);
+                return $subjects;
+            });
 
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
             // Eliminar duplicados por 'id'
             $students = $studentsCollection->unique('identity_document')->values()->all();
-
-
-            // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
-            // $groupedStudents = collect($students)
-            //     ->groupBy('grade')
-            //     ->map(function ($gradeGroup) {
-            //         // Ordenar estudiantes por section alfabéticamente
-            //         return $gradeGroup->sortBy('section');
-            //     });
-
-            // // Si deseas convertirlo a un array
-            // return$groupedStudentsArray = $groupedStudents->toArray();
-
 
             if (count($students) > 0) {
                 $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
@@ -406,38 +401,23 @@ class TeacherController extends Controller
     {
         try {
 
-            // $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
-            //     "typeData" => "all",
-            //     // "teaher_id" => $teacher->id,
-            // ], ["grade", "section", "teacher" => function ($query) {
-            //     $query->where("type_education_id",3);
-            // }]);
-
             $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
                 "typeData" => "all",
             ], [
                 "grade",
                 "section",
-                "teacher" => function ($query) {
-                    $query->where("type_education_id", 3);
+                "teacher" => function ($query) use ($request) {
+                    $query->where("type_education_id", $request->input("type_education_id"));
                 }
             ]);
 
-
-
             $listStudentAll = $this->studentRepository->list([
                 "typeData" => "all",
-                // "company_id" => $teacher->company_id,
-                // "type_education_id" => $teacher->type_education_id,
-                // "grade_id" => $value->grade_id,
-                // "section_id" => $value->section_id,
             ], ["notes"]);
-
-
 
             $teachers = $this->teacherRepository->list([
                 "typeData" => "all",
-                "type_education_id" => 3,
+                "type_education_id" => $request->input("type_education_id"),
             ]);
 
             $subjectsData = $this->subjectRepository->list([
@@ -454,28 +434,17 @@ class TeacherController extends Controller
 
             foreach ($teachers as $key => $teacher) {
 
-
-                // $teacherComplementaries = $this->teacherComplementaryRepository->list([
-                //     "typeData" => "all",
-                //     "teaher_id" => $teacher->id,
-                // ], ["grade", "section"]);
-
                 $teacherComplementaries = $teacherComplementariesAll->where("teacher_id", $teacher->id);
 
                 foreach ($teacherComplementaries as $key => $value) {
-
-                    // $list = $this->studentRepository->list([
-                    //     "typeData" => "all",
-                    //     "company_id" => $teacher->company_id,
-                    //     "type_education_id" => $teacher->type_education_id,
-                    //     "grade_id" => $value->grade_id,
-                    //     "section_id" => $value->section_id,
-                    // ], ["notes"]);
 
                     $list = $listStudentAll->where("company_id", $teacher->company_id)
                         ->where("type_education_id", $teacher->type_education_id)
                         ->where("grade_id", $value->grade_id)
                         ->where("section_id", $value->section_id);
+
+                    $list = $list->sortBy('full_name');
+
 
                     $subjectIds = explode(',', $value->subject_ids);
 
@@ -531,14 +500,17 @@ class TeacherController extends Controller
                                 }
                             }
 
-                            // if (!in_array($studentData["identity_document"], $students)) {
                             $students[] = $studentData; // Agrega el estudiante completo al array
-                            // }
                         }
                     }
                 }
             }
 
+            // Ordenando los header de las materias
+            $headers = collect($headers)->map(function ($subjects) {
+                sort($subjects);
+                return $subjects;
+            });
 
             // Convertir el array a una colección
             $studentsCollection = collect($students);
@@ -546,21 +518,10 @@ class TeacherController extends Controller
             // Eliminar duplicados por 'id'
             $students = $studentsCollection->unique('identity_document')->values()->all();
 
-
-            // // Agrupar por 'grade' y ordenar todos los estudiantes por 'section' alfabéticamente
-            // $groupedStudents = collect($students)
-            //     ->groupBy('grade')
-            //     ->map(function ($gradeGroup) {
-            //         // Ordenar estudiantes por section alfabéticamente
-            //         return $gradeGroup->sortBy('section');
-            //     });
-
-            // // Si deseas convertirlo a un array
-            // return$groupedStudentsArray = $groupedStudents->toArray();
-
+            $prueba = $request->input("type_education_id");
 
             if (count($students) > 0) {
-                $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
+                $excel = Excel::raw(new ConsolidatedExport($students, $headers, $prueba), \Maatwebsite\Excel\Excel::XLSX);
 
                 $excelBase64 = base64_encode($excel);
                 return response()->json(['code' => 200, 'excel' => $excelBase64]);
