@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TeacherAuth\TeacherAuthLoginRequest;
+use App\Models\BlockData;
 use App\Repositories\MenuRepository;
 use App\Repositories\UserRepository;
 use App\Services\MailService;
@@ -34,6 +35,9 @@ class TeacherAuthController extends Controller
 
         $user = Auth::guard('teachers')->user();
 
+        $blockData = BlockData::where("name","BLOCK_PAYROLL_UPLOAD")->first()->is_active;
+
+
         if ($user) {
             //datos personales
             $obj['id'] = $user->id;
@@ -44,6 +48,8 @@ class TeacherAuthController extends Controller
             $obj['company_id'] = $user->company_id;
             $obj['company'] = $user->company;
             $obj['type_user'] = "teacher";
+
+            $obj['blockData'] = $blockData;
 
 
             return response()->json([

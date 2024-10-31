@@ -157,14 +157,14 @@ class StudentController extends Controller
             DB::beginTransaction();
 
             // Buscar al usuario por ID
-            $mdoel = $this->studentRepository->find($id);
-            if (!$mdoel) {
+            $model = $this->studentRepository->find($id);
+            if (!$model) {
                 return response()->json(['message' => 'Usuario no encontrado'], 404);
             }
 
             // Actualizar la contraseña
-            $mdoel->password = Hash::make($mdoel->identity_document);
-            $mdoel->save();
+            $model->password = Hash::make($model->identity_document);
+            $model->save();
 
             DB::commit();
 

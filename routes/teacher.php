@@ -32,3 +32,5 @@ Route::put('/teachers/order', [TeacherController::class, 'updateOrder']);
 
 
 Route::get('/teacher-downloadAllConsolidated', [TeacherController::class, 'downloadAllConsolidated']);
+
+Route::get('/teacher-resetPassword/{id}', [TeacherController::class, 'resetPassword']);

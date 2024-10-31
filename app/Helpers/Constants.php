@@ -12,4 +12,6 @@ class Constants
     public const INITIAL_EDUCATION = 1;
     public const PRIMARY_EDUCATION = 2;
     public const HIGH_SCHOOL_EDUCATION = 3;
+
+    public const BLOCK_PAYROLL_UPLOAD = 789456123;
 }

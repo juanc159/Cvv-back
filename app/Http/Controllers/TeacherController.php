@@ -22,6 +22,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Throwable;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -531,6 +532,31 @@ class TeacherController extends Controller
             }
         } catch (Throwable $th) {
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
+    }
+
+    public function resetPassword($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Buscar al usuario por ID
+            $model = $this->teacherRepository->find($id);
+            if (!$model) {
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
+
+            // Actualizar la contraseña
+            $model->password = Hash::make(123456789);
+            $model->save();
+
+            DB::commit();
+
+            return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
 }

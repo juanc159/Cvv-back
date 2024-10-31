@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Constants;
+use App\Models\BlockData;
 use App\Models\Grade;
 use App\Models\Section;
-use App\Models\Student;
-use App\Models\TypeEducation;
+use App\Repositories\BlockDataRepository;
 use App\Repositories\NoteRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\TypeEducationRepository;
@@ -15,7 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Cache;
-
+use Throwable;
 
 class NoteController extends Controller
 {
@@ -24,6 +25,7 @@ class NoteController extends Controller
         private StudentRepository $studentRepository,
         private NoteRepository $noteRepository,
         private UserRepository $userRepository,
+        private BlockDataRepository $blockDataRepository,
     ) {
         $this->typeEducationRepository = $typeEducationRepository;
         $this->studentRepository = $studentRepository;
@@ -37,9 +39,12 @@ class NoteController extends Controller
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
         $typeEducations = $this->typeEducationRepository->selectList();
+        $blockData = BlockData::where("name","BLOCK_PAYROLL_UPLOAD")->first()->is_active;
+
 
         return response()->json([
             'typeEducations' => $typeEducations,
+            'blockData' => $blockData,
         ]);
     }
 
@@ -208,5 +213,28 @@ class NoteController extends Controller
             return strtoupper($item[$field]) === strtoupper($value);
         });
         return $data;
+    }
+
+    public function blockPayrollUpload(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $model = BlockData::where("name","BLOCK_PAYROLL_UPLOAD")->first();
+            $model->is_active = $request->input('value');
+            $model->save();
+
+            ($model->is_active == 1) ? $msg = 'Activado' : $msg = 'Inactivado';
+
+            DB::commit();
+
+            return response()->json(['code' => 200, 'message' => 'Carga de archivos ' . $msg . ' con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+
+
     }
 }
