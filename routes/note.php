@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
-Route::post('/note-store', [NoteController::class, 'store']);
+// Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
+// Route::post('/note-store', [NoteController::class, 'store']);
 
 Route::post('/note-blockPayrollUpload', [NoteController::class, 'blockPayrollUpload']);
