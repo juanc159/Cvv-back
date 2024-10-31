@@ -514,34 +514,10 @@ class TeacherController extends Controller
             });
 
             // Convertir el array a una colección
-            $students = collect($students);
-
-
-            // Agrupamos los estudiantes por 'identity_document'
-            $estudiantesAgrupados = $students->groupBy('identity_document')->map(function ($grupo) {
-                // Iniciamos un array base vacío
-                $estudianteUnificado = [];
-
-                // Recorremos cada estudiante del grupo
-                foreach ($grupo as $estudiante) {
-                    // Unimos todos los elementos
-                    foreach ($estudiante as $key => $value) {
-                        if ($value !== null) {
-                            $estudianteUnificado[$key] = $value;
-                        }
-                    }
-                }
-
-                return $estudianteUnificado;
-            });
-
-            // Convertimos a un array si es necesario
-            $students = $estudiantesAgrupados->values()->all();
-
-
+            $studentsCollection = collect($students);
 
             // Eliminar duplicados por 'id'
-            // return $students = $studentsCollection->unique('identity_document')->values()->all();
+            $students = $studentsCollection->unique('identity_document')->values()->all();
 
             $prueba = $request->input("type_education_id");
 
