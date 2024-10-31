@@ -547,7 +547,7 @@ class TeacherController extends Controller
             }
 
             // Actualizar la contraseña
-            $model->password = Hash::make(123456789);
+            $model->password = Hash::make(12345);
             $model->save();
 
             DB::commit();
