@@ -50,3 +50,6 @@ Route::get('/linkstorage', function () {
 
 
 Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');
+
+Route::get('/teacher-downloadConsolidated/{id}', [TeacherController::class, 'downloadConsolidated']);
+
