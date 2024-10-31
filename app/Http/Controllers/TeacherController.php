@@ -519,20 +519,20 @@ class TeacherController extends Controller
 
             // Agrupamos los estudiantes por 'identity_document'
             $estudiantesAgrupados = $students->groupBy('identity_document')->map(function ($grupo) {
-                // Iniciamos un array base
-                $estudianteBase = [];
+                // Iniciamos un array base vacío
+                $estudianteUnificado = [];
 
                 // Recorremos cada estudiante del grupo
                 foreach ($grupo as $estudiante) {
+                    // Unimos todos los elementos
                     foreach ($estudiante as $key => $value) {
-                        // Solo agregamos valores no nulos
                         if ($value !== null) {
-                            $estudianteBase[$key] = $value;
+                            $estudianteUnificado[$key] = $value;
                         }
                     }
                 }
 
-                return $estudianteBase;
+                return $estudianteUnificado;
             });
 
             // Convertimos a un array si es necesario
