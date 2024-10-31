@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NoteController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TenantController;
@@ -53,3 +54,10 @@ Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning']
 
 Route::get('/teacher-downloadConsolidated/{id}', [TeacherController::class, 'downloadConsolidated']);
 
+
+
+
+
+
+Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
+Route::post('/note-store', [NoteController::class, 'store']);
