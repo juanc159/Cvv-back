@@ -39,7 +39,7 @@ class NoteController extends Controller
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
         $typeEducations = $this->typeEducationRepository->selectList();
-        $blockData = BlockData::where("name","BLOCK_PAYROLL_UPLOAD")->first()->is_active;
+        $blockData = BlockData::where("name", "BLOCK_PAYROLL_UPLOAD")->first()->is_active;
 
 
         return response()->json([
@@ -82,17 +82,17 @@ class NoteController extends Controller
                         }
 
 
-                        // $groupedCedulas = collect($formattedData)
-                        //     ->filter(function ($item) {
-                        //         return !is_null($item["CÉDULA"]); // Filtrar elementos con cédulas no nulas
-                        //     })
-                        //     ->groupBy('AÑO') // Agrupar por AÑO
-                        //     ->map(function ($yearGroup) {
-                        //         return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
-                        //             ->map(function ($sectionGroup) {
-                        //                 return $sectionGroup->pluck("CÉDULA")->filter()->values(); // Extraer cédulas
-                        //             });
-                        //     });
+                        //    return $groupedCedulas = collect($formattedData)
+                        //         ->filter(function ($item) {
+                        //             return !is_null($item["CÉDULA"]); // Filtrar elementos con cédulas no nulas
+                        //         })
+                        //         ->groupBy('AÑO') // Agrupar por AÑO
+                        //         ->map(function ($yearGroup) {
+                        //             return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
+                        //                 ->map(function ($sectionGroup) {
+                        //                     return $sectionGroup->pluck("CÉDULA")->filter()->values(); // Extraer cédulas
+                        //                 });
+                        //         });
 
 
                         // foreach ($groupedCedulas as $key => $value) {
@@ -136,6 +136,8 @@ class NoteController extends Controller
                                     "identity_document" => $row["CÉDULA"]
                                 ]);
 
+
+
                                 $model = [
                                     "id" => $student ? $student->id : null,
                                     "company_id" => $request->input("company_id"),
@@ -149,16 +151,25 @@ class NoteController extends Controller
                                     "photo" => isset($row["PHOTO"]) ? $row["PHOTO"] : null,
                                 ];
 
+
+
                                 if ($student) {
                                     unset($model["password"]);
                                 }
                                 $student = $this->studentRepository->store($model);
 
+
+
+
                                 $grade = $typeEducation->grades->where("id", $grade->id)->first();
 
                                 $subjects = $grade->subjects;
 
+
+
                                 foreach ($subjects as $key => $sub) {
+
+
 
                                     $model2 = [
                                         "student_id" => $student->id,
@@ -168,18 +179,31 @@ class NoteController extends Controller
                                     $note = $this->noteRepository->searchOne($model2);
                                     $json = null;
 
+                                    if ($note) {
+                                        $json = json_decode($note->json, 1);
+                                    }
+
+
                                     $model2 = [
                                         "id" => $note ? $note->id : null,
                                         "student_id" => $student->id,
                                         "subject_id" => $sub->id,
                                     ];
 
+
                                     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                        $json[$xx] = isset($row[$sub->code . $xx]) ?  trim($row[$sub->code .  $xx]) : null;
+                                        $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
                                     }
+
+
+                                    // if ($row["CÉDULA"] = "34158972") {
+                                    //     return  $json;
+                                    // }
+
+
                                     $model2["json"] = json_encode($json);
 
-                                     $this->noteRepository->store($model2);
+                                      $this->noteRepository->store($model2);
                                 }
                             }
                         }
@@ -220,7 +244,7 @@ class NoteController extends Controller
         try {
             DB::beginTransaction();
 
-            $model = BlockData::where("name","BLOCK_PAYROLL_UPLOAD")->first();
+            $model = BlockData::where("name", "BLOCK_PAYROLL_UPLOAD")->first();
             $model->is_active = $request->input('value');
             $model->save();
 
@@ -234,7 +258,5 @@ class NoteController extends Controller
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
-
-
     }
 }
