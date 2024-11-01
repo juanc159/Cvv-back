@@ -99,61 +99,61 @@ class TeacherController extends Controller
         ]);
     }
 
-    // public function store(TeacherStoreRequest $request)
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    public function store(TeacherStoreRequest $request)
+    {
+        try {
+            DB::beginTransaction();
 
-    //         $post = $request->except(['photo', 'complementaries']);
-    //         if (empty($post["password"])) {
-    //             unset($post["password"]);
-    //         }
-    //         $data = $this->teacherRepository->store($post);
+            $post = $request->except(['photo', 'complementaries']);
+            if (empty($post["password"])) {
+                unset($post["password"]);
+            }
+            $data = $this->teacherRepository->store($post);
 
-    //         if ($request->file('photo')) {
-    //             $file = $request->file('photo');
-    //             $photo = $request->root() . '/storage/' . $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
-    //             $data->photo = $photo;
-    //         }
+            if ($request->file('photo')) {
+                $file = $request->file('photo');
+                $photo = $request->root() . '/storage/' . $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
+                $data->photo = $photo;
+            }
 
-    //         $data->save();
+            $data->save();
 
-    //         $complementaries = json_decode($request->input('complementaries'), 1);
-    //         if (count($complementaries) > 0) {
-    //             foreach ($complementaries as $key => $value) {
-    //                 if ($value['delete'] == 1) {
-    //                     $this->teacherComplementaryRepository->delete($value['id']);
-    //                 } else {
-    //                     $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
+            $complementaries = json_decode($request->input('complementaries'), 1);
+            if (count($complementaries) > 0) {
+                foreach ($complementaries as $key => $value) {
+                    if ($value['delete'] == 1) {
+                        $this->teacherComplementaryRepository->delete($value['id']);
+                    } else {
+                        $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
 
-    //                     $this->teacherComplementaryRepository->store([
-    //                         'id' => $value['id'],
-    //                         'grade_id' => $value['grade_id'],
-    //                         'teacher_id' => $data->id,
-    //                         'section_id' => $value['section_id'],
-    //                         'subject_ids' => implode(', ', $subjectsArray),
-    //                         'id' => $value['id'],
-    //                     ]);
-    //                 }
-    //             }
-    //         }
+                        $this->teacherComplementaryRepository->store([
+                            'id' => $value['id'],
+                            'grade_id' => $value['grade_id'],
+                            'teacher_id' => $data->id,
+                            'section_id' => $value['section_id'],
+                            'subject_ids' => implode(', ', $subjectsArray),
+                            'id' => $value['id'],
+                        ]);
+                    }
+                }
+            }
 
-    //         $data = new TeacherFormResource($data);
+            $data = new TeacherFormResource($data);
 
-    //         $msg = 'agregado';
-    //         if (!empty($request['id'])) {
-    //             $msg = 'modificado';
-    //         }
+            $msg = 'agregado';
+            if (!empty($request['id'])) {
+                $msg = 'modificado';
+            }
 
-    //         DB::commit();
+            DB::commit();
 
-    //         return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
-    //     } catch (Exception $th) {
-    //         DB::rollBack();
+            return response()->json(['code' => 200, 'message' => 'Registro ' . $msg . ' correctamente', 'data' => $data]);
+        } catch (Exception $th) {
+            DB::rollBack();
 
-    //         return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
-    //     }
-    // }
+            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
+        }
+    }
 
     public function delete($id)
     {
@@ -210,48 +210,48 @@ class TeacherController extends Controller
         ]);
     }
 
-    // public function planningStore(Request $request)
-    // {
+    public function planningStore(Request $request)
+    {
 
-    //     try {
-    //         DB::beginTransaction();
-    //         $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
+        try {
+            DB::beginTransaction();
+            $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
-    //         for ($i = 0; $i < $request->input('files_cant'); $i++) {
-    //             if ($request->input('file_delete_' . $i) == 1) {
-    //                 $this->teacherPlanningRepository->delete($request->input('file_id_' . $i));
-    //             } else {
+            for ($i = 0; $i < $request->input('files_cant'); $i++) {
+                if ($request->input('file_delete_' . $i) == 1) {
+                    $this->teacherPlanningRepository->delete($request->input('file_id_' . $i));
+                } else {
 
-    //                 $teacherPlanning = $this->teacherPlanningRepository->store([
-    //                     'id' => $request->input('file_id_' . $i) === 'null' ? null : $request->input('file_id_' . $i),
-    //                     'teacher_id' => $teacher->id,
-    //                     'grade_id' => $request->input('file_grade_id_' . $i),
-    //                     'section_id' => $request->input('file_section_id_' . $i),
-    //                     'subject_id' => $request->input('file_subject_id_' . $i),
-    //                     'path' => $request->input('file_file_' . $i),
-    //                     'name' => $request->input('file_name_' . $i),
-    //                 ]);
+                    $teacherPlanning = $this->teacherPlanningRepository->store([
+                        'id' => $request->input('file_id_' . $i) === 'null' ? null : $request->input('file_id_' . $i),
+                        'teacher_id' => $teacher->id,
+                        'grade_id' => $request->input('file_grade_id_' . $i),
+                        'section_id' => $request->input('file_section_id_' . $i),
+                        'subject_id' => $request->input('file_subject_id_' . $i),
+                        'path' => $request->input('file_file_' . $i),
+                        'name' => $request->input('file_name_' . $i),
+                    ]);
 
-    //                 if ($request->file('file_file_' . $i)) {
-    //                     $file = $request->file('file_file_' . $i);
-    //                     $path = $request->root() . '/storage/' . $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_' . $i), 'public');
-    //                     $teacherPlanning->path = $path;
-    //                 }
-    //                 $teacherPlanning->save();
-    //             }
-    //         }
+                    if ($request->file('file_file_' . $i)) {
+                        $file = $request->file('file_file_' . $i);
+                        $path = $request->root() . '/storage/' . $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_' . $i), 'public');
+                        $teacherPlanning->path = $path;
+                    }
+                    $teacherPlanning->save();
+                }
+            }
 
-    //         DB::commit();
+            DB::commit();
 
-    //         $data = new TeacherPlanningResource($teacher);
+            $data = new TeacherPlanningResource($teacher);
 
-    //         return response()->json(['code' => 200, 'message' => 'Registros actualizados con éxito', 'data' => $data]);
-    //     } catch (Throwable $th) {
-    //         DB::rollback();
+            return response()->json(['code' => 200, 'message' => 'Registros actualizados con éxito', 'data' => $data]);
+        } catch (Throwable $th) {
+            DB::rollback();
 
-    //         return response()->json(['code' => 500, 'message' => $th->getMessage()]);
-    //     }
-    // }
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
 
 
     public function updateOrder(Request $request)
@@ -556,28 +556,28 @@ class TeacherController extends Controller
         }
     }
 
-    // public function resetPassword($id)
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    public function resetPassword($id)
+    {
+        try {
+            DB::beginTransaction();
 
-    //         // Buscar al usuario por ID
-    //         $model = $this->teacherRepository->find($id);
-    //         if (!$model) {
-    //             return response()->json(['message' => 'Usuario no encontrado'], 404);
-    //         }
+            // Buscar al usuario por ID
+            $model = $this->teacherRepository->find($id);
+            if (!$model) {
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
 
-    //         // Actualizar la contraseña
-    //         $model->password = Hash::make(12345);
-    //         $model->save();
+            // Actualizar la contraseña
+            $model->password = Hash::make(12345);
+            $model->save();
 
-    //         DB::commit();
+            DB::commit();
 
-    //         return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
-    //     } catch (Throwable $th) {
-    //         DB::rollback();
+            return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
 
-    //         return response()->json(['code' => 500, 'message' => $th->getMessage()]);
-    //     }
-    // }
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
 }
