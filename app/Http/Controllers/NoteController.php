@@ -82,38 +82,38 @@ class NoteController extends Controller
                         }
 
 
-                        $groupedCedulas = collect($formattedData)
-                            ->filter(function ($item) {
-                                return !is_null($item["CÉDULA"]); // Filtrar elementos con cédulas no nulas
-                            })
-                            ->groupBy('AÑO') // Agrupar por AÑO
-                            ->map(function ($yearGroup) {
-                                return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
-                                    ->map(function ($sectionGroup) {
-                                        return $sectionGroup->pluck("CÉDULA")->filter()->values(); // Extraer cédulas
-                                    });
-                            });
+                        // $groupedCedulas = collect($formattedData)
+                        //     ->filter(function ($item) {
+                        //         return !is_null($item["CÉDULA"]); // Filtrar elementos con cédulas no nulas
+                        //     })
+                        //     ->groupBy('AÑO') // Agrupar por AÑO
+                        //     ->map(function ($yearGroup) {
+                        //         return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
+                        //             ->map(function ($sectionGroup) {
+                        //                 return $sectionGroup->pluck("CÉDULA")->filter()->values(); // Extraer cédulas
+                        //             });
+                        //     });
 
 
-                        foreach ($groupedCedulas as $key => $value) {
-                            // $grade = Grade::where("name", $key)->first();
-                            $grade = $this->grade($key, "name");
-                            if ($grade) {
-                                foreach ($value as $key2 => $value2) {
-                                    // $section = Section::where("name", trim($key2))->first();
-                                    $section = $this->section($key2, "name");
-                                    if ($section) {
-                                        $this->studentRepository->deleteDataArray([
-                                            "company_id" => $request->input("company_id"),
-                                            "identity_document" => $value2,
-                                            "type_education_id" => $request->input("type_education_id"),
-                                            "grade_id" => $grade->id,
-                                            "section_id" => $section->id,
-                                        ]);
-                                    }
-                                }
-                            }
-                        }
+                        // foreach ($groupedCedulas as $key => $value) {
+                        //     // $grade = Grade::where("name", $key)->first();
+                        //     $grade = $this->grade($key, "name");
+                        //     if ($grade) {
+                        //         foreach ($value as $key2 => $value2) {
+                        //             // $section = Section::where("name", trim($key2))->first();
+                        //             $section = $this->section($key2, "name");
+                        //             if ($section) {
+                        //                 $this->studentRepository->deleteDataArray([
+                        //                     "company_id" => $request->input("company_id"),
+                        //                     "identity_document" => $value2,
+                        //                     "type_education_id" => $request->input("type_education_id"),
+                        //                     "grade_id" => $grade->id,
+                        //                     "section_id" => $section->id,
+                        //                 ]);
+                        //             }
+                        //         }
+                        //     }
+                        // }
 
                         // Obtener todos los estudiantes cuyos cedulas NO están en el array
 
