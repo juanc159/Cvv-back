@@ -517,7 +517,28 @@ class TeacherController extends Controller
             $studentsCollection = collect($students);
 
             // Eliminar duplicados por 'id'
-            $students = $studentsCollection->unique('identity_document')->values()->all();
+            // return  $students = $studentsCollection->reduce(function ($carry, $item) {
+            //     return array_merge($carry, $item);
+            // }, []);
+
+            // Agrupando por `identity_document` y `full_name` (o cualquier clave común)
+             $students = $studentsCollection->reduce(function ($carry, $item) {
+                // Buscar si ya existe un registro con el mismo `identity_document` y `full_name`
+                $key = $item['identity_document'] . '|' . $item['full_name'];
+
+                if (!isset($carry[$key])) {
+                    $carry[$key] = $item; // Si no existe, añadir el item
+                } else {
+                    $carry[$key] = array_merge($carry[$key], $item); // Si existe, fusionar
+                }
+
+                return $carry;
+            }, []);
+
+
+
+
+            // $students = $studentsCollection->unique('identity_document')->values()->all();
 
             $prueba = $request->input("type_education_id");
 
