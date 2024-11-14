@@ -19,6 +19,7 @@ class StudentListResource extends JsonResource
             'photo' => $this->photo,
             'identity_document' => $this->identity_document,
             'full_name' => $this->full_name,
+            'type_education_name' => $this->typeEducation?->name,
         ];
     }
 }
