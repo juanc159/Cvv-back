@@ -460,7 +460,7 @@ class TeacherController extends Controller
                                 "section" => $value->section->name,
                                 "identity_document" => $value2->identity_document,
                                 "full_name" => $value2->full_name,
-                                "pdf" => $value2->pdf,
+                                "pdf" => $value2->pdf == 1 ? 1 : "",
                             ];
 
                             // Agregar códigos como keys basadas en la cantidad de notas
