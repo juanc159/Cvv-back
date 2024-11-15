@@ -41,7 +41,7 @@
                     <td style="border: 1px solid black">{{ $nro++ }}</td>
 
                     @if ($prueba)
-                        <td style="border: 1px solid black"></td>
+                        <td style="border: 1px solid black">{{ $row['pdf'] }}</td>
                     @endif
 
 

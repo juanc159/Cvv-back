@@ -58,7 +58,7 @@ function filterComponent($query, $request, $model = null)
                 // Verifica si el campo es null o está vacío
                 if (isset($value['type']) && !empty($value['type']) && $value['type'] == 'null') {
                     if (isset($value['search_key']) && !empty($value['search_key'])) { // Asegúrate de que el campo esté definido
-                        $field = "photo"; // Asigna el campo dinámicamente
+                        $field = $value['search_key']; // Asigna el campo dinámicamente
 
                         if ($value['search'] === 0 || $value['search'] === '0') {
                             // Verifica si el campo es null o está vacío
