@@ -56,7 +56,7 @@ class StudentExport implements FromView, WithEvents, ShouldAutoSize, WithTitle, 
                 $highestRow = $sheet->getHighestRow();
 
                 // Proteger la hoja
-                // $sheet->getProtection()->setSheet(true);
+                $sheet->getProtection()->setSheet(true);
                 // $sheet->getProtection()->setPassword('tu_contraseña'); // Opcional
 
                 // Desbloquear todas las celdas
