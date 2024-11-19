@@ -150,7 +150,7 @@ class NoteController extends Controller
                                     "pdf" => isset($row["PDF"]) && $row["PDF"] == 1 ? 1 : 0,
                                 ];
 
-
+                                //prueba
 
                                 if ($student) {
                                     unset($model["password"]);
