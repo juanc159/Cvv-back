@@ -148,7 +148,6 @@ class NoteController extends Controller
                                     "password" => $row["CÉDULA"],
                                     "full_name" => $row["NOMBRES Y APELLIDOS ESTUDIANTE"],
                                     "pdf" => isset($row["PDF"]) && $row["PDF"] == 1 ? 1 : 0,
-                                    "photo" => isset($row["PHOTO"]) ? $row["PHOTO"] : null,
                                 ];
 
 
