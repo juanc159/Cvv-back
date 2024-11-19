@@ -136,8 +136,6 @@ class NoteController extends Controller
                                     "identity_document" => $row["CÉDULA"]
                                 ]);
 
-
-
                                 $model = [
                                     "id" => $student ? $student->id : null,
                                     "company_id" => $request->input("company_id"),
@@ -155,19 +153,11 @@ class NoteController extends Controller
                                 }
                                 $student = $this->studentRepository->store($model);
 
-
-
-
                                 $grade = $typeEducation->grades->where("id", $grade->id)->first();
 
                                 $subjects = $grade->subjects;
 
-
-
                                 foreach ($subjects as $key => $sub) {
-
-
-
                                     $model2 = [
                                         "student_id" => $student->id,
                                         "subject_id" => $sub->id,
@@ -187,16 +177,9 @@ class NoteController extends Controller
                                         "subject_id" => $sub->id,
                                     ];
 
-
                                     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
                                         $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
                                     }
-
-
-                                    // if ($row["CÉDULA"] = "34158972") {
-                                    //     return  $json;
-                                    // }
-
 
                                     $model2["json"] = json_encode($json);
 
