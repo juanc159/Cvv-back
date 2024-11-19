@@ -291,7 +291,6 @@ class TeacherController extends Controller
                 "company_id" => $teacher->company_id,
             ]);
 
-
             $listStudentAll = $this->studentRepository->list([
                 "typeData" => "all",
             ], ["notes"]);
@@ -301,7 +300,6 @@ class TeacherController extends Controller
 
             // Construir los encabezados
             $headers = [];
-
 
             foreach ($teacherComplementaries as $key => $value) {
 
