@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Grade\GradeSelectInifiniteResource;
 use App\Http\Resources\Settings\Country\CountrySelectResource;
+use App\Repositories\GradeRepository;
 use App\Repositories\Querys\CityRepository;
 use App\Repositories\Querys\CountryRepository;
 use App\Repositories\Querys\DepartmentRepository;
@@ -18,17 +20,20 @@ class QueryController extends Controller
     private $cityRepository;
 
     private $userRepository;
+    private $gradeRepository;
 
     public function __construct(
         CountryRepository $countryRepository,
         DepartmentRepository $departmentRepository,
         CityRepository $cityRepository,
         UserRepository $userRepository,
+        GradeRepository $gradeRepository,
     ) {
         $this->countryRepository = $countryRepository;
         $this->departmentRepository = $departmentRepository;
         $this->cityRepository = $cityRepository;
         $this->userRepository = $userRepository;
+        $this->gradeRepository = $gradeRepository;
     }
 
     public function selectCountries(Request $request)
@@ -65,5 +70,17 @@ class QueryController extends Controller
             'message' => 'Datos Encontrados',
             'cities' => $cities,
         ]);
+    }
+
+    public function selectInfiniteGrade(Request $request)
+    {
+        $grade = $this->gradeRepository->list($request->all());
+        $dataGrade = GradeSelectInifiniteResource::collection($grade);
+
+        return [
+            'code' => 200,
+            'grade_arrayInfo' => $dataGrade,
+            'grade_countLinks' => $grade->lastPage(),
+        ];
     }
 }

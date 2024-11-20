@@ -8,3 +8,5 @@ Route::get('/selectCountries', [QueryController::class, 'selectCountries'])->nam
 Route::get('/selectDepartments/{country_id}', [QueryController::class, 'selectDepartments'])->name('selectDepartments');
 Route::get('/selectCities/{department_id}', [QueryController::class, 'selectCities'])->name('selectCities');
 // Lista de Pais, Departamentos y Ciudades
+
+Route::post('/selectInfiniteGrade', [QueryController::class, 'selectInfiniteGrade']);
