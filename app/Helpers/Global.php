@@ -9,7 +9,7 @@ function getSubdomain($post)
     return $subdomain . '/';
 }
 
-function filterComponent($query, $request, $model = null)
+function filterComponent($query, &$request, $model = null)
 {
     if (isset($request["searchQuery"]) && is_string($request["searchQuery"])) {
         $request["searchQuery"] = json_decode($request["searchQuery"], 1);
@@ -56,23 +56,23 @@ function filterComponent($query, $request, $model = null)
                 }
 
                 // Verifica si el campo es null o está vacío
-                if (isset($value['type']) && !empty($value['type']) && $value['type'] == 'null') {
-                    if (isset($value['search_key']) && !empty($value['search_key'])) { // Asegúrate de que el campo esté definido
-                        $field = "photo"; // Asigna el campo dinámicamente
+                // if (isset($value['type']) && !empty($value['type']) && $value['type'] == 'null') {
+                //     if (isset($value['search_key']) && !empty($value['search_key'])) { // Asegúrate de que el campo esté definido
+                //         $field = "photo"; // Asigna el campo dinámicamente
 
-                        if ($value['search'] === 0 || $value['search'] === '0') {
-                            // Verifica si el campo es null o está vacío
-                            $query->where(function ($query) use ($field) {
-                                $query->whereNull($field)
-                                    ->orWhere($field, ''); // Campo vacío
-                            });
-                        } elseif ($value['search'] === 1 || $value['search'] === '1') {
-                            // Verifica si el campo no es null y no está vacío
-                            $query->whereNotNull($field)
-                                ->where($field, '<>', ''); // No está vacío
-                        }
-                    }
-                }
+                //         if ($value['search'] === 0 || $value['search'] === '0') {
+                //             // Verifica si el campo es null o está vacío
+                //             $query->where(function ($query) use ($field) {
+                //                 $query->whereNull($field)
+                //                     ->orWhere($field, ''); // Campo vacío
+                //             });
+                //         } elseif ($value['search'] === 1 || $value['search'] === '1') {
+                //             // Verifica si el campo no es null y no está vacío
+                //             $query->whereNotNull($field)
+                //                 ->where($field, '<>', ''); // No está vacío
+                //         }
+                //     }
+                // }
 
                 //Busqueda normal
                 if (!empty($value['input_type']) && isset($value['search']) && !empty($value['search_key'])) {

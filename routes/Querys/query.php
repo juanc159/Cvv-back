@@ -10,3 +10,4 @@ Route::get('/selectCities/{department_id}', [QueryController::class, 'selectCiti
 // Lista de Pais, Departamentos y Ciudades
 
 Route::post('/selectInfiniteGrade', [QueryController::class, 'selectInfiniteGrade']);
+Route::post('/selectInfiniteSection', [QueryController::class, 'selectInfiniteSection']);

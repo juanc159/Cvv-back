@@ -8,6 +8,7 @@ use App\Repositories\GradeRepository;
 use App\Repositories\Querys\CityRepository;
 use App\Repositories\Querys\CountryRepository;
 use App\Repositories\Querys\DepartmentRepository;
+use App\Repositories\SectionRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 
@@ -21,6 +22,7 @@ class QueryController extends Controller
 
     private $userRepository;
     private $gradeRepository;
+    private $sectionRepository;
 
     public function __construct(
         CountryRepository $countryRepository,
@@ -28,12 +30,14 @@ class QueryController extends Controller
         CityRepository $cityRepository,
         UserRepository $userRepository,
         GradeRepository $gradeRepository,
+        SectionRepository $sectionRepository,
     ) {
         $this->countryRepository = $countryRepository;
         $this->departmentRepository = $departmentRepository;
         $this->cityRepository = $cityRepository;
         $this->userRepository = $userRepository;
         $this->gradeRepository = $gradeRepository;
+        $this->sectionRepository = $sectionRepository;
     }
 
     public function selectCountries(Request $request)
@@ -81,6 +85,17 @@ class QueryController extends Controller
             'code' => 200,
             'grade_arrayInfo' => $dataGrade,
             'grade_countLinks' => $grade->lastPage(),
+        ];
+    }
+    public function selectInfiniteSection(Request $request)
+    {
+        $section = $this->sectionRepository->list($request->all());
+        $dataSection = GradeSelectInifiniteResource::collection($section);
+
+        return [
+            'code' => 200,
+            'section_arrayInfo' => $dataSection,
+            'section_countLinks' => $section->lastPage(),
         ];
     }
 }

@@ -33,6 +33,40 @@ class StudentRepository extends BaseRepository
             if (! empty($request['section_id'])) {
                 $query->where('section_id', $request['section_id']);
             }
+
+
+
+
+            if (isset($request['searchQuery']['arrayFilter']) && count($request['searchQuery']['arrayFilter']) > 0) {
+
+                $arrayFilter = $request['searchQuery']['arrayFilter'];
+
+
+
+                // Verificar si 'photoPerzonalized' está presente en el array de filtros
+                $photoPerzonalizedFilter = array_filter($arrayFilter, function ($filter) {
+                    return isset($filter['search_key']) && $filter['search_key'] === 'photoPerzonalized';
+                });
+
+
+                if (! empty($photoPerzonalizedFilter)) {
+                    $photoPerzonalizedFilter = array_shift($photoPerzonalizedFilter); // Obtener el primer elemento del filtro encontrado
+
+                    // var_dump($photoPerzonalizedFilter['search']);
+
+                    if ($photoPerzonalizedFilter['search'] === 0 || $photoPerzonalizedFilter['search'] === '0') {
+                        // Verifica si el campo es null o está vacío
+                        $query->where(function ($query)  {
+                            $query->whereNull("photo")
+                                ->orWhere("photo", ''); // Campo vacío
+                        });
+                    } elseif ($photoPerzonalizedFilter['search'] === 1 || $photoPerzonalizedFilter['search'] === '1') {
+                        // Verifica si el campo no es null y no está vacío
+                        $query->whereNotNull("photo")
+                            ->where("photo", '<>', ''); // No está vacío
+                    }
+                }
+            }
         });
 
 
