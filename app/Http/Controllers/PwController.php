@@ -329,7 +329,7 @@ class PwController extends Controller
         try {
             $company = Company::with([
                 "details" => function ($q) {
-                    $q->whereIn("type_detail_id", [6, 7, 8,13]);
+                    $q->whereIn("type_detail_id", [6, 7, 8, 13, 14, 15]);
                 }
             ])->find($company_id);
 
