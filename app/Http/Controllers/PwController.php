@@ -338,7 +338,7 @@ class PwController extends Controller
                     'type_detail_name' => $value->typeDetail?->name,
                     'icon' => $value->icon,
                     'color' => $value->color,
-                    'content' => $value->content,
+                    'content' => strpos($value->content, '|') !== false ? explode('|', $value->content) : $value->content,
                 ];
             });
 
