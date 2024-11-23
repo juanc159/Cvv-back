@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StudentListExport;
 use App\Http\Requests\Student\StudentStoreRequest;
 use App\Http\Resources\Student\StudentFormResource;
 use App\Http\Resources\Student\StudentListResource;
@@ -11,6 +12,7 @@ use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 class StudentController extends Controller
@@ -172,6 +174,31 @@ class StudentController extends Controller
         } catch (Throwable $th) {
             DB::rollback();
 
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function excelExport(Request $request)
+    {
+        try {
+
+            $filter = [
+                'typeData' => 'all',
+                'company_id' => 1,
+                // 'company_id' => $this->auth->company_id,
+            ];
+
+            $data = $this->studentRepository->list([
+                ...$filter,
+                ...$request->all()
+            ]);
+
+            $excel = Excel::raw(new StudentListExport($data), \Maatwebsite\Excel\Excel::XLSX);
+
+            $excelBase64 = base64_encode($excel);
+
+            return response()->json(['code' => 200, 'excel' => $excelBase64]);
+        } catch (Throwable $th) {
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }

@@ -27,3 +27,4 @@ Route::post('/student-planningStore', [StudentController::class, 'planningStore'
 
 Route::get('/student-resetPassword/{id}', [StudentController::class, 'resetPassword']);
 
+Route::post('/student-excelExport', [StudentController::class, 'excelExport']);
