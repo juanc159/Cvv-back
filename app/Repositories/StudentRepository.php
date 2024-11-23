@@ -41,8 +41,6 @@ class StudentRepository extends BaseRepository
 
                 $arrayFilter = $request['searchQuery']['arrayFilter'];
 
-
-
                 // Verificar si 'photoPerzonalized' está presente en el array de filtros
                 $photoPerzonalizedFilter = array_filter($arrayFilter, function ($filter) {
                     return isset($filter['search_key']) && $filter['search_key'] === 'photoPerzonalized';
