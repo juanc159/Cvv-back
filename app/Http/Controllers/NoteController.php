@@ -145,8 +145,14 @@ class NoteController extends Controller
                                     "identity_document" => $row["CÉDULA"],
                                     // "password" => $row["CÉDULA"],
                                     "full_name" => $row["NOMBRES Y APELLIDOS ESTUDIANTE"],
-                                    "pdf" => isset($row["PDF"]) && $row["PDF"] == 1 ? 1 : 0,
                                 ];
+
+                                if(isset($row["PDF"])){
+                                    $model["pdf"] = $row["PDF"] == 1 ? 1 : 0;
+                                }
+
+
+
 
                                 if ($student) {
                                     unset($model["password"]);
