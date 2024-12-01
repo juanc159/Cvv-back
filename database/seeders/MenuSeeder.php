@@ -59,7 +59,7 @@ class MenuSeeder extends Seeder
                 'order' => 60,
                 'title' => 'Banner',
                 'to' => 'Banner-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-border-inner',
                 'requiredPermission' => 'banner.list',
             ],
             [
@@ -67,7 +67,7 @@ class MenuSeeder extends Seeder
                 'order' => 70,
                 'title' => 'Materias',
                 'to' => 'Subject-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-checklist',
                 'requiredPermission' => 'subject.list',
             ],
             [
@@ -75,7 +75,7 @@ class MenuSeeder extends Seeder
                 'order' => 80,
                 'title' => 'Grados',
                 'to' => 'Grade-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-layers-intersect',
                 'requiredPermission' => 'grade.list',
             ],
             [
@@ -83,7 +83,7 @@ class MenuSeeder extends Seeder
                 'order' => 90,
                 'title' => 'Servicios',
                 'to' => 'Service-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-device-gamepad-3',
                 'requiredPermission' => 'service.list',
             ],
             [
@@ -91,7 +91,7 @@ class MenuSeeder extends Seeder
                 'order' => 100,
                 'title' => 'Estudiantes',
                 'to' => 'Student-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-users-group',
                 'requiredPermission' => 'student.list',
             ],
             [
@@ -99,7 +99,7 @@ class MenuSeeder extends Seeder
                 'order' => 110,
                 'title' => 'Docentes',
                 'to' => 'Teacher-List',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-user-square-rounded',
                 'requiredPermission' => 'teacher.list',
             ],
             [
@@ -107,7 +107,7 @@ class MenuSeeder extends Seeder
                 'order' => 120,
                 'title' => 'Notas',
                 'to' => 'Note-Index',
-                'icon' => 'mdi-account-lock-outline',
+                'icon' => 'tabler-database-edit',
                 'requiredPermission' => 'note.index',
             ],
         ];
