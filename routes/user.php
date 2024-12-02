@@ -26,5 +26,6 @@ Route::middleware(['check.permission:menu.user'])->group(function () {
 
     Route::post('/user/changeStatus', [UserController::class, 'changeStatus']);
 
-    Route::post('/user/changePassword', [UserController::class, 'changePassword']);
 });
+
+Route::post('/user/changePassword', [UserController::class, 'changePassword']);
