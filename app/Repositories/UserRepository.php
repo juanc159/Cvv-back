@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class UserRepository extends BaseRepository
 {

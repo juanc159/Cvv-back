@@ -113,5 +113,4 @@ class RoleRepository extends BaseRepository
 
         return $data;
     }
-
 }

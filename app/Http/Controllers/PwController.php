@@ -131,7 +131,7 @@ class PwController extends Controller
 
                 $teachers[] = [
                     'subject_name' => $subject->name,
-                    'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
+                    'fullName' => $value['teacher']['name'].' '.$value['teacher']['last_name'],
                     'photo' => $value['teacher']['photo'],
                     'email' => $value['teacher']['email'],
                     'phone' => $value['teacher']['phone'],
@@ -145,7 +145,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name . ' ' . $section->name;
+        $title = $grade->name.' '.$section->name;
 
         return response()->json([
             'teachers' => $teachers,
@@ -173,7 +173,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name . ' ' . $section->name;
+        $title = $grade->name.' '.$section->name;
 
         return response()->json([
             'students' => $students,
@@ -265,7 +265,7 @@ class PwController extends Controller
 
                 return [
                     'id' => $value->id,
-                    'fullName' => $value->name . ' ' . $value->last_name,
+                    'fullName' => $value->name.' '.$value->last_name,
                     'photo' => $value->photo,
                     'type_education_id' => $value->type_education_id,
                     'type_education_name' => $value->typeEducation?->name,

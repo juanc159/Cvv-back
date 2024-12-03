@@ -18,7 +18,7 @@ class StudentRepository extends BaseRepository
             filterComponent($query, $request);
 
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%' . $request['name'] . '%');
+                $query->where('name', 'like', '%'.$request['name'].'%');
             }
 
             if (! empty($request['company_id'])) {
@@ -193,13 +193,14 @@ class StudentRepository extends BaseRepository
 
         return $data;
     }
+
     public function getCountByTypeEducation($request = [])
     {
         $data = $this->model
             ->select('type_education_id', 'type_education.name', DB::raw('count(*) as total'))
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id') // Realizamos el join con la tabla 'type_education'
             ->where('students.is_active', true)
-            ->where('company_id', $request["company_id"])
+            ->where('company_id', $request['company_id'])
             ->groupBy('type_education_id', 'type_education.name') // Agrupamos también por el nombre del tipo de educación
             ->get();
 

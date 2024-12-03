@@ -496,15 +496,16 @@ class TeacherController extends Controller
             DB::beginTransaction();
             $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
 
-
             foreach ($teachers as $index => $teacher) {
                 Teacher::where('id', $teacher['id'])->update(['order' => $index]);
             }
 
             DB::commit();
-            return response()->json(["code" => 200, 'message' => 'Orden actualizado correctamente']);
+
+            return response()->json(['code' => 200, 'message' => 'Orden actualizado correctamente']);
         } catch (Throwable $th) {
             DB::rollBack();
+
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
         }
     }

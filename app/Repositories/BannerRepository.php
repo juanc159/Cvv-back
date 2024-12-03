@@ -73,5 +73,4 @@ class BannerRepository extends BaseRepository
 
         return $data;
     }
-
 }

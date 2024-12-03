@@ -60,7 +60,6 @@ class SubjectRepository extends BaseRepository
         return $data;
     }
 
-
     public function countData($request = [])
     {
         $data = $this->model->where(function ($query) use ($request) {
