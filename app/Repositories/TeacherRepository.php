@@ -20,6 +20,9 @@ class TeacherRepository extends BaseRepository
             if (! empty($request['name'])) {
                 $query->where('name', 'like', '%'.$request['name'].'%');
             }
+            if (! empty($request['type_education_id'])) {
+                $query->where('type_education_id', $request['type_education_id']);
+            }
 
             if (! empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
