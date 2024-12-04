@@ -116,36 +116,39 @@ class PwController extends Controller
             foreach ($subjects as $sub) {
                 $subject = $this->subjectRepository->find($sub);
 
-                $files = TeacherPlanning::where(function ($query) use ($value, $subject) {
-                    $query->where('teacher_id', $value->teacher_id);
-                    $query->where('grade_id', $value->grade_id);
-                    $query->where('section_id', $value->section_id);
-                    $query->where('subject_id', $subject->id);
-                })->get()->map(function ($f) {
-                    return [
-                        'name' => $f->name,
-                        'path' => $f->path,
-                        'id' => $f->id,
-                    ];
-                });
+                if ($subject) {
 
-                $teachers[] = [
-                    'subject_name' => $subject->name,
-                    'fullName' => $value['teacher']['name'].' '.$value['teacher']['last_name'],
-                    'photo' => $value['teacher']['photo'],
-                    'email' => $value['teacher']['email'],
-                    'phone' => $value['teacher']['phone'],
-                    'jobPosition' => $value['teacher']['jobPosition']['name'],
-                    'files' => $files,
-                    'backgroundColor' => $color,
-                ];
-            }
+                    $files = TeacherPlanning::where(function ($query) use ($value, $subject) {
+                        $query->where('teacher_id', $value->teacher_id);
+                        $query->where('grade_id', $value->grade_id);
+                        $query->where('section_id', $value->section_id);
+                        // $query->where('subject_id', $subject->id);
+                    })->get()->map(function ($f) {
+                        return [
+                            'name' => $f->name,
+                            'path' => $f->path,
+                            'id' => $f->id,
+                        ];
+                    });
+
+                    $teachers[] = [
+                        'subject_name' => $subject->name,
+                        'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
+                        'photo' => $value['teacher']['photo'],
+                        'email' => $value['teacher']['email'],
+                        'phone' => $value['teacher']['phone'],
+                        'jobPosition' => $value['teacher']['jobPosition']['name'],
+                        'files' => $files,
+                        'backgroundColor' => $color,
+                    ];
+                }
+            } 
         }
 
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'teachers' => $teachers,
@@ -173,7 +176,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'students' => $students,
@@ -265,7 +268,7 @@ class PwController extends Controller
 
                 return [
                     'id' => $value->id,
-                    'fullName' => $value->name.' '.$value->last_name,
+                    'fullName' => $value->name . ' ' . $value->last_name,
                     'photo' => $value->photo,
                     'type_education_id' => $value->type_education_id,
                     'type_education_name' => $value->typeEducation?->name,

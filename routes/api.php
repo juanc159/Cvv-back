@@ -3,6 +3,7 @@
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,6 @@ Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning']
 
 Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
 Route::post('/note-store', [NoteController::class, 'store']);
+
+
+Route::post('/user/changePassword', [UserController::class, 'changePassword']);
