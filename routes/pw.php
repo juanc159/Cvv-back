@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\PwController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -48,3 +49,6 @@ Route::get('/pw-service/{service_id}', [PwController::class, 'service'])->name('
 Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
 
 Route::post('/changePassword', [PassportAuthController::class, 'changePassword']);
+
+
+Route::post('/user/changePassword', [UserController::class, 'changePassword']);

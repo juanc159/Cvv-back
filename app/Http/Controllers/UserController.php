@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Resources\User\UserFormResource;
 use App\Http\Resources\User\UserListResource;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Repositories\CompanyRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
@@ -188,13 +190,21 @@ class UserController extends Controller
     }
 
     public function changePassword(Request $request)
-    {
-
+    { 
         // Obtener el usuario autenticado
-        $user = $this->userRepository->find($request->input('id'));
+
+        if($request->input("type_user")=='teacher'){
+            $user = Teacher::find($request->input("id")); 
+        }
+        if($request->input("type_user")=='student'){
+            $user = Student::find($request->input("id")); 
+        }
+        if($request->input("type_user")=='admin'){ 
+            $user = $this->userRepository->find($request->input('id'));
+        }
 
         // Cambiar la contraseña
-        $user->password = $request->input('new_password');
+         $user->password = $request->input('new_password');
         $user->save();
 
         return response()->json(['code' => 200, 'message' => 'Contraseña modificada con éxito.']);

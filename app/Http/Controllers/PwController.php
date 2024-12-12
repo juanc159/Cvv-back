@@ -142,7 +142,7 @@ class PwController extends Controller
                         'backgroundColor' => $color,
                     ];
                 }
-            } 
+            }
         }
 
         $grade = $this->gradeRepository->find($grade_id);
@@ -187,16 +187,10 @@ class PwController extends Controller
     public function pdfPNote($id)
     {
         try {
-            $rutaImagen = public_path('/img/firma.png');
-            if (file_exists($rutaImagen)) {
-                $contenidoImagen = file_get_contents($rutaImagen);
-                $firma = base64_encode($contenidoImagen);
-            }
-
             $fecha = Carbon::now();
             $fecha->setLocale('es');
 
-            $student = $this->studentRepository->find($id, ['typeEducation', 'notes.subject', 'grade', 'section']);
+            $student = $this->studentRepository->find($id, ['typeEducation.note_selections', 'notes.subject', 'grade', 'section']);
             if ($student) {
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,

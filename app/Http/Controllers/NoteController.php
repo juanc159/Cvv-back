@@ -40,7 +40,7 @@ class NoteController extends Controller
         Cache::put('Cache_Grade', Grade::get(), now()->addMinutes(60));
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
-        $typeEducations = $this->typeEducationRepository->selectList();
+        $typeEducations = $this->typeEducationRepository->selectList(select:["cantNotes"]);
         $blockData = BlockData::where('name', Constants::BLOCK_PAYROLL_UPLOAD)->first()->is_active;
 
         return response()->json([

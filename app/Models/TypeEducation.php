@@ -10,6 +10,15 @@ class TypeEducation extends Model
 {
     use HasFactory, HasUuids;
 
+
+    protected function casts(): array
+    {
+        return [
+            'cantNotes' => 'integer',
+            'is_active' => 'boolean',
+        ];
+    }
+
     public function subjects()
     {
         return $this->hasMany(Subject::class, 'type_education_id', 'id');
@@ -18,5 +27,10 @@ class TypeEducation extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class, 'type_education_id', 'id');
+    }
+
+    public function note_selections()
+    {
+        return $this->hasMany(TypeEducationNoteSelection::class, 'type_education_id', 'id');
     }
 }

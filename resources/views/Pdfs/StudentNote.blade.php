@@ -65,8 +65,7 @@
 
     <!-- IMAGEN DE ENCABEZADO -->
     <header>
-        <img src="{{ public_path('img/header.png') }}"
-            style="width: 100%;">
+        <img src="{{ public_path('img/header.png') }}" style="width: 100%;">
     </header>
 
     <footer>
@@ -118,24 +117,63 @@
                 <tr>
                     <th>&nbsp;</th>
                     @for ($i = 1; $i <= $data['student']['typeEducation']['cantNotes']; $i++)
-                        <th>NOTA {{ $i }}</th>
+                        @php
+                            $isNoteSelected = false;
+                            foreach ($data['student']['typeEducation']->note_selections as $selection) {
+                                if ($selection->note_number == $i && $selection->is_selected) {
+                                    $isNoteSelected = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+
+                        @if ($isNoteSelected)
+                            <th>NOTA {{ $i }}</th>
+                        @endif
                     @endfor
                 </tr>
+
+
                 @foreach ($data['student']['notes'] as $key => $nota)
                     <tr>
                         <td style="text-align: center; font-size: 15px;"><span> {{ $nota['subject']['name'] }}</span>
                         </td>
 
                         @php
-                            $valores = json_decode($nota['json'], 1);
+                            $valores = json_decode($nota['json'], true); // Decodificar como array asociativo
+                            $noteSelections = $data['student']['typeEducation']->note_selections;
                         @endphp
-                        @foreach ($valores as $key => $val)
+                        {{-- @foreach ($valores as $key => $val)
                             <td
                                 style="border: 1px solid rgb(119, 119, 119); padding-left: 8px; padding-right: 8px; padding: 4px; text-align: center;">
                                 <span>{{ $val }}</span>
                             </td>
+                        @endforeach --}}
+
+
+
+                        @foreach ($valores as $key => $val)
+                            @php
+                                $isNoteSelected = false;
+                                foreach ($noteSelections as $selection) {
+                                    if ($selection->note_number == $key && $selection->is_selected) {
+                                        $isNoteSelected = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+
+                            @if ($isNoteSelected )
+                                <td style="border: 1px solid rgb(119, 119, 119); padding-left: 8px; padding-right: 8px; padding: 4px; text-align: center;">
+                                    <span>{{ $val }}</span>
+                                </td>
+                            @endif
                         @endforeach
-                    </tr>
+
+
+
+
+                </tr>
                 @endforeach
 
 

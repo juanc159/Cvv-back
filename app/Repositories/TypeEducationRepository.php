@@ -65,7 +65,7 @@ class TypeEducationRepository extends BaseRepository
         })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [
                 'value' => $value->$fieldValue,
-                'title' => $value->$fieldTitle,
+                'title' => $value->$fieldTitle, 
             ];
 
             if (count($select) > 0) {

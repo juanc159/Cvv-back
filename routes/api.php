@@ -21,4 +21,3 @@ Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
 Route::post('/note-store', [NoteController::class, 'store']);
 
 
-Route::post('/user/changePassword', [UserController::class, 'changePassword']);
