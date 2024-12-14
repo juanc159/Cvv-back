@@ -3,7 +3,6 @@
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,3 +20,23 @@ Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
 Route::post('/note-store', [NoteController::class, 'store']);
 
 
+
+
+Route::post('/savefiles', [NoteController::class, 'savefiles']);
+
+
+Route::get('/file/download', function (Request $request) {
+    try {
+
+        $ruta = public_path('/storage/' . $request->input("file"));
+        // Verificar si el archivo existe
+        if (!file_exists($ruta)) {
+            return response()->json(['code' => 404, 'message' => 'Archivo no encontrado']);
+        }
+
+        // Descargar el archivo
+        return response()->download($ruta);
+    } catch (\Throwable $th) {
+        return response()->json(['code' => 500, 'message' => 'Error al buscar los datos', 'error' => $th->getMessage()]);
+    }
+});

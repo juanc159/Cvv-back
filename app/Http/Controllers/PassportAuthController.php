@@ -260,6 +260,7 @@ class PassportAuthController extends Controller
             $obj['id'] = $user->id;
             $obj['full_name'] = $user->full_name;
             $obj['photo'] = $user->photo_url;
+            $obj['identity_document'] = $user->identity_document;
 
             //colegio
             $obj['company_id'] = $user->company_id;
@@ -278,6 +279,7 @@ class PassportAuthController extends Controller
 
             $obj['first_time'] = $user->first_time;
             $obj['pdf'] = $user->pdf;
+            $obj['boletin'] = $user->boletin;
             $obj['type_user'] = 'student';
 
             $company = $user->company;

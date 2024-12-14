@@ -205,7 +205,7 @@ class PwController extends Controller
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
         }
-    }
+    } 
 
     public function linksMenu($company_id)
     {

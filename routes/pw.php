@@ -22,29 +22,30 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Principal
-Route::get('/pw-dataPrincipal', [PwController::class, 'dataPrincipal'])->name('pw.dataPrincipal');
+Route::get('/pw-dataPrincipal', [PwController::class, 'dataPrincipal']);
 // Principal
 
 // School
-Route::get('/pw-dataSchool/{id}', [PwController::class, 'dataSchool'])->name('pw.dataSchool');
+Route::get('/pw-dataSchool/{id}', [PwController::class, 'dataSchool']);
 // School
 
 // School
-Route::get('/pw-dataGradeSection/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSection'])->name('pw.dataGradeSection');
+Route::get('/pw-dataGradeSection/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSection']);
 // School
 
 // School
-Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSectionNotes'])->name('pw.dataGradeSectionNotes');
+Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwController::class, 'dataGradeSectionNotes']);
 // School
 
-Route::get('/pw-pdfNote/{id}', [PwController::class, 'pdfPNote'])->name('pw.pdfPNote');
+Route::get('/pw-pdfNote/{id}', [PwController::class, 'pdfPNote']);
 
-Route::get('/pw-linksMenu/{company_id}', [PwController::class, 'linksMenu'])->name('pw.linksMenu');
-Route::get('/pw-banners/{company_id}', [PwController::class, 'banners'])->name('pw.banners');
-Route::get('/pw-teachers/{company_id}', [PwController::class, 'teachers'])->name('pw.teachers');
-Route::get('/pw-contactData/{company_id}', [PwController::class, 'contactData'])->name('pw.contactData');
-Route::get('/pw-services/{company_id}', [PwController::class, 'services'])->name('pw.services');
-Route::get('/pw-service/{service_id}', [PwController::class, 'service'])->name('pw.service');
+
+Route::get('/pw-linksMenu/{company_id}', [PwController::class, 'linksMenu']);
+Route::get('/pw-banners/{company_id}', [PwController::class, 'banners']);
+Route::get('/pw-teachers/{company_id}', [PwController::class, 'teachers']);
+Route::get('/pw-contactData/{company_id}', [PwController::class, 'contactData']);
+Route::get('/pw-services/{company_id}', [PwController::class, 'services']);
+Route::get('/pw-service/{service_id}', [PwController::class, 'service']);
 
 Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
 

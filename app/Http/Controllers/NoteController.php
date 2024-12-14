@@ -7,6 +7,7 @@ use App\Helpers\Constants;
 use App\Models\BlockData;
 use App\Models\Grade;
 use App\Models\Section;
+use App\Models\Student;
 use App\Repositories\BlockDataRepository;
 use App\Repositories\NoteRepository;
 use App\Repositories\StudentRepository;
@@ -40,7 +41,7 @@ class NoteController extends Controller
         Cache::put('Cache_Grade', Grade::get(), now()->addMinutes(60));
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
-        $typeEducations = $this->typeEducationRepository->selectList(select:["cantNotes"]);
+        $typeEducations = $this->typeEducationRepository->selectList(select: ["cantNotes"]);
         $blockData = BlockData::where('name', Constants::BLOCK_PAYROLL_UPLOAD)->first()->is_active;
 
         return response()->json([
@@ -170,7 +171,7 @@ class NoteController extends Controller
                                     ];
 
                                     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                        $json[$xx] = isset($row[$sub->code.$xx]) ? trim($row[$sub->code.$xx]) : (isset($json[$xx]) ? $json[$xx] : null);
+                                        $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
                                     }
 
                                     $model2['json'] = json_encode($json);
@@ -226,7 +227,7 @@ class NoteController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Carga de archivos '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Carga de archivos ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -362,7 +363,7 @@ class NoteController extends Controller
             // Agrupando por `identity_document` y `full_name` (o cualquier clave común)
             $students = $studentsCollection->reduce(function ($carry, $item) {
                 // Buscar si ya existe un registro con el mismo `identity_document` y `full_name`
-                $key = $item['identity_document'].'|'.$item['full_name'];
+                $key = $item['identity_document'] . '|' . $item['full_name'];
 
                 if (! isset($carry[$key])) {
                     $carry[$key] = $item; // Si no existe, añadir el item
@@ -387,6 +388,65 @@ class NoteController extends Controller
             }
         } catch (Throwable $th) {
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
+    }
+
+    public function savefiles(Request $request)
+    {
+        $field = $request->input('field');
+
+        $responseMessages = []; // Aquí guardaremos los mensajes de cada archivo
+
+        // Verificar si los archivos han sido subidos
+        if ($request->hasFile('file')) {
+
+            try {
+
+                // Obtener los archivos
+                $file = $request->file('file');
+
+                // Obtener el nombre del archivo sin extensión
+                $fileNameWithoutExtension = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+
+                // Buscar el estudiante con ese documento de identidad
+                $student = Student::where('identity_document', $fileNameWithoutExtension)->first();
+
+                // Si el estudiante existe, actualizamos el campo 'photo'
+                if ($student) {
+                    // Guardar el archivo en la carpeta 'students' 
+                    $path = $file->store('company_' . $student->company_id . '/student/student_' . $student->id . $request->input('file'), 'public');
+
+                    // Actualizar el campo 'photo'
+                    $student->$field = $path;
+                    $student->save();
+
+                    // Agregar mensaje de éxito al array
+                    $responseMessages[] = [
+                        'file' => $file->getClientOriginalName(),
+                        'message' => 'Archivo guardado y foto actualizada correctamente',
+                    ];
+                } else {
+                    // Si el estudiante no existe, agregar mensaje de error
+                    $responseMessages[] = [
+                        'file' => $file->getClientOriginalName(),
+                        'message' => 'Estudiante no encontrado para ese documento de identidad',
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Capturar excepciones y agregar mensaje de error al array
+                $responseMessages[] = [
+                    'file' => $file->getClientOriginalName(),
+                    'message' => 'Error al guardar el archivo: ' . $e->getMessage(),
+                ];
+            }
+
+            // Responder con los mensajes de cada archivo
+            return response()->json([
+                'code' => 200,
+                'messages' => $responseMessages,
+            ], 200);
+        } else {
+            return response()->json(['message' => 'No se han enviado archivos'], 400);
         }
     }
 }
