@@ -122,7 +122,7 @@ class PermissionSeeder extends Seeder
             [
                 'id' => 18,
                 'name' => 'note.reset_option_download_pdf',
-                'description' => 'Reinicar opción descarga pdf y boletin',
+                'description' => 'Reiniciar opción descarga pdf y boletin',
                 'menu_id' => 12,
             ],
         ];
