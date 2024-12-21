@@ -355,10 +355,6 @@ class NoteController extends Controller
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
-            // Eliminar duplicados por 'id'
-            // return  $students = $studentsCollection->reduce(function ($carry, $item) {
-            //     return array_merge($carry, $item);
-            // }, []);
 
             // Agrupando por `identity_document` y `full_name` (o cualquier clave común)
             $students = $studentsCollection->reduce(function ($carry, $item) {
@@ -447,6 +443,27 @@ class NoteController extends Controller
             ], 200);
         } else {
             return response()->json(['message' => 'No se han enviado archivos'], 400);
+        }
+    }
+
+    public function resetOptionDownloadPdf(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request["typeData"] = "all";
+              $students = $this->studentRepository->list($request->all());
+            foreach ($students as $key => $value) {
+                $value->pdf = null;
+                $value->save();
+            }
+            DB::commit();
+
+            return response()->json(['code' => 200, 'message' => 'Se ha reiniciado la opción de pdf en el consolidado']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
 }

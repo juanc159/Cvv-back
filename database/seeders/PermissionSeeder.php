@@ -89,6 +89,42 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Módulo Notas',
                 'menu_id' => 12,
             ],
+            [
+                'id' => 13,
+                'name' => 'note.upload_notes',
+                'description' => 'Cargar Notas',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 14,
+                'name' => 'note.download_notes',
+                'description' => 'Descargar Notas',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 15,
+                'name' => 'note.block_uploading_of_grades_to_teachers',
+                'description' => 'Bloquear carga de notas a los profesores',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 16,
+                'name' => 'note.viewing_notes',
+                'description' => 'Visualización de las notas',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 17,
+                'name' => 'note.bulk_file_upload',
+                'description' => 'Carga de archivos masivos',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 18,
+                'name' => 'note.reset_option_download_pdf',
+                'description' => 'Reinicar opción descarga pdf y boletin',
+                'menu_id' => 12,
+            ],
         ];
 
         // Inicializar la barra de progreso

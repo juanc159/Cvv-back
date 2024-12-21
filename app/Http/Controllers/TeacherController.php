@@ -110,7 +110,7 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -208,7 +208,7 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -285,7 +285,7 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Teacher '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Teacher ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -324,13 +324,13 @@ class TeacherController extends Controller
                     ->where('type_education_id', $teacher->type_education_id)
                     ->where('grade_id', $value->grade_id)
                     ->where('section_id', $value->section_id);
-
+            
                 $list = $list->sortBy('full_name');
-
+            
                 $subjectIds = explode(',', $value->subject_ids);
-
+            
                 $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
-
+            
                 if (count($list) > 0) {
                     foreach ($list as $key2 => $value2) {
                         // Inicializa un array para los códigos de materias
@@ -341,30 +341,30 @@ class TeacherController extends Controller
                             'identity_document' => $value2->identity_document,
                             'full_name' => $value2->full_name,
                         ];
-
+            
                         // Agregar códigos como keys basadas en la cantidad de notas
                         for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
+            
                             foreach ($filteredSubjects as $subject) {
-
                                 $code = "{$subject->code}{$i}";
-
+            
                                 // Verifica si ya existe un array para este grado
                                 if (! isset($headers[$value->grade->name])) {
                                     $headers[$value->grade->name] = []; // Inicializa el array si no existe
                                 }
-
+            
                                 // Agrega el código si no existe
                                 if (! in_array($code, $headers[$value->grade->name])) {
                                     $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
                                 }
-
+            
                                 // Intenta obtener las notas para el subject_id correspondiente
                                 $notes = $value2->notes->where('subject_id', $subject->id)->first(); // Cambia aquí para usar el ID correcto
-
+            
                                 // Verifica si se encontraron notas y decodifica
                                 if ($notes) {
                                     $notesArray = json_decode($notes->json, true); // Cambia a `true` para obtener un array asociativo
-
+            
                                     // Asigna la nota correspondiente si existe
                                     if (isset($notesArray[$i])) { // Ajustar índice
                                         // Verifica si ya existe
@@ -380,11 +380,34 @@ class TeacherController extends Controller
                                 }
                             }
                         }
-
-                        $students[] = $studentData; // Agrega el estudiante completo al array
+            
+                        // Verifica si el estudiante ya existe en el array
+                        if (isset($students[$value2->identity_document])) {
+                            // Si ya existe, fusiona los datos
+                            $existingStudentData = $students[$value2->identity_document];
+            
+                            // Fusionamos las notas
+                            foreach ($studentData as $key => $newValue) {
+                                if ($key !== 'identity_document' && $key !== 'full_name' && $key !== 'nro' && $key !== 'grade' && $key !== 'section') {
+                                    // Si ya existe una nota, la mantenemos (no sobrescribir)
+                                    if (! isset($existingStudentData[$key]) || $existingStudentData[$key] === null) {
+                                        $existingStudentData[$key] = $newValue;
+                                    }
+                                }
+                            }
+            
+                            // Actualiza el array con la nueva información combinada
+                            $students[$value2->identity_document] = $existingStudentData;
+                        } else {
+                            // Si no existe, simplemente agrega el estudiante
+                            $students[$value2->identity_document] = $studentData;
+                        }
                     }
                 }
             }
+            
+            
+
 
             // Ordenando los header de las materias
             $headers = collect($headers)->map(function ($subjects) {
@@ -392,12 +415,8 @@ class TeacherController extends Controller
 
                 return $subjects;
             });
+ 
 
-            // Convertir el array a una colección
-            $studentsCollection = collect($students);
-
-            // Eliminar duplicados por 'id'
-            $students = $studentsCollection->unique('identity_document')->values()->all();
 
             if (count($students) > 0) {
                 $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
@@ -455,22 +474,22 @@ class TeacherController extends Controller
             $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
             for ($i = 0; $i < $request->input('files_cant'); $i++) {
-                if ($request->input('file_delete_'.$i) == 1) {
-                    $this->teacherPlanningRepository->delete($request->input('file_id_'.$i));
+                if ($request->input('file_delete_' . $i) == 1) {
+                    $this->teacherPlanningRepository->delete($request->input('file_id_' . $i));
                 } else {
                     $teacherPlanning = $this->teacherPlanningRepository->store([
-                        'id' => $request->input('file_id_'.$i) === 'null' ? null : $request->input('file_id_'.$i),
+                        'id' => $request->input('file_id_' . $i) === 'null' ? null : $request->input('file_id_' . $i),
                         'teacher_id' => $teacher->id,
-                        'grade_id' => $request->input('file_grade_id_'.$i),
-                        'section_id' => $request->input('file_section_id_'.$i),
-                        'subject_id' => $request->input('file_subject_id_'.$i),
-                        'path' => $request->input('file_file_'.$i),
-                        'name' => $request->input('file_name_'.$i),
+                        'grade_id' => $request->input('file_grade_id_' . $i),
+                        'section_id' => $request->input('file_section_id_' . $i),
+                        'subject_id' => $request->input('file_subject_id_' . $i),
+                        'path' => $request->input('file_file_' . $i),
+                        'name' => $request->input('file_name_' . $i),
                     ]);
 
-                    if ($request->file('file_file_'.$i)) {
-                        $file = $request->file('file_file_'.$i);
-                        $path = $file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_'.$i), 'public');
+                    if ($request->file('file_file_' . $i)) {
+                        $file = $request->file('file_file_' . $i);
+                        $path = $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_' . $i), 'public');
                         $teacherPlanning->path = $path;
                         $teacherPlanning->save();
                     }

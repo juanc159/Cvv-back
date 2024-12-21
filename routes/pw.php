@@ -48,8 +48,5 @@ Route::get('/pw-services/{company_id}', [PwController::class, 'services']);
 Route::get('/pw-service/{service_id}', [PwController::class, 'service']);
 
 Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
-
-Route::post('/changePassword', [PassportAuthController::class, 'changePassword']);
-
-
+ 
 Route::post('/user/changePassword', [UserController::class, 'changePassword']);
