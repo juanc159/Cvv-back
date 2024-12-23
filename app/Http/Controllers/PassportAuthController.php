@@ -235,10 +235,10 @@ class PassportAuthController extends Controller
         $obj['type_user'] = 'teacher';
 
         $obj['blockData'] = false;
-        // $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
-        // if ($blockData) {
-        //     $obj['blockData'] = $blockData->is_active;
-        // }
+        return$blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
+        if ($blockData) {
+            $obj['blockData'] = $blockData->is_active;
+        }
 
         $company = $user->company;
 
