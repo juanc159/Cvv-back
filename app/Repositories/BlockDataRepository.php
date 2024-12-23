@@ -81,4 +81,11 @@ class BlockDataRepository extends BaseRepository
 
         return $data;
     }
+
+    public function searchByName($name)
+    {
+        $data = $this->model->where('name', $name)->first();
+
+        return $data;
+    }
 }
