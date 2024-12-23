@@ -92,25 +92,25 @@ class NoteController extends Controller
                                     });
                             });
 
-                        foreach ($groupedCedulas as $key => $value) {
-                            // $grade = Grade::where("name", $key)->first();
-                            $grade = $this->grade($key, 'name');
-                            if ($grade) {
-                                foreach ($value as $key2 => $value2) {
-                                    // $section = Section::where("name", trim($key2))->first();
-                                    $section = $this->section($key2, 'name');
-                                    if ($section) {
-                                        $this->studentRepository->deleteDataArray([
-                                            'company_id' => $request->input('company_id'),
-                                            'identity_document' => $value2,
-                                            'type_education_id' => $request->input('type_education_id'),
-                                            'grade_id' => $grade->id,
-                                            'section_id' => $section->id,
-                                        ]);
-                                    }
-                                }
-                            }
-                        }
+                        // foreach ($groupedCedulas as $key => $value) {
+                        //     // $grade = Grade::where("name", $key)->first();
+                        //     $grade = $this->grade($key, 'name');
+                        //     if ($grade) {
+                        //         foreach ($value as $key2 => $value2) {
+                        //             // $section = Section::where("name", trim($key2))->first();
+                        //             $section = $this->section($key2, 'name');
+                        //             if ($section) {
+                        //                 $this->studentRepository->deleteDataArray([
+                        //                     'company_id' => $request->input('company_id'),
+                        //                     'identity_document' => $value2,
+                        //                     'type_education_id' => $request->input('type_education_id'),
+                        //                     'grade_id' => $grade->id,
+                        //                     'section_id' => $section->id,
+                        //                 ]);
+                        //             }
+                        //         }
+                        //     }
+                        // }
 
                         // Obtener todos los estudiantes cuyos cedulas NO están en el array
 
