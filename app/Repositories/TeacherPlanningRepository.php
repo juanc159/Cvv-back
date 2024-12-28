@@ -87,4 +87,11 @@ class TeacherPlanningRepository extends BaseRepository
 
         return $data;
     }
+
+    public function deleteArray($arrayIds, $teacher_id)
+    {
+        $data = $this->model->whereNotIn('id', $arrayIds)->where('teacher_id', $teacher_id)->delete();
+
+        return $data;
+    }
 }
