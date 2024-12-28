@@ -110,6 +110,14 @@ class MenuSeeder extends Seeder
                 'icon' => 'tabler-database-edit',
                 'requiredPermission' => 'note.index',
             ],
+            [
+                'id' => 13,
+                'order' => 130,
+                'title' => 'Backup',
+                'to' => 'Note-Index',
+                'icon' => 'tabler-database-edit',
+                'requiredPermission' => 'note.index',
+            ],
         ];
 
         // Inicializar la barra de progreso

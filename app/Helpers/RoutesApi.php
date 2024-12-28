@@ -24,5 +24,6 @@ class RoutesApi
         'routes/teacher.php',
         'routes/note.php',
         'routes/dashboard.php',
+        'routes/backup.php',
     ];
 }
