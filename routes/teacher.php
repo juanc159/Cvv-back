@@ -27,10 +27,12 @@ Route::middleware(['check.permission:teacher.list'])->group(function () {
     Route::post('/teacher/changeStatus', [TeacherController::class, 'changeStatus']);
 
     Route::get('/teacher-resetPassword/{id}', [TeacherController::class, 'resetPassword']);
-
+    
     Route::get('/teacher-planning/{id?}', [TeacherController::class, 'planning']);
-
+    
     Route::post('/teacher-planningStore', [TeacherController::class, 'planningStore']);
-
+    
     Route::put('/teachers/order', [TeacherController::class, 'updateOrder']);
+
+    Route::delete('/teacher-resetPlanifications', [TeacherController::class, 'resetPlanifications']);
 });

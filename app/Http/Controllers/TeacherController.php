@@ -7,7 +7,9 @@ use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
 use App\Http\Resources\Teacher\TeacherPlanningResource;
+use App\Jobs\BrevoProcessSendEmail;
 use App\Models\Teacher;
+use App\Repositories\CompanyRepository;
 use App\Repositories\JobPositionRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
@@ -17,6 +19,7 @@ use App\Repositories\TeacherPlanningRepository;
 use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
@@ -32,6 +35,7 @@ class TeacherController extends Controller
         protected SubjectRepository $subjectRepository,
         protected StudentRepository $studentRepository,
         protected TeacherPlanningRepository $teacherPlanningRepository,
+        protected CompanyRepository $companyRepository,
     ) {}
 
     public function list(Request $request)
@@ -324,13 +328,13 @@ class TeacherController extends Controller
                     ->where('type_education_id', $teacher->type_education_id)
                     ->where('grade_id', $value->grade_id)
                     ->where('section_id', $value->section_id);
-            
+
                 $list = $list->sortBy('full_name');
-            
+
                 $subjectIds = explode(',', $value->subject_ids);
-            
+
                 $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
-            
+
                 if (count($list) > 0) {
                     foreach ($list as $key2 => $value2) {
                         // Inicializa un array para los códigos de materias
@@ -341,30 +345,30 @@ class TeacherController extends Controller
                             'identity_document' => $value2->identity_document,
                             'full_name' => $value2->full_name,
                         ];
-            
+
                         // Agregar códigos como keys basadas en la cantidad de notas
                         for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
-            
+
                             foreach ($filteredSubjects as $subject) {
                                 $code = "{$subject->code}{$i}";
-            
+
                                 // Verifica si ya existe un array para este grado
                                 if (! isset($headers[$value->grade->name])) {
                                     $headers[$value->grade->name] = []; // Inicializa el array si no existe
                                 }
-            
+
                                 // Agrega el código si no existe
                                 if (! in_array($code, $headers[$value->grade->name])) {
                                     $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
                                 }
-            
+
                                 // Intenta obtener las notas para el subject_id correspondiente
                                 $notes = $value2->notes->where('subject_id', $subject->id)->first(); // Cambia aquí para usar el ID correcto
-            
+
                                 // Verifica si se encontraron notas y decodifica
                                 if ($notes) {
                                     $notesArray = json_decode($notes->json, true); // Cambia a `true` para obtener un array asociativo
-            
+
                                     // Asigna la nota correspondiente si existe
                                     if (isset($notesArray[$i])) { // Ajustar índice
                                         // Verifica si ya existe
@@ -380,12 +384,12 @@ class TeacherController extends Controller
                                 }
                             }
                         }
-            
+
                         // Verifica si el estudiante ya existe en el array
                         if (isset($students[$value2->identity_document])) {
                             // Si ya existe, fusiona los datos
                             $existingStudentData = $students[$value2->identity_document];
-            
+
                             // Fusionamos las notas
                             foreach ($studentData as $key => $newValue) {
                                 if ($key !== 'identity_document' && $key !== 'full_name' && $key !== 'nro' && $key !== 'grade' && $key !== 'section') {
@@ -395,7 +399,7 @@ class TeacherController extends Controller
                                     }
                                 }
                             }
-            
+
                             // Actualiza el array con la nueva información combinada
                             $students[$value2->identity_document] = $existingStudentData;
                         } else {
@@ -405,8 +409,8 @@ class TeacherController extends Controller
                     }
                 }
             }
-            
-            
+
+
 
 
             // Ordenando los header de las materias
@@ -415,7 +419,7 @@ class TeacherController extends Controller
 
                 return $subjects;
             });
- 
+
 
 
             if (count($students) > 0) {
@@ -438,16 +442,37 @@ class TeacherController extends Controller
             DB::beginTransaction();
 
             // Buscar al usuario por ID
-            $model = $this->teacherRepository->find($id);
-            if (! $model) {
+            $teacher = $this->teacherRepository->find($id);
+            if (! $teacher) {
                 return response()->json(['message' => 'Usuario no encontrado'], 404);
             }
 
             // Actualizar la contraseña
-            $model->password = 123456;
-            $model->save();
+            $teacher->password = 123456;
+            $teacher->save();
 
             DB::commit();
+
+            $user_admin = auth()->user();
+            $company_name = $teacher->company?->name;
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $teacher->full_name,
+                        "email" => $teacher->email,
+                    ]
+                ],
+                subject: "Tu contraseña ha sido reiniciada por el administrador",
+                templateId: 3,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $teacher->full_name, 
+                    "user_admin" => $user_admin->full_name, 
+                    "new_password" => "123456",
+                    "company_name" => $company_name, 
+                ],
+            );
 
             return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
         } catch (Throwable $th) {
@@ -470,29 +495,56 @@ class TeacherController extends Controller
     public function planningStore(Request $request)
     {
         try {
+
             DB::beginTransaction();
-            $teacher = $this->teacherRepository->find($request->input('teacher_id'), ['complementaries']);
 
-            for ($i = 0; $i < $request->input('files_cant'); $i++) {
-                if ($request->input('file_delete_' . $i) == 1) {
-                    $this->teacherPlanningRepository->delete($request->input('file_id_' . $i));
-                } else {
-                    $teacherPlanning = $this->teacherPlanningRepository->store([
-                        'id' => $request->input('file_id_' . $i) === 'null' ? null : $request->input('file_id_' . $i),
-                        'teacher_id' => $teacher->id,
-                        'grade_id' => $request->input('file_grade_id_' . $i),
-                        'section_id' => $request->input('file_section_id_' . $i),
-                        'subject_id' => $request->input('file_subject_id_' . $i),
-                        'path' => $request->input('file_file_' . $i),
-                        'name' => $request->input('file_name_' . $i),
-                    ]);
 
-                    if ($request->file('file_file_' . $i)) {
-                        $file = $request->file('file_file_' . $i);
-                        $path = $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_' . $i), 'public');
-                        $teacherPlanning->path = $path;
-                        $teacherPlanning->save();
-                    }
+            //obtengo los ids de los archivos
+            $arrayIds = [];
+            $fileCount = $request->input('files_cant');
+
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                $fileId = $request->input('file_id_' . $i);
+                if ($fileId) {
+                    $arrayIds[] = $fileId;
+                }
+            }
+
+            $groupedData = [];
+
+            $fileCount = $request->input('files_cant'); // Obtén la cantidad de archivos
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                // Agrupar los valores correspondientes por índice
+                $groupedData[] = [
+                    'name' => $request->input("file_name_{$i}"),
+                    'id' => $request->input("file_id_{$i}"),
+                    'grade_id' => $request->input("file_grade_id_{$i}"),
+                    'section_id' => $request->input("file_section_id_{$i}"),
+                    'subject_id' => $request->input("file_subject_id_{$i}"),
+                ];
+            }
+
+            $teacher = $this->teacherRepository->find($request->input('teacher_id'));
+
+            $this->teacherPlanningRepository->deleteArray($arrayIds, $teacher->id);
+
+            foreach ($groupedData as $key => $value) {
+                $teacherPlanning = $this->teacherPlanningRepository->store([
+                    'id' => $value['id'],
+                    'teacher_id' => $teacher->id,
+                    'name' => $value['name'],
+                    'grade_id' => $value['grade_id'],
+                    'section_id' => $value['section_id'],
+                    'subject_id' => $value['subject_id'],
+                ]);
+
+                if ($request->file("file_file_{$key}")) {
+                    $file =  $request->file("file_file_{$key}");
+                    $path = $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_{$key}'), 'public');
+                    $teacherPlanning->path = $path;
+                    $teacherPlanning->save();
                 }
             }
 
@@ -526,6 +578,43 @@ class TeacherController extends Controller
             DB::rollBack();
 
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
+    }
+
+    public function resetPlanifications(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Eliminar todas las planificaciones
+            $this->teacherPlanningRepository->deleteAll($request->company_id);
+
+            DB::commit();
+
+            $auth = auth()->user();
+            $company_name = $this->companyRepository->find($request->company_id)->name;
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $auth->full_name,
+                        "email" => $auth->email,
+                    ]
+                ],
+                subject: "Las planificaciones han sido reiniciadas (eliminadas)",
+                templateId: 2,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $auth->full_name, 
+                    "company_name" => $company_name, 
+                ],
+            );
+
+            return response()->json(['code' => 200, 'message' => 'Planificaciones reinicidas con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
 }

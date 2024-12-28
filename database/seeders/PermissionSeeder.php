@@ -125,6 +125,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Reiniciar opción descarga pdf y boletin',
                 'menu_id' => 12,
             ],
+            [
+                'id' => 19,
+                'name' => 'teacher.reset_planifications',
+                'description' => 'Reiniciar planificaciones',
+                'menu_id' => 11,
+            ],
         ];
 
         // Inicializar la barra de progreso

@@ -28,7 +28,7 @@ class TeacherPlanningRepository extends BaseRepository
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
+                    $query->orWhere('name', 'like', '%' . $request['searchQuery'] . '%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -87,4 +87,21 @@ class TeacherPlanningRepository extends BaseRepository
 
         return $data;
     }
+
+    public function deleteArray($arrayIds, $teacher_id)
+    {
+        $data = $this->model->whereNotIn('id', $arrayIds)->where('teacher_id', $teacher_id)->delete();
+
+        return $data;
+    }
+
+
+    public function deleteAll($company_id)
+    {
+        $data = $this->model->whereHas('teacher', function ($query) use ($company_id) {
+            $query->where('company_id', $company_id);
+        })->delete();
+
+        return $data;
+    } 
 }
