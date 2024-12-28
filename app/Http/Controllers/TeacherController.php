@@ -7,7 +7,9 @@ use App\Http\Requests\Teacher\TeacherStoreRequest;
 use App\Http\Resources\Teacher\TeacherFormResource;
 use App\Http\Resources\Teacher\TeacherListResource;
 use App\Http\Resources\Teacher\TeacherPlanningResource;
+use App\Jobs\BrevoProcessSendEmail;
 use App\Models\Teacher;
+use App\Repositories\CompanyRepository;
 use App\Repositories\JobPositionRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
@@ -17,6 +19,7 @@ use App\Repositories\TeacherPlanningRepository;
 use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
@@ -32,6 +35,7 @@ class TeacherController extends Controller
         protected SubjectRepository $subjectRepository,
         protected StudentRepository $studentRepository,
         protected TeacherPlanningRepository $teacherPlanningRepository,
+        protected CompanyRepository $companyRepository,
     ) {}
 
     public function list(Request $request)
@@ -438,16 +442,37 @@ class TeacherController extends Controller
             DB::beginTransaction();
 
             // Buscar al usuario por ID
-            $model = $this->teacherRepository->find($id);
-            if (! $model) {
+            $teacher = $this->teacherRepository->find($id);
+            if (! $teacher) {
                 return response()->json(['message' => 'Usuario no encontrado'], 404);
             }
 
             // Actualizar la contraseña
-            $model->password = 123456;
-            $model->save();
+            $teacher->password = 123456;
+            $teacher->save();
 
             DB::commit();
+
+            $user_admin = auth()->user();
+            $company_name = $teacher->company?->name;
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $teacher->full_name,
+                        "email" => $teacher->email,
+                    ]
+                ],
+                subject: "Tu contraseña ha sido reiniciada por el administrador",
+                templateId: 3,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $teacher->full_name, 
+                    "user_admin" => $user_admin->full_name, 
+                    "new_password" => "123456",
+                    "company_name" => $company_name, 
+                ],
+            );
 
             return response()->json(['code' => 200, 'message' => 'Contraseña reinicida con éxito']);
         } catch (Throwable $th) {
@@ -521,7 +546,7 @@ class TeacherController extends Controller
                     $teacherPlanning->path = $path;
                     $teacherPlanning->save();
                 }
-            } 
+            }
 
             DB::commit();
 
@@ -553,6 +578,43 @@ class TeacherController extends Controller
             DB::rollBack();
 
             return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        }
+    }
+
+    public function resetPlanifications(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Eliminar todas las planificaciones
+            $this->teacherPlanningRepository->deleteAll($request->company_id);
+
+            DB::commit();
+
+            $auth = auth()->user();
+            $company_name = $this->companyRepository->find($request->company_id)->name;
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $auth->full_name,
+                        "email" => $auth->email,
+                    ]
+                ],
+                subject: "Las planificaciones han sido reiniciadas (eliminadas)",
+                templateId: 2,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $auth->full_name, 
+                    "company_name" => $company_name, 
+                ],
+            );
+
+            return response()->json(['code' => 200, 'message' => 'Planificaciones reinicidas con éxito']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
 }

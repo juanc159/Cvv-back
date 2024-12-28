@@ -4,7 +4,7 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class BrevoEmailService
 {

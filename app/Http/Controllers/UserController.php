@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Resources\User\UserFormResource;
 use App\Http\Resources\User\UserListResource;
+use App\Jobs\BrevoProcessSendEmail;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Repositories\CompanyRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -181,7 +183,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'User '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'User ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -190,23 +192,52 @@ class UserController extends Controller
     }
 
     public function changePassword(Request $request)
-    { 
-        // Obtener el usuario autenticado
+    {
+        try {
+            DB::beginTransaction();
+            // Obtener el usuario autenticado
 
-        if($request->input("type_user")=='teacher'){
-            $user = Teacher::find($request->input("id")); 
-        }
-        if($request->input("type_user")=='student'){
-            $user = Student::find($request->input("id")); 
-        }
-        if($request->input("type_user")=='admin'){ 
-            $user = $this->userRepository->find($request->input('id'));
-        }
+            if ($request->input("type_user") == 'teacher') {
+                $user = Teacher::find($request->input("id"));
+            }
+            if ($request->input("type_user") == 'student') {
+                $user = Student::find($request->input("id"));
+            }
+            if ($request->input("type_user") == 'admin') {
+                $user = $this->userRepository->find($request->input('id'));
+            }
 
-        // Cambiar la contraseña
-         $user->password = $request->input('new_password');
-        $user->save();
+            // Cambiar la contraseña
+            $user->password = $request->input('new_password');
+            $user->save();
 
-        return response()->json(['code' => 200, 'message' => 'Contraseña modificada con éxito.']);
+            DB::commit();
+ 
+            $company_name = $user->company?->name;
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $user->full_name,
+                        "email" => $user->email,
+                    ]
+                ],
+                subject: "Contraseña Modificada",
+                templateId: 4,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $user->full_name,
+                    "new_password" => $request->input('new_password'), 
+                    "date_change" => Carbon::now()->format('d/m/Y \a \l\a\s H:i:s'),
+                    "company_name" => $company_name,
+                ],
+            );
+
+            return response()->json(['code' => 200, 'message' => 'Contraseña modificada con éxito.']);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
     }
 }

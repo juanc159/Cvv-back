@@ -205,7 +205,7 @@ class PwController extends Controller
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
         }
-    } 
+    }
 
     public function linksMenu($company_id)
     {
@@ -397,7 +397,13 @@ class PwController extends Controller
                 $q->where('last_name', 'Pendiente');
             })->get()->groupBy(['grade.name', 'section.name', 'subject.name']);
 
-            return response()->json(['code' => 200, 'plannings' => $plannings]);
+            $company = $this->companyRepository->find($company_id);
+            
+            return response()->json([
+                'code' => 200,
+                'plannings' => $plannings,
+                "students_pending_subject" => $company->students_pending_subject
+            ]);
         } catch (\Throwable $th) {
 
             return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
