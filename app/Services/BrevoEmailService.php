@@ -35,8 +35,8 @@ class BrevoEmailService
         $this->client = new Client;
         $this->url = 'https://api.brevo.com/v3/smtp/email';
         $this->apiKey = env('BREVO_API_KEY');
-        $this->senderEmail = env('MAIL_FROM_ADDRESS');
-        $this->senderName = env('MAIL_FROM_NAME');
+        $this->senderEmail = env('MAIL_FROM_ADDRESS_BREVO');
+        $this->senderName = env('MAIL_FROM_NAME_BREVO');
     }
 
     public function setTo(array $to)
