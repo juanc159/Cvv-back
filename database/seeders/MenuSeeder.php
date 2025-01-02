@@ -109,14 +109,14 @@ class MenuSeeder extends Seeder
                 'to' => 'Note-Index',
                 'icon' => 'tabler-database-edit',
                 'requiredPermission' => 'note.index',
-            ],
+            ], 
             [
                 'id' => 13,
                 'order' => 130,
-                'title' => 'Backup',
-                'to' => 'Note-Index',
+                'title' => 'Proyectos',
+                'to' => 'Project-List',
                 'icon' => 'tabler-database-edit',
-                'requiredPermission' => 'note.index',
+                'requiredPermission' => 'project.list',
             ],
         ];
 

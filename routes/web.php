@@ -1,6 +1,6 @@
 <?php
-
-use App\Http\Controllers\MigrationController;
+ 
+use App\Http\Controllers\MigrationController; 
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -8,3 +8,4 @@ Route::get('/', function () {
 });
 
 Route::get('/bd_table', [MigrationController::class, 'trasnferBD']);
+
