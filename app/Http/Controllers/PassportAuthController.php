@@ -83,8 +83,19 @@ class PassportAuthController extends Controller
             }
 
             if ($userRecord && Hash::check($password, $userRecord->password)) {
-                // Autenticación exitosa para 'students'
-                $token = $userRecord->createToken('authToken');
+
+                // Autenticación exitosa, ahora se genera el token
+                // Usamos Passport para crear un token de acceso
+                if ($type == 'student') {
+                    $token = $userRecord->createToken('authTokenForStudent');
+                } elseif ($type == 'teacher') {
+                    $token = $userRecord->createToken('authTokenForTeacher');
+                } else {
+                    $token = $userRecord->createToken('authTokenForAdmin');
+                }
+ 
+                // // Autenticación exitosa para 'students'
+                // $token = $userRecord->createToken('authToken');
             } else {
                 return response()->json([
                     'code' => '401',
@@ -235,7 +246,7 @@ class PassportAuthController extends Controller
         $obj['type_user'] = 'teacher';
 
         $obj['blockData'] = false;
-         $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
+        $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
         if ($blockData) {
             $obj['blockData'] = $blockData->is_active;
         }
@@ -243,7 +254,7 @@ class PassportAuthController extends Controller
         $company = $user->company;
 
         return [
-            'token' => $token->accessToken,
+            'access_token' => $token->accessToken,
             'user' => $obj,
             'company' => $company,
             'menu' => [],
@@ -285,7 +296,7 @@ class PassportAuthController extends Controller
             $company = $user->company;
 
             return [
-                'token' => $token->accessToken,
+                'access_token' => $token->accessToken,
                 'user' => $obj,
                 'company' => $company,
                 'menu' => [],

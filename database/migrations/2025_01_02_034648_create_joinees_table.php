@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('joinees', function (Blueprint $table) {
             $table->uuid("id")->primary();
             $table->foreignUuid('project_id')->constrained('projects');
-            $table->foreignUuid('user_id')->constrained('users');
+            $table->string('user_id');
             $table->timestamps();
         });
     }

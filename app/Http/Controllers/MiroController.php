@@ -22,9 +22,9 @@ class MiroController extends Controller
     ) {}
 
     public function addJoinees(Request $request)
-    {
+    { 
         $projectCode = $request->input("project_code");
-        $userId = $request->input("user_id");
+         $userId = $request->input("user_id");
 
         $project = Project::where('code', $projectCode)->first();
 
@@ -43,7 +43,8 @@ class MiroController extends Controller
 
                 return response([
                     'message' => 'Usuario uniendose al proyecto',
-                    'status' => true
+                    'status' => true,
+                    "project" => $project
                 ]);
             } else {
 
@@ -51,7 +52,8 @@ class MiroController extends Controller
 
                 return response([
                     'message' => 'usuario ya se encuentra en el proyecto',
-                    'status' => true
+                    'status' => true,
+                    "project" => $project
 
                 ]);
             }
@@ -96,7 +98,9 @@ class MiroController extends Controller
 
             $project = $this->projectRepository->find($projectId);
 
-            if ($userId === $project->user_id) {
+
+            
+            // if ($userId === $project->user_id) {
                 $miniTextEditor = MiniTextEditor::where('project_id', $projectId)
                     ->first();
                 $stickyNote = StickyNote::where('project_id', $projectId)
@@ -105,7 +109,7 @@ class MiroController extends Controller
                     ->first();
                 $drawing = Drawing::where('project_id', $projectId)
                     ->first();
-            }
+            // }
 
 
             return response([

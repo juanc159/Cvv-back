@@ -1,5 +1,6 @@
 <?php
 
+
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\TeacherController;
@@ -39,4 +40,16 @@ Route::get('/file/download', function (Request $request) {
     } catch (\Throwable $th) {
         return response()->json(['code' => 500, 'message' => 'Error al buscar los datos', 'error' => $th->getMessage()]);
     }
+}); 
+
+
+
+// Route::post('/broadcasting/auth', function () {  
+//     return response('Broadcasting auth route is working', 200);
+// });
+ 
+
+Route::post('/broadcasting/auth', function ( ) { 
+    return true;
+
 });

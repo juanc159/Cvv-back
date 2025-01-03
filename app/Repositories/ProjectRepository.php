@@ -63,7 +63,7 @@ class ProjectRepository extends BaseRepository
 
     public function generateCode()
     {
-        return Str::random(128) . '-' . time();
+        return Str::random(5) . '-' . time();
     }
 
     public function searchOne($request = [], $with = [], $select = ['*'])
@@ -80,3 +80,4 @@ class ProjectRepository extends BaseRepository
         return $data;
     }
 }
+
