@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
+use Throwable; 
 
 class PassportAuthController extends Controller
 {
@@ -93,7 +93,7 @@ class PassportAuthController extends Controller
                 } else {
                     $token = $userRecord->createToken('authTokenForAdmin');
                 }
- 
+
                 // // Autenticación exitosa para 'students'
                 // $token = $userRecord->createToken('authToken');
             } else {
@@ -120,7 +120,7 @@ class PassportAuthController extends Controller
                         // code...
                         break;
                 }
-            }
+            } 
 
             return response()->json($response, 200);
         } catch (Throwable $th) {

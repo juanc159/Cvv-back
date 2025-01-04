@@ -1,6 +1,8 @@
 <?php
- 
-use App\Http\Controllers\MigrationController; 
+
+use App\Events\UserConnected;
+use App\Http\Controllers\MigrationController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,6 +14,9 @@ Route::get('/bd_table', [MigrationController::class, 'trasnferBD']);
 
 
  
-// Route::get('/broadcasting/auth', function () {
-//     return 'Broadcasting auth route is working';
-// });
+Route::get('/prueba', function () {
+    $userRecord = User::first();
+    event(new UserConnected($userRecord));
+    
+});
+

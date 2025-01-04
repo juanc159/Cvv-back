@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ProjectBoardEvent;
+use App\Events\UserTypingEvent;
 use App\Models\Drawing;
 use App\Models\Joinee;
 use App\Models\MiniTextEditor;
@@ -21,10 +22,20 @@ class MiroController extends Controller
         protected ProjectRepository $projectRepository,
     ) {}
 
+    public function knowWhoIsTyping($projectId, $sendId)
+    {
+        $joinees = Joinee::where('project_id', $projectId)->get();
+        foreach ($joinees as $row) {
+            //event..
+
+            UserTypingEvent::dispatch($row->user_id);
+        }
+    }
+
     public function addJoinees(Request $request)
-    { 
+    {
         $projectCode = $request->input("project_code");
-         $userId = $request->input("user_id");
+        $userId = $request->input("user_id");
 
         $project = Project::where('code', $projectCode)->first();
 
@@ -69,6 +80,11 @@ class MiroController extends Controller
 
             $project = $this->projectRepository->searchOne($request->all());
 
+            $sendId = $request->input("send_id");
+
+            $this->knowWhoIsTyping($project->id, $sendId);
+
+
             return response([
                 'project' => $project,
             ], 200);
@@ -99,8 +115,8 @@ class MiroController extends Controller
             $project = $this->projectRepository->find($projectId);
 
 
-            
-            // if ($userId === $project->user_id) {
+
+            if ($userId === $project->user_id) {
                 $miniTextEditor = MiniTextEditor::where('project_id', $projectId)
                     ->first();
                 $stickyNote = StickyNote::where('project_id', $projectId)
@@ -109,7 +125,7 @@ class MiroController extends Controller
                     ->first();
                 $drawing = Drawing::where('project_id', $projectId)
                     ->first();
-            // }
+            }
 
 
             return response([

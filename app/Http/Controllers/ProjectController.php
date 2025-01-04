@@ -115,6 +115,10 @@ class ProjectController extends Controller
             DB::beginTransaction();
             $project = $this->projectRepository->find($id);
             if ($project) {
+                $project->stickyNote->delete();
+                $project->miniTextEditor->delete();
+                $project->textCaption->delete();
+                $project->drawing->delete();
                 $project->delete();
                 $msg = 'Registro eliminado correctamente';
             } else {

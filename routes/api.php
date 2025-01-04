@@ -49,7 +49,8 @@ Route::get('/file/download', function (Request $request) {
 // });
  
 
-Route::post('/broadcasting/auth', function ( ) { 
-    return true;
+// Route::post('/broadcasting/auth', function (Request $request) { 
+//     var_dump($request);
+//     return true;
 
-});
+// });
