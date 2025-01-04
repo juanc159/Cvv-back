@@ -40,7 +40,7 @@ class ProjectBoardEvent  implements ShouldBroadcast
         // ];
 
         // Single channel
-        return  new PresenceChannel("project.room");
+        return  new PresenceChannel("project.room.{$this->projectCode}");
         
 
     
