@@ -92,7 +92,10 @@ Dentro del directorio /etc/supervisor/conf.d/, crea un archivo de configuración
     sudo supervisorctl update
     sudo supervisorctl start laravel-worker:*
 
-### 3. Configuración del archivo .env en Laravel
+### 3. Laravel
+#### * Instalar reverb
+    php artisan install:broadcasting
+#### * Configurar .env
 
     BROADCAST_CONNECTION=reverb
     QUEUE_CONNECTION=sync
