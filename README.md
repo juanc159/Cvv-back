@@ -13,7 +13,8 @@ Asegúrate de tener los siguientes programas y servicios instalados en tu servid
 
 ## Pasos de Configuración
 
-### 1. Configuración del SSL
+### 1. Apache
+#### * Configuración del SSL
 
 Abre el archivo de configuración de SSL en tu servidor Apache y agrega o modifica lo siguiente:
 
@@ -56,6 +57,8 @@ Abre el archivo de configuración de SSL en tu servidor Apache y agrega o modifi
         </IfModule>
     </Directory>
     </IfModule> 
+#### * Reiniciar Apache
+    sudo systemctl restart apache2
 
 ### 2. Supervisor
 #### * Instalar Supervisor en el servidor
