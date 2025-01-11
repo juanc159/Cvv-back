@@ -63,6 +63,9 @@ class RoleRepository extends BaseRepository
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
+            if (! empty($request['company_id'])) {
+                $query->whereIn('company_id', $request['company_id']);
+            }
         })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [
                 'value' => $value->$fieldValue,
