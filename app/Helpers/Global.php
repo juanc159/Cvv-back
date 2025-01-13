@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Log;
 
 function filterComponent($query, &$request, $model = null)
 {
+    $request = recursiveJsonDecode($request);
+
     if (isset($request['searchQuery']) && is_string($request['searchQuery'])) {
         $request['searchQuery'] = json_decode($request['searchQuery'], 1);
         // var_dump($request["searchQuery"]);
@@ -217,4 +219,32 @@ function generarColorPastelAleatorio($intensidad = 0)
     $color = sprintf('#%02X%02X%02X', $r, $g, $b);
 
     return $color;
+}
+
+function recursiveJsonDecode($data)
+{
+    // Si $data es una cadena JSON válida, la decodificamos
+    if (is_string($data)) {
+        $decoded = json_decode($data, true);
+
+        // Si la decodificación tiene éxito, lo devolvemos como un array
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return recursiveJsonDecode($decoded); // Llamada recursiva para asegurarse de que todo se decodifica
+        }
+    }
+
+    // Si $data no es una cadena JSON, verificamos si es un array u objeto para recorrerlo
+    if (is_array($data)) {
+        // Recorremos los elementos del array para decodificar objetos JSON anidados
+        foreach ($data as $key => $value) {
+            $data[$key] = recursiveJsonDecode($value);
+        }
+    } elseif (is_object($data)) {
+        // Si es un objeto, recorremos sus propiedades para decodificar valores JSON anidados
+        foreach ($data as $key => $value) {
+            $data->$key = recursiveJsonDecode($value);
+        }
+    }
+
+    return $data; // Retornamos el valor decodificado (puede ser array u objeto)
 }
