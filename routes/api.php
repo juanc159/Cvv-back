@@ -11,7 +11,13 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:api');
 
 Route::get('/register', [PassportAuthController::class, 'register']);
+
 Route::post('login', [PassportAuthController::class, 'login']);
+
+Route::post('/password/email', [PassportAuthController::class, 'sendResetLink']);
+
+Route::post('/password/reset', [PassportAuthController::class, 'passwordReset']);
+
 
 Route::get('/teacher-downloadConsolidated/{id}', [TeacherController::class, 'downloadConsolidated']);
 Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Authentication\PassportAuthLoginRequest;
+use App\Http\Requests\Authentication\PassportAuthSendResetLinkRequest;
+use App\Jobs\BrevoProcessSendEmail;
 use App\Models\Role;
+use App\Models\User;
 use App\Repositories\BlockDataRepository;
 use App\Repositories\MenuRepository;
 use App\Repositories\StudentRepository;
@@ -17,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
+use Illuminate\Support\Facades\Password;
 
 class PassportAuthController extends Controller
 {
@@ -301,5 +305,89 @@ class PassportAuthController extends Controller
         $user = Auth::user();
 
         return response()->json(['user' => $user], 200);
+    }
+
+    public function sendResetLink(PassportAuthSendResetLinkRequest $request)
+    {
+        try {
+
+            $user = $this->userRepository->findByEmail($request->input("email"));
+
+            // Generar el enlace de restablecimiento
+            $token = Password::getRepository()->create($user);
+
+            $action_url = env("SYSTEM_URL_FRONT") . 'ResetPassword/' . $token . '?email=' . urlencode($request->input("email"));
+
+            // Enviar el correo usando el job de Brevo
+            BrevoProcessSendEmail::dispatch(
+                emailTo: [
+                    [
+                        "name" => $user->full_name,
+                        "email" => $request->input("email"),
+                    ]
+                ],
+                subject: "Link Restablecer Contraseña",
+                templateId: 5,  // El ID de la plantilla de Brevo que quieres usar
+                params: [
+                    "full_name" => $user->full_name,
+                    "bussines_name" => $user->company?->name,
+                    'action_url' => $action_url,
+
+                ],  // Aquí pasas los parámetros para la plantilla, por ejemplo, el texto del mensaje
+            );
+
+
+
+            return  response()->json(["code" => 200, 'message' => 'Te hemos enviado por correo electrónico el enlace para restablecer tu contraseña.'], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 500);
+        }
+    }
+
+    public function passwordReset(Request $request)
+    {
+        try {
+            // Validar los datos recibidos
+            $request->validate([
+                'token' => 'required',
+                'email' => 'required|email',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+
+              $response  = Password::reset(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                function (User $user, string $password) use ($request) {
+
+                    // Actualizar la contraseña del usuario
+                    $user->password = $password;
+                    $user->save();
+                }
+            );
+
+            if ($response == Password::PASSWORD_RESET) {
+                return response()->json([
+                    'code' => 200,
+                    'message' => 'La contraseña ha sido cambiada correctamente.'
+                ]);
+            }
+
+            return response()->json([
+                'code' => 400,
+                'message' => 'El token de restablecimiento es inválido o ha expirado.'
+            ], 400);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 500);
+        }
     }
 }
