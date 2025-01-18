@@ -360,24 +360,9 @@ class PwController extends Controller
                     'id' => $value->id,
                     'title' => $value->title,
                     'image' => $value->image,
-                    'html' => $value->html,
                 ];
             }) ;
-
-            // $company = Company::with([
-            //     'services' => function ($q) {
-            //         $q->where('is_active', 1);
-            //     },
-            // ])->find($company_id);
-
-            // $services = $company->services?->map(function ($value) {
-            //     return [
-            //         'id' => $value->id,
-            //         'title' => $value->title,
-            //         'image' => $value->image,
-            //         'html' => $value->html,
-            //     ];
-            // }) ?? [];
+ 
 
             return response()->json(['code' => 200, 'services' => $services]);
         } catch (\Throwable $th) {
