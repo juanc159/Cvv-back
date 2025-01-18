@@ -20,6 +20,9 @@ class ServiceRepository extends BaseRepository
             if (! empty($request['name'])) {
                 $query->where('name', 'like', '%'.$request['name'].'%');
             }
+            if (! empty($request['is_active'])) {
+                $query->where('is_active', $request['is_active']);
+            }
 
             if (! empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
