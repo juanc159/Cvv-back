@@ -117,6 +117,12 @@ class StudentController extends Controller
     public function edit($id)
     {
         try {
+
+            $selectInfiniteCountries = $this->queryController->selectInfiniteCountries(new Request([
+                "idsAllowed" => [Constants::COUNTRY_ID_COLOMBIA, Constants::COUNTRY_ID_VENEZUELA]
+            ]));
+
+            
             $student = $this->studentRepository->find($id);
             $form = new StudentFormResource($student);
 
@@ -145,6 +151,8 @@ class StudentController extends Controller
                 'form' => $form,
                 'typeEducations' => $typeEducations,
                 'sections' => $sections,
+            ...$selectInfiniteCountries,
+
             ]);
         } catch (Throwable $th) {
 
