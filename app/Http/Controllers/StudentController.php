@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Constants;
 use App\Http\Requests\Student\StudentStoreRequest;
 use App\Http\Resources\Student\StudentFormResource;
 use App\Http\Resources\Student\StudentListResource;
@@ -19,6 +20,7 @@ class StudentController extends Controller
         protected StudentRepository $studentRepository,
         protected TypeEducationRepository $typeEducationRepository,
         protected SectionRepository $sectionRepository,
+        protected QueryController $queryController,
     ) {}
 
     public function list(Request $request)
@@ -44,6 +46,10 @@ class StudentController extends Controller
     {
         try {
 
+            $selectInfiniteCountries = $this->queryController->selectInfiniteCountries(new Request([
+                "idsAllowed" => [Constants::COUNTRY_ID_COLOMBIA, Constants::COUNTRY_ID_VENEZUELA]
+            ]));
+
             $typeEducations = $this->typeEducationRepository->list(
                 request: [
                     'typeData' => 'all',
@@ -68,6 +74,8 @@ class StudentController extends Controller
                 'code' => 200,
                 'typeEducations' => $typeEducations,
                 'sections' => $sections,
+            ...$selectInfiniteCountries,
+
             ]);
         } catch (Throwable $th) {
 

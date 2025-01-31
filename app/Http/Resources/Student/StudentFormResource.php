@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Student;
 
+use App\Http\Resources\Country\CountrySelectResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,11 @@ class StudentFormResource extends JsonResource
             'full_name' => $this->full_name,
             'pdf' => $this->pdf,
             'photo' => $this->photo,
+            'gender' => $this->gender,
+            'birthday' => $this->birthday,
+            'country_id' => new CountrySelectResource($this->country),
+            'state_id' => $this->state_id,
+            'city_id' => $this->city_id,
         ];
     }
 }

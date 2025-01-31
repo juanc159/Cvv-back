@@ -30,18 +30,28 @@ class StudentStoreRequest extends FormRequest
             'section_id' => 'required',
             'identity_document' => 'required',
             'full_name' => 'required',
+            'gender' => 'required',
+            'birthday' => 'required',
+            'country_id' => 'required',
+            'state_id' => 'required',
+            'city_id' => 'required',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'company_id' => 'El campo es obligatorio',
-            'type_education_id' => 'El campo es obligatorio',
-            'grade_id' => 'El campo es obligatorio',
-            'section_id' => 'El campo es obligatorio',
-            'identity_document' => 'El campo es obligatorio',
-            'full_name' => 'El campo es obligatorio',
+            'company_id.required' => 'El campo es obligatorio',
+            'type_education_id.required' => 'El campo es obligatorio',
+            'grade_id.required' => 'El campo es obligatorio',
+            'section_id.required' => 'El campo es obligatorio',
+            'identity_document.required' => 'El campo es obligatorio',
+            'full_name.required' => 'El campo es obligatorio',
+            'gender.required' => 'El campo es obligatorio',
+            'birthday.required' => 'El campo es obligatorio',
+            'country_id.required' => 'El campo es obligatorio',
+            'state_id.required' => 'El campo es obligatorio',
+            'city_id.required' => 'El campo es obligatorio',
         ];
     }
 
