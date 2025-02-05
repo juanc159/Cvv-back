@@ -25,4 +25,5 @@ Route::middleware(['check.permission:subject.list'])->group(function () {
     Route::delete('/subject/delete/{id}', [SubjectController::class, 'delete']);
 
     Route::post('/subject/changeStatus', [SubjectController::class, 'changeStatus']);
+
 });

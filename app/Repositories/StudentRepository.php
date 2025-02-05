@@ -18,7 +18,7 @@ class StudentRepository extends BaseRepository
             filterComponent($query, $request);
 
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+                $query->where('name', 'like', '%' . $request['name'] . '%');
             }
 
             if (! empty($request['company_id'])) {
@@ -34,6 +34,9 @@ class StudentRepository extends BaseRepository
             if (! empty($request['section_id'])) {
                 $query->where('section_id', $request['section_id']);
             }
+
+            // **Excluir estudiantes retirados**
+            $query->whereDoesntHave('withdrawal');
 
             if (isset($request['searchQuery']['arrayFilter']) && count($request['searchQuery']['arrayFilter']) > 0) {
 
@@ -182,17 +185,35 @@ class StudentRepository extends BaseRepository
 
     public function countData($request = [])
     {
-        $data = $this->model->where(function ($query) use ($request) {
-            if (! empty($request['is_active'])) {
-                $query->where('is_active', $request['is_active']);
-            }
-            if (! empty($request['company_id'])) {
+        // Total de estudiantes
+        $totalStudents = $this->model->where(function ($query) use ($request) {
+            if (!empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
             }
         })->count();
 
-        return $data;
+        // Estudiantes activos (los que NO están retirados)
+        $activeStudents = $this->model->where(function ($query) use ($request) {
+            if (!empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            }
+        })->whereDoesntHave('withdrawal') // Filtrar los que NO tienen un retiro
+            ->count();
+
+        // Estudiantes retirados (los que SÍ están en la tabla de retiros)
+        $withdrawnStudents = $this->model->whereHas('withdrawal', function ($query) use ($request) {
+            if (!empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            }
+        })->count();
+
+        return [
+            'total' => $totalStudents,
+            'active' => $activeStudents,
+            'withdrawn' => $withdrawnStudents
+        ];
     }
+
 
     public function getCountByTypeEducation($request = [])
     {

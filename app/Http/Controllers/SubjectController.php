@@ -153,11 +153,12 @@ class SubjectController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Subject '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Subject ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
+
 }

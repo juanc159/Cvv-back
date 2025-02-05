@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Constants;
+use App\Imports\StudentsImport;
 use App\Models\Banner;
 use App\Models\BlockData;
 use App\Models\Company;
@@ -22,6 +23,9 @@ use App\Models\TypeDetail;
 use App\Models\TypeEducation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class MigrationController extends Controller
 {
@@ -388,5 +392,79 @@ class MigrationController extends Controller
         $model->role_id = Constants::ROLE_SUPERADMIN_UUID;
         $model->company_id = Constants::COMPANY_UUID;
         $model->save();
+    }
+
+
+    public function updates(Request $request)
+    {
+
+        // 1. Validar y leer el archivo CSV
+        $file = 'Datos_Consolidados2.csv';
+
+        // 1. Validar y leer el archivo CSV
+        $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::CSV)->first();
+
+        // 2. Procesar datos
+        $matriculas = $rows->countBy('identity_document');
+        $duplicates = $matriculas->filter(fn($c) => $c > 1)->keys();
+        $validRows = $rows->filter(fn($r) => $matriculas[$r['identity_document']] === 1);
+
+        // 3. Actualizar registros
+        $updated = 0;
+        $errors = [];
+
+        foreach ($validRows as $row) {
+            try {
+                DB::beginTransaction();
+
+                $students = Student::where('identity_document', 'LIKE', "%{$row['identity_document']}%")->get();
+                // return $students;
+
+                if ($students->count() !== 1) {
+                    $errors[] = [
+                        'nombre_del_alumno' => $row['full_name'],
+                        'matricula' => $row['identity_document'],
+                        'error' => $students->isEmpty() ? 'No encontrado' : 'Múltiples coincidencias'
+                    ];
+                    continue;
+                }
+
+
+                $students->first()->update([
+                    'gender' => $row['gender'],
+                    'country_id' => $row['country_id'],
+                    'state_id' => $row['state_id'],
+                    'city_id' => $row['city_id'],
+                    'birthday' => Carbon::createFromFormat('d/m/Y', $row['birthday'])
+                ]);
+
+                $updated++;
+                DB::commit();
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'matricula' => $row['identity_document'],
+                    'error' => $e->getMessage()
+                ];
+                DB::rollback();
+            }
+        }
+
+
+        // 4. Retornar respuesta
+        return response()->json([
+            'success' => true,
+            'updated' => $updated,
+            'duplicates' => $duplicates->values(),
+            'errors' => $errors
+        ]);
+    }
+
+    private function mapGender($sexo)
+    {
+        return match (strtoupper($sexo)) {
+            'M' => 'male',
+            'F' => 'female',
+            default => 'other'
+        };
     }
 }

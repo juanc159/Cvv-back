@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::table('students', function (Blueprint $table) {
             $table->string("gender")->nullable();
-            $table->string("birthday")->nullable();
-            $table->foreignId("country_id")->nullable();
-            $table->foreignId("state_id")->nullable();
-            $table->foreignId("city_id")->nullable();
+            $table->date("birthday")->nullable();
+            $table->foreignId("country_id")->nullable()->constrained("countries");
+            $table->foreignId("state_id")->nullable()->constrained("states");
+            $table->foreignId("city_id")->nullable()->constrained("cities");
         });
     }
 
@@ -28,9 +28,9 @@ return new class extends Migration
         Schema::table('students', function (Blueprint $table) {
             $table->dropColumn("gender");
             $table->dropColumn("birthday");
-            $table->dropColumn("country_id");
-            $table->dropColumn("state_id");
-            $table->dropColumn("city_id");
+            $table->dropConstrainedForeignId("country_id");
+            $table->dropConstrainedForeignId("state_id");
+            $table->dropConstrainedForeignId("city_id");
         });
     }
 };

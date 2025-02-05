@@ -10,5 +10,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/dashboard/countAllData', [DashboardController::class, 'countAllData']);
+
 Route::get('/dashboard/studentByTypeEducation', [DashboardController::class, 'studentByTypeEducation']);
+
 Route::get('/dashboard/studentByPhotoStatus', [DashboardController::class, 'studentByPhotoStatus']);
+
+Route::get('/dashboard/students-location', [DashboardController::class, 'studentsLocationData']);

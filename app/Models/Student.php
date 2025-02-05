@@ -12,6 +12,7 @@ class Student extends Model
 {
     use HasApiTokens, HasFactory, HasUuids, Searchable;
 
+    protected $guarded = [];
     protected $casts = [
         'password' => 'hashed',
         'first_time' => 'boolean',
@@ -24,7 +25,7 @@ class Student extends Model
         return $this->hasMany(Note::class, 'student_id', 'id');
     }
 
-    public function typeEducation()
+    public function type_education()
     {
         return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
     }
@@ -83,5 +84,22 @@ class Student extends Model
     public function city()
     {
         return $this->hasOne(City::class, 'id', 'city_id');
+    }
+
+    /**
+     * Relación con StudentWithdrawal.
+     * Retorna el registro de retiro si existe.
+     */
+    public function withdrawal()
+    {
+        return $this->hasOne(StudentWithdrawal::class, 'student_id');
+    }
+
+    /**
+     * Método para verificar si el estudiante está retirado.
+     */
+    public function isWithdrawn(): bool
+    {
+        return $this->withdrawal()->exists();
     }
 }

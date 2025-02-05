@@ -26,5 +26,13 @@ Route::middleware(['check.permission:student.list'])->group(function () {
 
     Route::post('/student/changeStatus', [StudentController::class, 'changeStatus']);
 
-    Route::get('/student-resetPassword/{id}', [StudentController::class, 'resetPassword']);
+    Route::get('/student-resetPassword/{id}', [StudentController::class, 'resetPassword']); 
+
+    Route::get('/student/show/{id}', [StudentController::class, 'show']);
+
+    Route::post('/student/withdraw', [StudentController::class, 'withdraw']);
+
+    Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);
+
+
 });

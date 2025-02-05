@@ -27,6 +27,7 @@ class StudentFormResource extends JsonResource
             'photo' => $this->photo,
             'gender' => $this->gender,
             'birthday' => $this->birthday,
+            'real_entry_date' => $this->real_entry_date,
             'country_id' => new CountrySelectResource($this->country),
             'state_id' => $this->state_id,
             'city_id' => $this->city_id,

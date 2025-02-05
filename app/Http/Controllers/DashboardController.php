@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use App\Repositories\BannerRepository;
 use App\Repositories\GradeRepository;
 use App\Repositories\RoleRepository;
@@ -11,6 +12,7 @@ use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DashboardController extends Controller
@@ -133,4 +135,55 @@ class DashboardController extends Controller
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
+
+    public function studentsLocationData()
+    {
+        $locationData = Student::leftJoin('companies', 'students.company_id', '=', 'companies.id')
+            ->select([
+                // 1. Estudiantes con datos incompletos (falta alguno de country, state o city)
+                DB::raw("SUM(CASE WHEN students.country_id IS NULL OR students.state_id IS NULL OR students.city_id IS NULL THEN 1 ELSE 0 END) as incompletos"),
+    
+                // 2. Estudiantes nacionales:
+                //    Se cuentan aquellos que tienen country_id definido y coincide con el de la compañía.
+                DB::raw("SUM(CASE WHEN students.country_id IS NOT NULL AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as nacionales"),
+    
+                // 3. Estudiantes extranjeros:
+                //    Se cuentan aquellos que tienen country_id definido y es distinto al de la compañía.
+                DB::raw("SUM(CASE WHEN students.country_id IS NOT NULL AND students.country_id <> companies.country_id THEN 1 ELSE 0 END) as extranjeros"),
+    
+                // Detalles adicionales (cuenta de datos faltantes en cada campo)
+                DB::raw("SUM(CASE WHEN students.country_id IS NULL THEN 1 ELSE 0 END) as sin_pais"),
+                DB::raw("SUM(CASE WHEN students.state_id IS NULL THEN 1 ELSE 0 END) as sin_departamento"),
+                DB::raw("SUM(CASE WHEN students.city_id IS NULL THEN 1 ELSE 0 END) as sin_ciudad")
+            ])
+            ->first();
+    
+        $response = [
+            'pie_chart' => [
+                'labels' => ['Nacionales', 'Extranjeros', 'Datos incompletos'],
+                'datasets' => [
+                    [
+                        'data' => [
+                            $locationData->nacionales ?? 0,
+                            $locationData->extranjeros ?? 0,
+                            $locationData->incompletos ?? 0,
+                        ],
+                        'backgroundColor' => ['#36a2eb', '#ff6384', '#FFCE56']
+                    ]
+                ]
+            ],
+            'detalles' => [
+                'incompletos'      => $locationData->incompletos ?? 0,
+                'nacionales'       => $locationData->nacionales ?? 0,
+                'extranjeros'      => $locationData->extranjeros ?? 0,
+                'sin_pais'         => $locationData->sin_pais ?? 0,
+                'sin_departamento' => $locationData->sin_departamento ?? 0,
+                'sin_ciudad'       => $locationData->sin_ciudad ?? 0,
+            ]
+        ];
+    
+        return response()->json($response);
+    }
+    
+    
 }
