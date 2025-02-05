@@ -17,6 +17,7 @@ use App\Repositories\StudentRepository;
 use App\Repositories\StudentWithdrawalRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Throwable;
@@ -331,19 +332,182 @@ class StudentController extends Controller
         }
     }
 
-    public function studentStatistics()
+    public function studentStatistics(Request $request)
     {
+
+        $companyId = 1;
+        $selectedYear = $request->input('year', date('Y'));
+        $selectedMonth = $request->input('month', date('n'));
+        $type_education_id = [1, 2, 3];
+
+        // Obtener rango de fechas para el periodo seleccionado
+        $startDate = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
+        $endDate = Carbon::create($selectedYear, $selectedMonth, 1)->endOfMonth();
+
+
+        // Consulta Matrícula Inicial (estudiantes activos antes del periodo)
+        $initialMatriculation = Student::selectRaw('
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->where('students.real_entry_date', '<', $startDate->format('Y-m-d'))
+            ->whereNotExists(function ($query) use ($startDate) {
+                $query->select(DB::raw(1))
+                    ->from('student_withdrawals')
+                    ->whereRaw('student_withdrawals.student_id = students.id')
+                    ->where('student_withdrawals.date', '<', $startDate);
+            })
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
+
+
+
+        // Consulta Nuevos Ingresos (matriculados en el periodo actual)
+        $newEntries = Student::selectRaw('
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereBetween('students.real_entry_date', [$startDate, $endDate])
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
+
+
+
+        // Consulta Egresos (retirados en el periodo actual)
+        $withdrawals = Student::selectRaw('
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+')
+            ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereBetween('student_withdrawals.date', [$startDate, $endDate])
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
+
+
+
+
+        // Combinar datos
+        // $statistics = collect();
+
+        // Procesar matrícula inicial
+        foreach ($initialMatriculation as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            $statistics[$key] = [
+                'type_education_name' => $item->type_education_name,
+                'grade_name' => $item->grade_name,
+                'section_name' => $item->section_name,
+                'initial' => [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female
+                ],
+                'new_entries' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0
+                ],
+                'withdrawals' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0
+                ]
+            ];
+        }
+
+        // Procesar nuevos ingresos
+        foreach ($newEntries as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            if (isset($statistics[$key])) {
+                $statistics[$key]['new_entries'] = [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female
+                ];
+            } else {
+                $statistics[$key] = [
+                    'type_education_name' => $item->type_education_name,
+                    'grade_name' => $item->grade_name,
+                    'section_name' => $item->section_name,
+                    'initial' => [
+                        'total' => 0,
+                        'male' => 0,
+                        'female' => 0
+                    ],
+                    'new_entries' => [
+                        'total' => $item->total,
+                        'male' => $item->male,
+                        'female' => $item->female
+                    ],
+                    'withdrawals' => [
+                        'total' => 0,
+                        'male' => 0,
+                        'female' => 0
+                    ]
+                ];
+            }
+        }
+
+        // Procesar egresos
+        foreach ($withdrawals as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            if (isset($statistics[$key])) {
+                $statistics[$key]['withdrawals'] = [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female
+                ];
+            }
+        }
+
+        // Calcular matrícula actual
+        foreach ($statistics as $key => $stat) {
+            $statistics[$key]['current'] = [
+                'total' => $stat['initial']['total'] + $stat['new_entries']['total'] - $stat['withdrawals']['total'],
+                'male' => $stat['initial']['male'] + $stat['new_entries']['male'] - $stat['withdrawals']['male'],
+                'female' => $stat['initial']['female'] + $stat['new_entries']['female'] - $stat['withdrawals']['female']
+            ];
+        }
+ 
+        return view('Exports.Student.Statistics', compact('statistics'));
+
         $companyId = 1;
         $year = 2024;
         $type_education_id = [1, 2, 3];
         $company = Company::findOrFail($companyId);
         $companyCountryId = $company->country_id;
-    
+
         // Obtener el primer día del mes actual
         $currentMonthStart = now()->startOfMonth();
-    
+
         // Consulta para Ingresos con tipo de educación
-         $ingresos = Student::join('grades', 'students.grade_id', '=', 'grades.id')
+        $ingresos = Student::join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
             ->where('students.company_id', $companyId)
@@ -485,8 +649,7 @@ class StudentController extends Controller
             ->whereIn('students.type_education_id', $type_education_id)
             ->orderBy('student_withdrawals.date', 'desc')
             ->get();
- 
-        return view('Exports.Student.Statistics', compact('statistics', 'withdrawnStudents'));
 
+        return view('Exports.Student.Statistics', compact('statistics', 'withdrawnStudents'));
     }
 }
