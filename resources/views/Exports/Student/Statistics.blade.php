@@ -96,3 +96,47 @@
         </tbody>
     </table>
 </div>
+
+<div class="container" style="margin-top: 40px;">
+    <h2 style="color: #333; font-family: Arial, sans-serif;">Estudiantes Retirados</h2>
+    <table class="table table-bordered" style="border: 2px solid #ccc; border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px;">
+        <thead>
+            <tr style="background-color: #f8f9fa; color: #333; font-weight: bold;">
+                <th style="padding: 10px; border-right: 2px solid #666;">Documento</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Apellidos y Nombres</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Fecha Nacimiento</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Grado</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Sección</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Sexo</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Fecha Retiro</th>
+                <th style="padding: 10px;">Motivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($withdrawnStudents as $student)
+                <tr style="background-color: {{ $loop->even ? '#f8f9fa' : '#ffffff' }};">
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->identity_document }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->full_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">
+                        @if($student->birthday)
+                            {{ Carbon\Carbon::parse($student->birthday)->format('d/m/Y') }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->grade_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->section_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->gender == 'M' ? 'Masculino' : 'Femenino' }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">
+                        {{ Carbon\Carbon::parse($student->withdrawal_date)->format('d/m/Y') }}
+                    </td>
+                    <td style="padding: 8px;">{{ $student->reason }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 15px;">No hay estudiantes retirados registrados</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>

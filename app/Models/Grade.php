@@ -9,10 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Grade extends Model
 {
-    use HasFactory,HasUuids,Searchable;
+    use HasFactory, HasUuids, Searchable;
 
-    protected $casts = [
-    ];
+    protected $casts = [];
 
     public function teachers()
     {
@@ -27,5 +26,11 @@ class Grade extends Model
     public function subjects()
     {
         return $this->belongsToMany(Subject::class, 'grade_subjects', 'grade_id', 'subject_id');
+    }
+
+    // En el modelo Grade
+    public function sections()
+    {
+        return $this->hasManyThrough(Section::class, TeacherComplementary::class, 'grade_id', 'id', 'id', 'section_id');
     }
 }

@@ -34,5 +34,7 @@ Route::middleware(['check.permission:student.list'])->group(function () {
 
     Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);
 
+    Route::post('/students/statisticsExcelExport', [StudentController::class, 'statisticsExcelExport']);
+
 
 });

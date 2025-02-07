@@ -23,7 +23,7 @@ class UpdateRandomEntryDateForStudents extends Seeder
 
         foreach ($students as $student) {
             // Generamos una fecha aleatoria entre 2024-01-01 y 2025-01-01
-            $randomDate = $faker->dateTimeBetween('2024-01-01', '2025-01-01')->format('Y-m-d');
+            $randomDate = $faker->dateTimeBetween('2025-01-01', '2025-01-31')->format('Y-m-d');
             
             // Actualizamos el campo 'real_entry_date' con la fecha aleatoria
             $student->real_entry_date = $randomDate;

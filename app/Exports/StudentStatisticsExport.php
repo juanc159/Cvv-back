@@ -13,33 +13,32 @@ class StudentStatisticsExport implements FromView, ShouldAutoSize, WithEvents
 {
     use Exportable;
 
-    public $statistics;
+    public $data;
 
-    public function __construct($statistics)
+    public function __construct($data)
     {
-        $this->statistics = $statistics;
+        $this->data = $data;
     }
 
     public function view(): View
     {
-        return view('Exports.Student.StudentStatisticsExportExcel', ['statistics' => $this->statistics]);
+        return view('Exports.Student.Statistics', [
+            'statistics' => $this->data["statistics"],
+            'withdrawnStudents' => $this->data["withdrawnStudents"],
+        ]);
     }
 
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                // Obtener el objeto hoja de cálculo
-                $sheet = $event->sheet;
-
-                // Obtener el rango de celdas con datos
-                $highestColumn = $sheet->getHighestColumn();
-                $highestRow = $sheet->getHighestRow();
-                $range = 'A1:'.$highestColumn.$highestRow;
-
-                // Establecer el filtro automático en el rango de celdas
-                $sheet->setAutoFilter($range);
-            },
+                $event->sheet->getStyle('A1:G1')->applyFromArray([
+                    'font' => [
+                        'bold' => true
+                    ],
+                    
+                ]);
+            }
         ];
     }
 } 
