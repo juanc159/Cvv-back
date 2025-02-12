@@ -82,7 +82,7 @@
                     <td colspan="2" style="text-align: center">
                         <b>
                             <label style=" color: #000 !important; font-size: 20px; ">Calificaciones Acumulativas <br>
-                                {{ $data['student']['typeEducation']['name'] }}</label></b>
+                                {{ $data['student']['type_education']['name'] }}</label></b>
                     </td>
                 </tr>
                 <tr>
@@ -116,10 +116,10 @@
 
                 <tr>
                     <th>&nbsp;</th>
-                    @for ($i = 1; $i <= $data['student']['typeEducation']['cantNotes']; $i++)
+                    @for ($i = 1; $i <= $data['student']['type_education']['cantNotes']; $i++)
                         @php
                             $isNoteSelected = false;
-                            foreach ($data['student']['typeEducation']->note_selections as $selection) {
+                            foreach ($data['student']['type_education']->note_selections as $selection) {
                                 if ($selection->note_number == $i && $selection->is_selected) {
                                     $isNoteSelected = true;
                                     break;
@@ -141,7 +141,7 @@
 
                         @php
                             $valores = json_decode($nota['json'], true); // Decodificar como array asociativo
-                            $noteSelections = $data['student']['typeEducation']->note_selections;
+                            $noteSelections = $data['student']['type_education']->note_selections;
                         @endphp
                         {{-- @foreach ($valores as $key => $val)
                             <td
