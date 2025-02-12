@@ -70,6 +70,21 @@ class NoteController extends Controller
                     ->find($teacher_id);
 
 
+                $subjectsData = [];
+                if ($teacher) {
+                    foreach ($teacher->complementaries as $complementary) {
+                        // Acceder a las materias relacionadas
+                        $subjects = $complementary->subjects;
+
+                        // Puedes hacer lo que necesites con las materias
+                        foreach ($subjects as $subject) {
+                            // echo $subject->name; // Mostrar el nombre de la materia, por ejemplo
+                            $subjectsData[] = $subject;
+                        }
+                    }
+                    // return $subjectsData;
+                }
+
                 $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
                 $sheets = count($import);
@@ -160,22 +175,10 @@ class NoteController extends Controller
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
 
-                                if($teacher){
-                                    foreach ($teacher->complementaries as $complementary) {
-                                        // Acceder a las materias relacionadas
-                                        $subjects = $complementary->subjects;
-    
-                                        // Puedes hacer lo que necesites con las materias
-                                        foreach ($subjects as $subject) {
-                                            // echo $subject->name; // Mostrar el nombre de la materia, por ejemplo
-                                            $subjectsData[] = $subject;
-                                        }
-                                    }
-                                    // return $subjectsData;
-                                }else{
+                                if (count($subjectsData) == 0) {
 
                                     $grade = $typeEducation->grades->where('id', $grade->id)->first();
-    
+
                                     $subjectsData = $grade->subjects;
                                 }
 
@@ -195,7 +198,7 @@ class NoteController extends Controller
                                         $json = json_decode($note->json, 1);
                                     }
 
-                                     $model2 = [
+                                    $model2 = [
                                         'id' => $note ? $note->id : null,
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
@@ -207,7 +210,7 @@ class NoteController extends Controller
 
                                     $model2['json'] = json_encode($json);
 
-                                      $this->noteRepository->store($model2);
+                                    $this->noteRepository->store($model2);
                                 }
                                 // return 4444;
                             }
