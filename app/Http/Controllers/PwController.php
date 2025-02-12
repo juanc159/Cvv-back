@@ -190,7 +190,7 @@ class PwController extends Controller
             $fecha = Carbon::now();
             $fecha->setLocale('es');
 
-            $student = $this->studentRepository->find($id, ['typeEducation.note_selections', 'notes.subject', 'grade', 'section']);
+            $student = $this->studentRepository->find($id, ['type_education.note_selections', 'notes.subject', 'grade', 'section']);
             if ($student) {
                 $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
                     'student' => $student,

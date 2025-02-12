@@ -45,11 +45,18 @@ class NoteController extends Controller
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
         $typeEducations = $this->typeEducationRepository->selectList(select: ["cantNotes"]);
+        $teachers = Teacher::get()->map(function ($item) {
+            return [
+                "value" => $item->id,
+                "title" => $item->full_name,
+            ];
+        });
         $blockData = BlockData::where('name', Constants::BLOCK_PAYROLL_UPLOAD)->first()->is_active;
 
         return response()->json([
             'typeEducations' => $typeEducations,
             'blockData' => $blockData,
+            'teachers' => $teachers,
         ]);
     }
 
