@@ -9,4 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 class Section extends Model
 {
     use HasFactory, HasUuids;
+
+    // En el modelo Section
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
 }

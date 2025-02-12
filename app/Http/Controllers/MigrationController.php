@@ -397,49 +397,49 @@ class MigrationController extends Controller
 
     public function updates(Request $request)
     {
-
-        // 1. Validar y leer el archivo CSV
-        $file = 'Datos_Consolidados2.csv';
-
-        // 1. Validar y leer el archivo CSV
-        $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::CSV)->first();
-
-        // 2. Procesar datos
+        // 1. Leer el archivo Excel
+        $file = 'Datos_Consolidados1.xlsx';
+        $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::XLSX)->first();
+    
+        // 2. Identificar duplicados en el CSV para reportar
         $matriculas = $rows->countBy('identity_document');
         $duplicates = $matriculas->filter(fn($c) => $c > 1)->keys();
-        $validRows = $rows->filter(fn($r) => $matriculas[$r['identity_document']] === 1);
-
-        // 3. Actualizar registros
+    
+        // 3. Procesar todas las filas
         $updated = 0;
         $errors = [];
-
-        foreach ($validRows as $row) {
+    
+        foreach ($rows as $row) {
             try {
                 DB::beginTransaction();
-
+    
+                // Buscar TODOS los estudiantes coincidentes
                 $students = Student::where('identity_document', 'LIKE', "%{$row['identity_document']}%")->get();
-                // return $students;
-
-                if ($students->count() !== 1) {
+    
+                if ($students->isEmpty()) {
                     $errors[] = [
-                        'nombre_del_alumno' => $row['full_name'],
+                        'nombre_del_alumno' => $row['name'].' '.$row["surname"],
                         'matricula' => $row['identity_document'],
-                        'error' => $students->isEmpty() ? 'No encontrado' : 'Múltiples coincidencias'
+                        'error' => 'No encontrado'
                     ];
+                    DB::commit();
                     continue;
                 }
-
-
-                $students->first()->update([
-                    'gender' => $row['gender'],
-                    'country_id' => $row['country_id'],
-                    'state_id' => $row['state_id'],
-                    'city_id' => $row['city_id'],
-                    'birthday' => Carbon::createFromFormat('d/m/Y', $row['birthday'])
-                ]);
-
-                $updated++;
+    
+                // Actualizar todos los registros encontrados
+                foreach ($students as $student) {
+                    $student->update([
+                        'gender' => $row['gender'],
+                        'country_id' => $row['country_id'],
+                        'state_id' => $row['state_id'],
+                        'city_id' => $row['city_id'],
+                        'birthday' => $row['birthday'],
+                    ]);
+                }
+    
+                $updated += $students->count();
                 DB::commit();
+    
             } catch (\Exception $e) {
                 $errors[] = [
                     'matricula' => $row['identity_document'],
@@ -448,8 +448,7 @@ class MigrationController extends Controller
                 DB::rollback();
             }
         }
-
-
+    
         // 4. Retornar respuesta
         return response()->json([
             'success' => true,

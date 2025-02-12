@@ -332,22 +332,40 @@ class StudentController extends Controller
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
- 
+
     public function studentStatistics(Request $request)
-    { 
-        $data = $this->studentRepository->studentStatisticsData($request); 
+    {
+
+        // return  $reporte = Student::select([
+        //     DB::raw('type_education.name as tipo_educacion'),
+        //     DB::raw('CONCAT(grades.name, " - ", sections.name) as grado_seccion'),
+        //     DB::raw('COALESCE(students.gender, "No especificado") as genero'),
+        //     DB::raw('COUNT(students.id) as total')
+        // ])
+        //     ->leftJoin('type_education', 'students.type_education_id', '=', 'type_education.id')
+        //     ->leftJoin('grades', 'students.grade_id', '=', 'grades.id')
+        //     ->leftJoin('sections', 'students.section_id', '=', 'sections.id')
+        //     ->groupBy('tipo_educacion')
+        //     ->groupBy('grado_seccion')
+        //     ->groupBy('genero') 
+        //     ->get()
+        //     ->groupBy(['tipo_educacion', 'grado_seccion']);
+
+         $data = $this->studentRepository->studentStatisticsData($request);
 
         // return view('Exports.Student.Statistics', compact('statistics'));
 
         return response()->json([
             'code' => 200,
             ...$data,
-        ]); 
+        ]);
     }
 
     public function statisticsExcelExport(Request $request)
     {
         $data = $this->studentRepository->studentStatisticsData($request);
+        $data['dateInitial'] = $request->input('dateInitial');
+        $data['dateEnd'] = $request->input('dateEnd');
 
         $excel = Excel::raw(new StudentStatisticsExport($data), \Maatwebsite\Excel\Excel::XLSX);
 

@@ -257,8 +257,8 @@ class StudentRepository extends BaseRepository
         $companyId = $request->input('company_id');
 
         // Obtener rango de fechas para el periodo seleccionado
-        $dateInitial = Carbon::parse($request->input('dateInitial', "2021-01-01"));
-        $dateEnd = Carbon::parse($request->input('dateEnd', "2025-12-31"));
+        $dateInitial = Carbon::parse($request->input('dateInitial', "2000-01-01"));
+        $dateEnd = Carbon::parse($request->input('dateEnd', "2099-12-31"));
 
         $typeEducations = TypeEducation::with(['grades.sections'])->get();
 
@@ -360,7 +360,7 @@ class StudentRepository extends BaseRepository
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
             ->where('students.company_id', $companyId)
             ->whereIn('students.type_education_id', $type_education_id)
-            ->whereDate('student_withdrawals.date', ">=",$dateInitial)
+            ->whereDate('student_withdrawals.date', ">=", $dateInitial)
             ->whereDate('student_withdrawals.date', "<=", $dateEnd)
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
             ->get();
@@ -440,6 +440,29 @@ class StudentRepository extends BaseRepository
                 'female' => $stat['initial']['female'] + $stat['new_entries']['female'] - $stat['withdrawals']['female']
             ];
         }
+
+
+        // Nueva consulta para estudiantes retirados
+        $withdrawnStudents = Student::select([
+            'students.identity_document',
+            'students.full_name',
+            'students.birthday',
+            'students.gender',
+            'grades.name as grade_name',
+            'sections.name as section_name',
+            'student_withdrawals.date as withdrawal_date',
+            'student_withdrawals.reason'
+        ])
+            ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereDate('student_withdrawals.date', ">=", $dateInitial)
+            ->whereDate('student_withdrawals.date', "<=", $dateEnd)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->orderBy('student_withdrawals.date', 'desc')
+            ->get();
 
         return [
             "statistics" => $statistics,

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('student_withdrawals', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('student_id');
+            $table->foreignUuid('student_id')->constrained();
             $table->date('date');
             $table->string('reason', 255);
             $table->timestamps(); 

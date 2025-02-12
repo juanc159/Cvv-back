@@ -8,6 +8,9 @@ use App\Models\BlockData;
 use App\Models\Grade;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\Subject;
+use App\Models\Teacher;
+use App\Models\TypeEducation;
 use App\Repositories\BlockDataRepository;
 use App\Repositories\NoteRepository;
 use App\Repositories\StudentRepository;
@@ -59,6 +62,14 @@ class NoteController extends Controller
                 $file = $request->file('archive');
                 $import = Excel::toArray([], $file);
 
+                $teacher_id = $request->teacher_id;
+
+                $teacher = Teacher::with([
+                    'complementaries',
+                ])
+                    ->find($teacher_id);
+
+
                 $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
                 $sheets = count($import);
@@ -80,17 +91,17 @@ class NoteController extends Controller
                             $formattedData[] = $formattedRow;
                         }
 
-                        $groupedCedulas = collect($formattedData)
-                            ->filter(function ($item) {
-                                return ! is_null($item['CÉDULA']); // Filtrar elementos con cédulas no nulas
-                            })
-                            ->groupBy('AÑO') // Agrupar por AÑO
-                            ->map(function ($yearGroup) {
-                                return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
-                                    ->map(function ($sectionGroup) {
-                                        return $sectionGroup->pluck('CÉDULA')->filter()->values(); // Extraer cédulas
-                                    });
-                            });
+                        // $groupedCedulas = collect($formattedData)
+                        //     ->filter(function ($item) {
+                        //         return ! is_null($item['CÉDULA']); // Filtrar elementos con cédulas no nulas
+                        //     })
+                        //     ->groupBy('AÑO') // Agrupar por AÑO
+                        //     ->map(function ($yearGroup) {
+                        //         return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
+                        //             ->map(function ($sectionGroup) {
+                        //                 return $sectionGroup->pluck('CÉDULA')->filter()->values(); // Extraer cédulas
+                        //             });
+                        //     });
 
                         // foreach ($groupedCedulas as $key => $value) {
                         //     // $grade = Grade::where("name", $key)->first();
@@ -147,11 +158,31 @@ class NoteController extends Controller
                                 }
                                 $student = $this->studentRepository->store($model);
 
-                                $grade = $typeEducation->grades->where('id', $grade->id)->first();
+                                //  $teacher->complementaries->where("grade_id",$grade->id);
 
-                                $subjects = $grade->subjects;
+                                if($teacher){
+                                    foreach ($teacher->complementaries as $complementary) {
+                                        // Acceder a las materias relacionadas
+                                        $subjects = $complementary->subjects;
+    
+                                        // Puedes hacer lo que necesites con las materias
+                                        foreach ($subjects as $subject) {
+                                            // echo $subject->name; // Mostrar el nombre de la materia, por ejemplo
+                                            $subjectsData[] = $subject;
+                                        }
+                                    }
+                                    // return $subjectsData;
+                                }else{
 
-                                foreach ($subjects as $key => $sub) {
+                                    $grade = $typeEducation->grades->where('id', $grade->id)->first();
+    
+                                    $subjectsData = $grade->subjects;
+                                }
+
+                                // return $subjectsData;
+
+
+                                foreach ($subjectsData   as $key => $sub) {
                                     $model2 = [
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
@@ -164,7 +195,7 @@ class NoteController extends Controller
                                         $json = json_decode($note->json, 1);
                                     }
 
-                                    $model2 = [
+                                     $model2 = [
                                         'id' => $note ? $note->id : null,
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
@@ -176,8 +207,9 @@ class NoteController extends Controller
 
                                     $model2['json'] = json_encode($json);
 
-                                    $this->noteRepository->store($model2);
+                                      $this->noteRepository->store($model2);
                                 }
+                                // return 4444;
                             }
                         }
                     }
@@ -452,7 +484,7 @@ class NoteController extends Controller
             DB::beginTransaction();
 
             $request["typeData"] = "all";
-              $students = $this->studentRepository->list($request->all());
+            $students = $this->studentRepository->list($request->all());
             foreach ($students as $key => $value) {
                 $value->pdf = null;
                 $value->save();

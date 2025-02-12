@@ -25,6 +25,8 @@ class StudentStatisticsExport implements FromView, ShouldAutoSize, WithEvents
         return view('Exports.Student.Statistics', [
             'statistics' => $this->data["statistics"],
             'withdrawnStudents' => $this->data["withdrawnStudents"],
+            'dateInitial' => $this->data["dateInitial"],
+            'dateEnd' => $this->data["dateEnd"],
         ]);
     }
 
