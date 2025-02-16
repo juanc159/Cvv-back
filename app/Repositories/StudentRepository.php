@@ -310,11 +310,16 @@ class StudentRepository extends BaseRepository
         sections.name as section_name,
         COUNT(*) as total,
         SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+
+        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
     ')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
             ->where('students.company_id', $companyId)
             ->whereIn('students.type_education_id', $type_education_id)
             ->where('students.real_entry_date', '<', $dateInitial)
@@ -334,11 +339,17 @@ class StudentRepository extends BaseRepository
         sections.name as section_name,
         COUNT(*) as total,
         SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+
+
+        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
     ')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
             ->where('students.company_id', $companyId)
             ->whereIn('students.type_education_id', $type_education_id)
             ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
@@ -352,12 +363,17 @@ class StudentRepository extends BaseRepository
         sections.name as section_name,
         COUNT(*) as total,
         SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female
+        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+
+        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
     ')
             ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
             ->where('students.company_id', $companyId)
             ->whereIn('students.type_education_id', $type_education_id)
             ->whereDate('student_withdrawals.date', ">=", $dateInitial)
@@ -376,23 +392,38 @@ class StudentRepository extends BaseRepository
                 'initial' => [
                     'total' => 0,
                     'male' => 0,
-                    'female' => 0
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
+
                 ],
                 'new_entries' => [
                     'total' => 0,
                     'male' => 0,
-                    'female' => 0
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
                 ],
                 'withdrawals' => [
                     'total' => 0,
                     'male' => 0,
-                    'female' => 0
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
                 ],
                 'current' => [
                     'total' => 0,
                     'male' => 0,
-                    'female' => 0
-                ]
+                    'female' => 0,
+                ],
+                'foreign' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                ],
             ];
         }
 
@@ -403,7 +434,10 @@ class StudentRepository extends BaseRepository
                 $statistics[$key]['initial'] = [
                     'total' => $item->total,
                     'male' => $item->male,
-                    'female' => $item->female
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
                 ];
             }
         }
@@ -415,7 +449,10 @@ class StudentRepository extends BaseRepository
                 $statistics[$key]['new_entries'] = [
                     'total' => $item->total,
                     'male' => $item->male,
-                    'female' => $item->female
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
                 ];
             }
         }
@@ -427,7 +464,10 @@ class StudentRepository extends BaseRepository
                 $statistics[$key]['withdrawals'] = [
                     'total' => $item->total,
                     'male' => $item->male,
-                    'female' => $item->female
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
                 ];
             }
         }
@@ -441,6 +481,14 @@ class StudentRepository extends BaseRepository
             ];
         }
 
+        // Procesar extrangeros
+        foreach ($statistics as $key => $stat) { 
+             $statistics[$key]['foreign'] = [
+                'total' => $stat['initial']['total_foreign'] + $stat['new_entries']['total_foreign'] - $stat['withdrawals']['total_foreign'],
+                'male' => $stat['initial']['male_foreign'] + $stat['new_entries']['male_foreign'] - $stat['withdrawals']['male_foreign'],
+                'female' => $stat['initial']['female_foreign'] + $stat['new_entries']['female_foreign'] - $stat['withdrawals']['female_foreign']
+            ];
+        } 
 
         // Nueva consulta para estudiantes retirados
         $withdrawnStudents = Student::select([
@@ -464,9 +512,32 @@ class StudentRepository extends BaseRepository
             ->orderBy('student_withdrawals.date', 'desc')
             ->get();
 
+
+        // Consulta Nuevos Ingresos (matriculados en el periodo actual)
+        $entriesStudents = Student::selectRaw('
+                students.identity_document,
+                students.full_name,
+                students.birthday,
+                students.gender,
+                type_education.name as type_education_name,
+                grades.name as grade_name,
+                sections.name as section_name
+            ')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
+            ->orderBy('students.real_entry_date', 'desc')
+            ->get();
+
+
+
         return [
             "statistics" => $statistics,
             "withdrawnStudents" => $withdrawnStudents,
+            "entriesStudents" => $entriesStudents,
         ];
     }
 }

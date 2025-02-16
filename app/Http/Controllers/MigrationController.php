@@ -397,63 +397,74 @@ class MigrationController extends Controller
 
     public function updates(Request $request)
     {
-        // 1. Leer el archivo Excel
-        $file = 'Datos_Consolidados1.xlsx';
-        $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::XLSX)->first();
-    
-        // 2. Identificar duplicados en el CSV para reportar
-        $matriculas = $rows->countBy('identity_document');
-        $duplicates = $matriculas->filter(fn($c) => $c > 1)->keys();
-    
+        $files = [
+            'todo-inicial.xlsx',
+            'todo-primaria.xlsx',
+            'todo-mediageneral.xlsx',
+        ];
+
         // 3. Procesar todas las filas
         $updated = 0;
         $errors = [];
-    
-        foreach ($rows as $row) {
-            try {
-                DB::beginTransaction();
-    
-                // Buscar TODOS los estudiantes coincidentes
-                $students = Student::where('identity_document', 'LIKE', "%{$row['identity_document']}%")->get();
-    
-                if ($students->isEmpty()) {
-                    $errors[] = [
-                        'nombre_del_alumno' => $row['name'].' '.$row["surname"],
-                        'matricula' => $row['identity_document'],
-                        'error' => 'No encontrado'
-                    ];
+        $duplicates = [];
+
+        foreach ($files as $key => $file) {
+            // 1. Leer el archivo Excel
+            $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::XLSX)->first();
+
+            // 2. Identificar duplicados en el CSV para reportar
+            $matriculas = $rows->countBy('identity_document');
+            $duplicates = [...$duplicates, ...$matriculas->filter(fn($c) => $c > 1)->keys()];
+
+
+
+            foreach ($rows as $row) {
+                try {
+                    DB::beginTransaction();
+
+                    // Buscar TODOS los estudiantes coincidentes
+                    $students = Student::where('identity_document', 'LIKE', "%{$row['identity_document']}%")->get();
+
+                    if ($students->isEmpty()) {
+                        $errors[] = [
+                            'nombre_del_alumno' => $row['names'] . ' ' . $row["surnames"],
+                            'matricula' => $row['identity_document'],
+                            'error' => 'No encontrado'
+                        ];
+                        DB::commit();
+                        continue;
+                    }
+
+                    // Actualizar todos los registros encontrados
+                    foreach ($students as $student) {
+                        $student->update([
+                            'gender' => $row['gender'],
+                            'country_id' => $row['country_id'],
+                            'state_id' => $row['state_id'],
+                            'city_id' => $row['city_id'],
+                            'birthday' => $row['birthday'],
+                        ]);
+                    }
+
+                    $updated += $students->count();
                     DB::commit();
-                    continue;
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'matricula' => $row['identity_document'],
+                        'error' => $e->getMessage()
+                    ];
+                    DB::rollback();
                 }
-    
-                // Actualizar todos los registros encontrados
-                foreach ($students as $student) {
-                    $student->update([
-                        'gender' => $row['gender'],
-                        'country_id' => $row['country_id'],
-                        'state_id' => $row['state_id'],
-                        'city_id' => $row['city_id'],
-                        'birthday' => $row['birthday'],
-                    ]);
-                }
-    
-                $updated += $students->count();
-                DB::commit();
-    
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'matricula' => $row['identity_document'],
-                    'error' => $e->getMessage()
-                ];
-                DB::rollback();
             }
         }
-    
+
+
+
         // 4. Retornar respuesta
         return response()->json([
             'success' => true,
             'updated' => $updated,
-            'duplicates' => $duplicates->values(),
+            'duplicates' => $duplicates,
             'errors' => $errors
         ]);
     }

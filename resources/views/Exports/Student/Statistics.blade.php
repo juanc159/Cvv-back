@@ -21,6 +21,7 @@
                 <th colspan="3" style=" text-align: center; border-right: 2px solid #666; background-color: #007bff; color: white; padding: 12px; font-size: 15px;">Ingresos</th>
                 <th colspan="3" style=" text-align: center; border-right: 2px solid #666; background-color: #dc3545; color: white; padding: 12px; font-size: 15px;">Egresos</th>
                 <th colspan="3" style=" text-align: center; background-color: #28a745; color: white; padding: 12px; font-size: 15px;">Matrícula Actual</th>
+                <th colspan="3" style=" text-align: center; background-color: #FFCC80; color: white; padding: 12px; font-size: 15px;">Extranjeros</th>
             </tr>
             <tr style="background-color: #f8f9fa; color: #333; font-weight: bold; text-align: center;">
                 <th></th>
@@ -47,12 +48,14 @@
                     'new_entries' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'current' => ['male' => 0, 'female' => 0, 'total' => 0],
+                    'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
                 ];
                 $subtotals = [
                     'initial' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'new_entries' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'current' => ['male' => 0, 'female' => 0, 'total' => 0],
+                    'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
                 ];
             @endphp
             @foreach($statistics as $stat)
@@ -71,6 +74,9 @@
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['male'] }}</td>
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['female'] }}</td>
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['total'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['male'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['female'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['total'] }}</td>
                     </tr>
                     @php
                         // Reiniciar los subtotales para el nuevo tipo de educación
@@ -79,6 +85,7 @@
                             'new_entries' => ['male' => 0, 'female' => 0, 'total' => 0],
                             'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                             'current' => ['male' => 0, 'female' => 0, 'total' => 0],
+                            'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
                         ];
                     @endphp
                 @endif
@@ -104,7 +111,10 @@
                     <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #ffebee;">{{ $stat['withdrawals']['total'] }}</td>
                     <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #c8e6c9;">{{ $stat['current']['male'] }}</td>
                     <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #c8e6c9;">{{ $stat['current']['female'] }}</td>
-                    <td style="text-align: center; padding: 12px; background-color: #c8e6c9;">{{ $stat['current']['total'] }}</td>
+                    <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #c8e6c9;">{{ $stat['current']['total'] }}</td>
+                    <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #FFE0B2;">{{ $stat['foreign']['male'] }}</td>
+                    <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #FFE0B2;">{{ $stat['foreign']['female'] }}</td>
+                    <td style="text-align: center; padding: 12px; background-color: #FFE0B2;">{{ $stat['foreign']['total'] }}</td>
                     @php
                         // Acumular los totales y subtotales
                         $totals['initial']['male'] += $stat['initial']['male'];
@@ -119,6 +129,9 @@
                         $totals['current']['male'] += $stat['current']['male'];
                         $totals['current']['female'] += $stat['current']['female'];
                         $totals['current']['total'] += $stat['current']['total'];
+                        $totals['foreign']['male'] += $stat['foreign']['male'];
+                        $totals['foreign']['female'] += $stat['foreign']['female'];
+                        $totals['foreign']['total'] += $stat['foreign']['total'];
         
                         $subtotals['initial']['male'] += $stat['initial']['male'];
                         $subtotals['initial']['female'] += $stat['initial']['female'];
@@ -132,6 +145,9 @@
                         $subtotals['current']['male'] += $stat['current']['male'];
                         $subtotals['current']['female'] += $stat['current']['female'];
                         $subtotals['current']['total'] += $stat['current']['total'];
+                        $subtotals['foreign']['male'] += $stat['foreign']['male'];
+                        $subtotals['foreign']['female'] += $stat['foreign']['female'];
+                        $subtotals['foreign']['total'] += $stat['foreign']['total'];
                     @endphp
                 </tr>
             @endforeach
@@ -150,6 +166,9 @@
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['male'] }}</td>
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['female'] }}</td>
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['current']['total'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['male'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['female'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['total'] }}</td>
                 </tr>
             @endif
             <tr style="font-weight: bold; background-color: #f2f2f2; text-align: center;">
@@ -166,6 +185,9 @@
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['current']['male'] }}</td>
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['current']['female'] }}</td>
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['current']['total'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['male'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['female'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['total'] }}</td>
             </tr>
         </tbody>
         
@@ -206,6 +228,49 @@
                         {{ Carbon\Carbon::parse($student->withdrawal_date)->format('d/m/Y') }}
                     </td>
                     <td style="padding: 8px;">{{ $student->reason }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 15px;">No hay estudiantes retirados registrados</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div class="container" style="margin-top: 40px;">
+    <h2 style="color: #333; font-family: Arial, sans-serif;">Estudiantes Ingreados</h2>
+    <table class="table table-bordered" style="border: 2px solid #ccc; border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px;">
+        <thead>
+            <tr style="background-color: #f8f9fa; color: #333; font-weight: bold;">
+                <th style="padding: 10px; border-right: 2px solid #666;">Documento</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Apellidos y Nombres</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Fecha Nacimiento</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Grado</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Sección</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Sexo</th>
+                <th style="padding: 10px; border-right: 2px solid #666;">Fecha Ingreso</th>
+                <th style="padding: 10px;">Motivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($entriesStudents as $student)
+                <tr style="background-color: {{ $loop->even ? '#f8f9fa' : '#ffffff' }};">
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->identity_document }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->full_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">
+                        @if($student->birthday)
+                            {{ Carbon\Carbon::parse($student->birthday)->format('d/m/Y') }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->grade_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->section_name }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">{{ $student->gender == 'M' ? 'Masculino' : 'Femenino' }}</td>
+                    <td style="padding: 8px; border-right: 2px solid #666;">
+                        {{ Carbon\Carbon::parse($student->real_entry_date)->format('d/m/Y') }}
+                    </td> 
                 </tr>
             @empty
                 <tr>

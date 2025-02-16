@@ -131,6 +131,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Reiniciar planificaciones',
                 'menu_id' => 11,
             ],
+            [
+                'id' => 20,
+                'name' => 'menu.enrollments&Exits',
+                'description' => 'Reporte Ingresos y Egresos',
+                'menu_id' => 13,
+            ],
         ];
 
         // Inicializar la barra de progreso

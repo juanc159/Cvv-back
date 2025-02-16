@@ -113,10 +113,10 @@ class MenuSeeder extends Seeder
             [
                 'id' => 13,
                 'order' => 130,
-                'title' => 'Backup',
-                'to' => 'Note-Index',
+                'title' => 'Ingresos/Egresos',
+                'to' => 'Enrollments&Exits-Index',
                 'icon' => 'tabler-database-edit',
-                'requiredPermission' => 'note.index',
+                'requiredPermission' => 'menu.enrollments&Exits',
             ],
         ];
 

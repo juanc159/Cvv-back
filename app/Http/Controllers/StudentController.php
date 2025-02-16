@@ -335,22 +335,6 @@ class StudentController extends Controller
 
     public function studentStatistics(Request $request)
     {
-
-        // return  $reporte = Student::select([
-        //     DB::raw('type_education.name as tipo_educacion'),
-        //     DB::raw('CONCAT(grades.name, " - ", sections.name) as grado_seccion'),
-        //     DB::raw('COALESCE(students.gender, "No especificado") as genero'),
-        //     DB::raw('COUNT(students.id) as total')
-        // ])
-        //     ->leftJoin('type_education', 'students.type_education_id', '=', 'type_education.id')
-        //     ->leftJoin('grades', 'students.grade_id', '=', 'grades.id')
-        //     ->leftJoin('sections', 'students.section_id', '=', 'sections.id')
-        //     ->groupBy('tipo_educacion')
-        //     ->groupBy('grado_seccion')
-        //     ->groupBy('genero') 
-        //     ->get()
-        //     ->groupBy(['tipo_educacion', 'grado_seccion']);
-
          $data = $this->studentRepository->studentStatisticsData($request);
 
         // return view('Exports.Student.Statistics', compact('statistics'));
