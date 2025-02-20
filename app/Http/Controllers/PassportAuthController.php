@@ -326,6 +326,7 @@ class PassportAuthController extends Controller
                 ], 404);
             }
 
+            return $user;
             // Generar el enlace de restablecimiento
             $token = Password::getRepository()->create($user);
 
