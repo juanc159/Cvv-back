@@ -328,7 +328,6 @@ class PassportAuthController extends Controller
 
             // Generar el enlace de restablecimiento
             $token = Password::getRepository()->create($user);
-            return $token;
 
             $action_url = env("SYSTEM_URL_FRONT") . 'ResetPassword/' . $token . '?email=' . urlencode($request->input("email"));
 
