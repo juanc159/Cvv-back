@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
 
 class MigrationController extends Controller
 {
@@ -398,7 +399,7 @@ class MigrationController extends Controller
     public function updates(Request $request)
     {
         $files = [
-            '4b-primaria22222.xlsx',
+            'prueba.xlsx',
             // 'todo-primaria.xlsx',
             // 'todo-mediageneral.xlsx',
         ];
