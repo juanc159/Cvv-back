@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\File;
 
 class MigrationController extends Controller
 {
@@ -399,9 +398,9 @@ class MigrationController extends Controller
     public function updates(Request $request)
     {
         $files = [
-            'prueba.xlsx',
-            // 'todo-primaria.xlsx',
-            // 'todo-mediageneral.xlsx',
+            'todo-inicial.xlsx',
+            'todo-primaria.xlsx',
+            'todo-mediageneral.xlsx',
         ];
 
         // 3. Procesar todas las filas
@@ -411,7 +410,7 @@ class MigrationController extends Controller
 
         foreach ($files as $key => $file) {
             // 1. Leer el archivo Excel
-            $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::XLSX)->first();
+           return $rows = Excel::toCollection(new StudentsImport, $file, 'public', \Maatwebsite\Excel\Excel::XLSX)->first();
 
             // 2. Identificar duplicados en el CSV para reportar
             $matriculas = $rows->countBy('identity_document');
