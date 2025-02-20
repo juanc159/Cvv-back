@@ -260,13 +260,13 @@ class StudentRepository extends BaseRepository
         $dateInitial = Carbon::parse($request->input('dateInitial', "2000-01-01"));
         $dateEnd = Carbon::parse($request->input('dateEnd', "2099-12-31"));
 
-        // $typeEducations = TypeEducation::with(['grades.sections'])->get();
+        $typeEducations = TypeEducation::with(['grades.sections'])->get();
 
-        $typeEducations = TypeEducation::with(['grades.sections' => function ($query) {
-            $query->whereDoesntHave('subjects', function ($subQuery) {
-                $subQuery->where('id', 33); // Omitir las secciones con la materia con id 33
-            });
-        }])->get();
+        // $typeEducations = TypeEducation::with(['grades.sections' => function ($query) {
+        //     $query->whereDoesntHave('subjects', function ($subQuery) {
+        //         $subQuery->where('id', 33); // Omitir las secciones con la materia con id 33
+        //     });
+        // }])->get();
 
         $type_education_id = $typeEducations->pluck('id')->toArray();
 
