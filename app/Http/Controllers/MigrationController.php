@@ -398,9 +398,9 @@ class MigrationController extends Controller
     public function updates(Request $request)
     {
         $files = [
-            'todo-inicial.xlsx',
-            'todo-primaria.xlsx',
-            'todo-mediageneral.xlsx',
+            '4b-primaria22222.xlsx',
+            // 'todo-primaria.xlsx',
+            // 'todo-mediageneral.xlsx',
         ];
 
         // 3. Procesar todas las filas
