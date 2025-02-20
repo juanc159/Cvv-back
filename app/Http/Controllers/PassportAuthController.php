@@ -313,6 +313,11 @@ class PassportAuthController extends Controller
 
             $user = $this->userRepository->findByEmail($request->input("email"));
 
+            if(!$user){
+                $user = $this->teacherRepository->findByEmail($request->input("email"));
+            }
+            
+
             // Verificar si el usuario fue encontrado
             if (!$user) {
                 return response()->json([

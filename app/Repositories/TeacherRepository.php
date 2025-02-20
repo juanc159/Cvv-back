@@ -125,4 +125,9 @@ class TeacherRepository extends BaseRepository
 
         return $data;
     }
+
+    public function findByEmail($email)
+    {
+        return $this->model::where('email', $email)->first();
+    }
 }
