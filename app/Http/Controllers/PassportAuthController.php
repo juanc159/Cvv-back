@@ -239,7 +239,7 @@ class PassportAuthController extends Controller
         $obj['type_user'] = 'teacher';
 
         $obj['blockData'] = false;
-         $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
+        $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
         if ($blockData) {
             $obj['blockData'] = $blockData->is_active;
         }
@@ -313,6 +313,14 @@ class PassportAuthController extends Controller
 
             $user = $this->userRepository->findByEmail($request->input("email"));
 
+            // Verificar si el usuario fue encontrado
+            if (!$user) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'El usuario con ese correo electrónico no existe.',
+                ], 404);
+            }
+
             // Generar el enlace de restablecimiento
             $token = Password::getRepository()->create($user);
 
@@ -360,7 +368,7 @@ class PassportAuthController extends Controller
             ]);
 
 
-              $response  = Password::reset(
+            $response  = Password::reset(
                 $request->only('email', 'password', 'password_confirmation', 'token'),
                 function (User $user, string $password) use ($request) {
 
