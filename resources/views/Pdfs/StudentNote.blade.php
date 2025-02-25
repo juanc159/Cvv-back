@@ -134,7 +134,7 @@
                 </tr>
 
 
-                @foreach ($data['student']['notes'] as $key => $nota)
+                @foreach ($data['filteredNotes'] as $key => $nota)
                     <tr>
                         <td style="text-align: center; font-size: 15px;"><span> {{ $nota['subject']['name'] }}</span>
                         </td>

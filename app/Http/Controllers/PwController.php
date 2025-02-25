@@ -7,6 +7,7 @@ use App\Http\Resources\Company\CompanyPwSchoolResource;
 use App\Models\Banner;
 use App\Models\Company;
 use App\Models\CompanyDetail;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\TeacherPlanning;
 use App\Repositories\BannerRepository;
@@ -187,23 +188,64 @@ class PwController extends Controller
     public function pdfPNote($id)
     {
         try {
-            $fecha = Carbon::now();
-            $fecha->setLocale('es');
-
-            $student = $this->studentRepository->find($id, ['type_education.note_selections', 'notes.subject', 'grade', 'section']);
-            if ($student) {
-                $pdf = $this->studentRepository->pdf('Pdfs.StudentNote', [
-                    'student' => $student,
-                    'date' => $fecha->translatedFormat('l, j \\de F \\de Y'),
-                ], 'Notas', false);
-
-                $pdf = base64_encode($pdf);
+            // Verificar que Carbon::now() devuelva una instancia válida
+            $currentDate = Carbon::now(); 
+    
+            // Configurar el locale y formatear
+            $currentDate->setLocale('es');
+            $formattedDate = $currentDate->translatedFormat('l, j \\de F \\de Y');
+    
+            // Resto del código...
+            $student = $this->studentRepository->find($id, [
+                'notes.subject',
+                'grade.subjects',
+            ]);
+    
+            if (!$student) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'Estudiante no encontrado',
+                ], 404);
             }
-
-            return response()->json(['code' => 200, 'pdf' => $pdf]);
+    
+            $subjectIds = $student->grade->subjects->pluck('id');
+            $filteredNotes = $student->notes()
+                ->whereIn('subject_id', $subjectIds)
+                ->with('subject')
+                ->get();
+    
+            $pdfContent = $this->studentRepository->pdf(
+                'Pdfs.StudentNote',
+                [
+                    'student' => $student,
+                    'filteredNotes' => $filteredNotes,
+                    'date' => $formattedDate,
+                ],
+                'Notas',
+                false
+            );
+    
+            if (!$pdfContent) {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Error al generar el PDF',
+                ], 500);
+            }
+    
+            $pdfBase64 = base64_encode($pdfContent);
+    
+            return response()->json([
+                'code' => 200,
+                'pdf' => $pdfBase64,
+            ], 200);
+    
         } catch (\Throwable $th) {
-
-            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error al procesar la solicitud',
+                'error' => $th->getMessage(), // Para depuración
+                'line' => $th->getLine(),     // Para depuración
+            ], 500);
         }
     }
 
@@ -361,8 +403,8 @@ class PwController extends Controller
                     'title' => $value->title,
                     'image' => $value->image,
                 ];
-            }) ;
- 
+            });
+
 
             return response()->json(['code' => 200, 'services' => $services]);
         } catch (\Throwable $th) {
@@ -397,7 +439,7 @@ class PwController extends Controller
             })->get()->groupBy(['grade.name', 'section.name', 'subject.name']);
 
             $company = $this->companyRepository->find($company_id);
-            
+
             return response()->json([
                 'code' => 200,
                 'plannings' => $plannings,
