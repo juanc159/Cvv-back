@@ -184,7 +184,7 @@ class TeacherController extends Controller
             $jobPositions = $this->jobPositionRepository->selectList();
             $sections = $this->sectionRepository->selectList();
 
-            $teacher = $this->teacherRepository->find($id);
+             $teacher = $this->teacherRepository->find($id,["complementaries"]);
             $form = new TeacherFormResource($teacher);
 
             return response()->json([
@@ -205,8 +205,9 @@ class TeacherController extends Controller
     {
         try {
             DB::beginTransaction();
+ 
 
-            $post = $request->except(['photo', 'complementaries', 'password']);
+              $post = $request->except(['photo', 'complementaries', 'password']);
 
             $data = $this->teacherRepository->store($post);
 
@@ -227,7 +228,7 @@ class TeacherController extends Controller
                     $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
                     $subjectsArray = implode(', ', $subjectsArray);
 
-                    $this->teacherComplementaryRepository->store([
+                      $this->teacherComplementaryRepository->store([
                         'id' => $value['id'] ?? null,
                         'teacher_id' => $data->id,
                         'grade_id' => $value['grade_id'],

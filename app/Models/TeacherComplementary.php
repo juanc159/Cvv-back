@@ -24,13 +24,19 @@ class TeacherComplementary extends Model
         return $this->hasOne(Teacher::class, 'id', 'teacher_id');
     }
 
-      // Accesor para obtener las materias asociadas
-      public function getSubjectsAttribute()
-      {
-          // Obtenemos los IDs de las materias desde el campo `subject_ids` que está separado por comas
-          $subjectIds = explode(',', $this->subject_ids);
-  
-          // Buscamos los objetos `Subject` correspondientes a esos IDs
-          return Subject::whereIn('id', $subjectIds)->get();
-      }
+
+    // Accesor para obtener las materias asociadas
+    public function getSubjectsAttribute()
+    {
+        // Convertir la cadena en array y limpiar espacios
+        $subjectIds = array_map('trim', explode(',', $this->subject_ids));
+
+        // Verificar si hay IDs válidos
+        if (empty($subjectIds) || $subjectIds[0] === '') {
+            return collect(); // Devuelve colección vacía si no hay IDs
+        }
+
+        // Buscar los sujetos
+        return Subject::whereIn('id', $subjectIds)->get();
+    }
 }
