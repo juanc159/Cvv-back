@@ -545,6 +545,8 @@ class StudentRepository extends BaseRepository
             "statistics" => $statistics,
             "withdrawnStudents" => $withdrawnStudents,
             "entriesStudents" => $entriesStudents,
+            "dateInitial" => $dateInitial,
+            "dateEnd" => $dateEnd,
         ];
     }
 }
