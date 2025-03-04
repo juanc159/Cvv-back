@@ -162,13 +162,13 @@ class NoteController extends Controller
                                 ]);
 
                                 $model = [
-                                    'id' => $student ? $student->id : null,
-                                    'company_id' => $request->input('company_id'),
-                                    'type_education_id' => $request->input('type_education_id'),
-                                    'grade_id' => $grade?->id,
-                                    'section_id' => $section?->id,
-                                    'identity_document' => $row['CÉDULA'],
-                                    'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'],
+                                    // 'id' => $student ? $student->id : null,
+                                    // 'company_id' => $request->input('company_id'),
+                                    // 'type_education_id' => $request->input('type_education_id'),
+                                    // 'grade_id' => $grade?->id,
+                                    // 'section_id' => $section?->id,
+                                    // 'identity_document' => $row['CÉDULA'],
+                                    // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'],
                                 ];
 
                                 if (isset($row['PDF'])) {

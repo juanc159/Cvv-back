@@ -532,6 +532,7 @@ class StudentRepository extends BaseRepository
                 students.full_name,
                 students.birthday,
                 students.gender,
+                students.real_entry_date,
                 type_education.name as type_education_name,
                 grades.name as grade_name,
                 sections.name as section_name
