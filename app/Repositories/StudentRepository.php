@@ -256,10 +256,16 @@ class StudentRepository extends BaseRepository
     {
         $companyId = $request->input('company_id');
 
-        // Obtener rango de fechas para el periodo seleccionado
-        // Obtener rango de fechas para el periodo seleccionado
-        $dateInitial = Carbon::parse($request->input('dateInitial', Carbon::now()->startOfMonth()->toDateString()));
-        $dateEnd = Carbon::parse($request->input('dateEnd', Carbon::now()->endOfMonth()->toDateString()));
+        // Obtener rango de fechas para el periodo seleccionado 
+        $dateInitial = $request->input('dateInitial'); 
+        $dateEnd = $request->input('dateEnd');
+
+        if(empty($dateInitial)){
+            $dateInitial =  Carbon::now()->startOfMonth()->toDateString();
+        }
+        if(empty($dateEnd)){
+            $dateEnd = Carbon::now()->endOfMonth()->toDateString();
+        }
 
         $typeEducations = TypeEducation::with(['grades.sections'])->get();
 
