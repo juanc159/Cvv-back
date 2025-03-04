@@ -257,8 +257,9 @@ class StudentRepository extends BaseRepository
         $companyId = $request->input('company_id');
 
         // Obtener rango de fechas para el periodo seleccionado
-        $dateInitial = Carbon::parse($request->input('dateInitial', "2000-01-01"));
-        $dateEnd = Carbon::parse($request->input('dateEnd', "2099-12-31"));
+        // Obtener rango de fechas para el periodo seleccionado
+        $dateInitial = Carbon::parse($request->input('dateInitial', Carbon::now()->startOfMonth()->toDateString()));
+        $dateEnd = Carbon::parse($request->input('dateEnd', Carbon::now()->endOfMonth()->toDateString()));
 
         $typeEducations = TypeEducation::with(['grades.sections'])->get();
 
@@ -488,13 +489,13 @@ class StudentRepository extends BaseRepository
         }
 
         // Procesar extrangeros
-        foreach ($statistics as $key => $stat) { 
-             $statistics[$key]['foreign'] = [
+        foreach ($statistics as $key => $stat) {
+            $statistics[$key]['foreign'] = [
                 'total' => $stat['initial']['total_foreign'] + $stat['new_entries']['total_foreign'] - $stat['withdrawals']['total_foreign'],
                 'male' => $stat['initial']['male_foreign'] + $stat['new_entries']['male_foreign'] - $stat['withdrawals']['male_foreign'],
                 'female' => $stat['initial']['female_foreign'] + $stat['new_entries']['female_foreign'] - $stat['withdrawals']['female_foreign']
             ];
-        } 
+        }
 
         // Nueva consulta para estudiantes retirados
         $withdrawnStudents = Student::select([
@@ -546,5 +547,4 @@ class StudentRepository extends BaseRepository
             "entriesStudents" => $entriesStudents,
         ];
     }
- 
 }
