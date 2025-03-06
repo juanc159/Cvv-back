@@ -92,6 +92,7 @@ class NoteController extends Controller
                     // return $subjectsData;
                 }
 
+
                 $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
                 $sheets = count($import);
@@ -151,7 +152,7 @@ class NoteController extends Controller
                             return array_map('trim', $item); // Aplica trim a cada valor del item
                         }, $formattedData);
 
-                        foreach ($formattedData as $row) {
+                        foreach ($formattedData as $kkk=> $row) {
                             if (! empty($row['CÉDULA'])) {
 
                                 $grade = $this->grade($row['AÑO'], 'name');
@@ -162,7 +163,7 @@ class NoteController extends Controller
                                 ]);
 
                                 $model = [
-                                    // 'id' => $student ? $student->id : null,
+                                    'id' => $student ? $student->id : null,
                                     // 'company_id' => $request->input('company_id'),
                                     // 'type_education_id' => $request->input('type_education_id'),
                                     // 'grade_id' => $grade?->id,
@@ -178,6 +179,13 @@ class NoteController extends Controller
                                 if ($student) {
                                     unset($model['password']);
                                 }
+
+                                logMessage("model");
+                                logMessage($model);
+                                logMessage("kkk");
+                                logMessage($kkk);
+                                logMessage("row");
+                                logMessage($row);
                                 $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
