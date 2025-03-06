@@ -90,8 +90,6 @@ class StudentRepository extends BaseRepository
             $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
-            logMessage("error aqui");
-            logMessage($request);
             $data['password'] = $request['identity_document'];
         }
 

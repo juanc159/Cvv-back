@@ -179,13 +179,7 @@ class NoteController extends Controller
                                 if ($student) {
                                     unset($model['password']);
                                 }
-
-                                logMessage("model");
-                                logMessage($model);
-                                logMessage("kkk");
-                                logMessage($kkk);
-                                logMessage("row");
-                                logMessage($row);
+ 
                                 $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
