@@ -3,7 +3,7 @@
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 
-//Rutas protegidas
+// Rutas protegidas
 Route::middleware(['check.permission:subject.list'])->group(function () {
 
     /*

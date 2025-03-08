@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Company;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -36,10 +37,9 @@ class CompanyStoreRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
-
         throw new HttpResponseException(response()->json([
             'code' => 422,
-            'message' => 'Hubo un error en la validación del formulario',
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
         ], 422));
     }

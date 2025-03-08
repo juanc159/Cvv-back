@@ -3,7 +3,7 @@
 use App\Http\Controllers\GradeController;
 use Illuminate\Support\Facades\Route;
 
-//Rutas protegidas
+// Rutas protegidas
 Route::middleware(['check.permission:grade.list'])->group(function () {
 
     /*

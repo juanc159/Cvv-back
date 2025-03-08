@@ -23,4 +23,3 @@ Route::post('/note-resetOptionDownloadPdf', [NoteController::class, 'resetOption
 */
 Route::get('/type_educations/visualization/show', [TypeEducationNoteSelectionController::class, 'show']);
 Route::post('/type_educations/visualization/store', [TypeEducationNoteSelectionController::class, 'store']);
- 

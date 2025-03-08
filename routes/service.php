@@ -3,7 +3,7 @@
 use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
-//Rutas protegidas
+// Rutas protegidas
 Route::middleware(['check.permission:service.list'])->group(function () {
 
     /*

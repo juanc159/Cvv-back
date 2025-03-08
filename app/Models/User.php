@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Traits\Cacheable;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasPermissions, HasRoles, HasUuids,Notifiable,Searchable;
+    use Cacheable, HasApiTokens, HasFactory, HasPermissions, HasRoles, HasUuids, Notifiable, Searchable;
 
     /**
      * The attributes that are mass assignable.
@@ -56,6 +57,15 @@ class User extends Authenticatable
     public function getFullNameAttribute()
     {
         return $this->name.' '.$this->surname;
+    }
+
+    public function scopeSearchFullName($query, $value)
+    {
+        if (empty($value)) {
+            return $query;
+        }
+
+        return $query->whereRaw("CONCAT(name, ' ', surname) LIKE ?", ["%{$value}%"]);
     }
 
     public function getAllPermissionsAttribute()

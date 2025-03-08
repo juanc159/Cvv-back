@@ -3,7 +3,7 @@
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 
-//Rutas protegidas
+// Rutas protegidas
 Route::middleware(['check.permission:menu.role'])->group(function () {
 
     /*

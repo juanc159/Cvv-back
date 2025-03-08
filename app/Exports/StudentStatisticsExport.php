@@ -23,11 +23,11 @@ class StudentStatisticsExport implements FromView, ShouldAutoSize, WithEvents
     public function view(): View
     {
         return view('Exports.Student.Statistics', [
-            'statistics' => $this->data["statistics"],
-            'withdrawnStudents' => $this->data["withdrawnStudents"],
-            'entriesStudents' => $this->data["entriesStudents"],
-            'dateInitial' => $this->data["dateInitial"],
-            'dateEnd' => $this->data["dateEnd"],
+            'statistics' => $this->data['statistics'],
+            'withdrawnStudents' => $this->data['withdrawnStudents'],
+            'entriesStudents' => $this->data['entriesStudents'],
+            'dateInitial' => $this->data['dateInitial'],
+            'dateEnd' => $this->data['dateEnd'],
         ]);
     }
 
@@ -37,11 +37,11 @@ class StudentStatisticsExport implements FromView, ShouldAutoSize, WithEvents
             AfterSheet::class => function (AfterSheet $event) {
                 $event->sheet->getStyle('A1:G1')->applyFromArray([
                     'font' => [
-                        'bold' => true
+                        'bold' => true,
                     ],
-                    
+
                 ]);
-            }
+            },
         ];
     }
-} 
+}

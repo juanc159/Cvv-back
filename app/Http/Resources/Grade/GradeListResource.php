@@ -18,8 +18,6 @@ class GradeListResource extends JsonResource
             'id' => $this->id,
             'type_education_name' => $this->typeEducation->name,
             'name' => $this->name,
-            'code' => $this->code,
-            'is_active' => $this->is_active,
         ];
     }
 }

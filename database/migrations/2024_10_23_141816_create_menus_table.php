@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
-            $table->double('order')->default(9999); //Orden del menu
-            $table->string('title'); //Texto en el boton
-            $table->string('to')->nullable(); //to del boton y name del route
-            $table->string('icon'); //icono
+            $table->double('order')->default(9999); // Orden del menu
+            $table->string('title'); // Texto en el boton
+            $table->string('to')->nullable(); // to del boton y name del route
+            $table->string('icon'); // icono
             $table->string('requiredPermission')->nullable(); // Esta ruta requiere permisos de XXXX
             $table->integer('father')->nullable(); // padre
             $table->timestamps();

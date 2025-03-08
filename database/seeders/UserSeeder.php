@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        //ESTE USUARIO SUPER ADMINISTRADOR NO VA A TENER COMPAÑIA
+        // ESTE USUARIO SUPER ADMINISTRADOR NO VA A TENER COMPAÑIA
         $arrayData = [
             [
                 'name' => 'SuperAdmin',

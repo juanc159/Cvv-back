@@ -19,7 +19,7 @@ class BannerController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->bannerRepository->list($request->all());
+            $data = $this->bannerRepository->paginate($request->all());
             $tableData = BannerListResource::collection($data);
 
             return [

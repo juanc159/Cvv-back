@@ -22,7 +22,7 @@ class GradeController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->gradeRepository->list($request->all());
+            $data = $this->gradeRepository->paginate($request->all());
             $tableData = GradeListResource::collection($data);
 
             return [

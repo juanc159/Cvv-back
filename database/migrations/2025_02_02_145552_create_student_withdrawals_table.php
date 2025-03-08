@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignUuid('student_id')->constrained();
             $table->date('date');
             $table->string('reason', 255);
-            $table->timestamps(); 
+            $table->timestamps();
         });
     }
 

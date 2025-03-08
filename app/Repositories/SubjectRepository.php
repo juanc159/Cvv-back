@@ -4,12 +4,58 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\Subject;
+use App\QueryBuilder\Filters\DataSelectFilter;
+use App\QueryBuilder\Sort\RelatedTableSort;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class SubjectRepository extends BaseRepository
 {
     public function __construct(Subject $modelo)
     {
         parent::__construct($modelo);
+    }
+
+    public function paginate($request = [])
+    {
+        $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
+
+        return $this->cacheService->remember($cacheKey, function () {
+
+            $query = QueryBuilder::for($this->model->query())
+                ->with(['typeEducation:id,name'])
+                ->select(['subjects.id', 'subjects.name', 'code', 'type_education_id'])
+                ->allowedFilters([
+                    'name',
+                    'code',
+                    AllowedFilter::callback('type_education_id', new DataSelectFilter),
+                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                        $query->where(function ($subQuery) use ($value) {
+                            $subQuery->orWhere('name', 'like', "%$value%");
+                            $subQuery->orWhere('code', 'like', "%$value%");
+
+                            $subQuery->orWhereHas('typeEducation', function ($q) use ($value) {
+                                $q->where('name', 'like', "%$value%");
+                            });
+                        });
+                    }),
+                ])
+                ->allowedSorts([
+                    'name',
+                    'code',
+                    AllowedSort::custom('type_education_name', new RelatedTableSort(
+                        'subjects',
+                        'type_education',
+                        'name',
+                        'type_education_id',
+                    )),
+
+                ])
+                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+            return $query;
+        }, Constants::REDIS_TTL);
     }
 
     public function list($request = [], $with = [], $select = ['*'])

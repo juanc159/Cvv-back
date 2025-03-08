@@ -4,12 +4,52 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\Company;
+use App\QueryBuilder\Filters\QueryFilters;
+use App\QueryBuilder\Sort\IsActiveSort;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class CompanyRepository extends BaseRepository
 {
     public function __construct(Company $modelo)
     {
         parent::__construct($modelo);
+    }
+
+    public function paginate($request = [])
+    {
+        $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
+
+        return $this->cacheService->remember($cacheKey, function () {
+
+            $query = QueryBuilder::for($this->model->query())
+                ->select(['id', 'name', 'slogan', 'is_active'])
+                ->allowedFilters([
+                    'name',
+                    'slogan',
+                    'is_active',
+                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                        $query->where(function ($subQuery) use ($value) {
+                            $subQuery->orWhere('name', 'like', "%$value%");
+                            $subQuery->orWhere('slogan', 'like', "%$value%");
+
+                            QueryFilters::filterByText($subQuery, $value, 'is_active', [
+                                'activo' => 1,
+                                'inactivo' => 0,
+                            ]);
+                        });
+                    }),
+                ])
+                ->allowedSorts([
+                    'name',
+                    'slogan',
+                    AllowedSort::custom('is_active', new IsActiveSort),
+                ])
+                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+            return $query;
+        }, Constants::REDIS_TTL);
     }
 
     public function list($request = [], $with = [], $select = ['*'], $idsAllowed = [], $idsNotAllowed = [])

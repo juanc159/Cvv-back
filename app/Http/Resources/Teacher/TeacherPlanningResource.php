@@ -21,10 +21,10 @@ class TeacherPlanningResource extends JsonResource
             'job_position_id' => $this->job_position_id,
             'complementaries' => $this->complementaries->map(function ($value) {
                 $dataSub = [];
-                $subject_ids = explode(',', $value->subject_ids); 
+                $subject_ids = explode(',', $value->subject_ids);
                 foreach ($subject_ids as $key => $sub) {
-                    $x = Subject::find($sub); 
-                    if($x){
+                    $x = Subject::find($sub);
+                    if ($x) {
                         $files = TeacherPlanning::where(function ($query) use ($value, $x) {
                             $query->where('teacher_id', $value->teacher_id);
                             $query->where('grade_id', $value->grade_id);
@@ -37,7 +37,7 @@ class TeacherPlanningResource extends JsonResource
                                 'file' => $f->path,
                             ];
                         });
-    
+
                         $dataSub[] = [
                             'value' => $sub,
                             'title' => $x->name,

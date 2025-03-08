@@ -25,23 +25,23 @@ function filterComponent($query, &$request, $model = null)
                     continue;
                 }
 
-                //Si existe el elemento relacion y es un string debo pasarlo a array
+                // Si existe el elemento relacion y es un string debo pasarlo a array
                 if (isset($value['relation']) && is_string($value['relation'])) {
                     $value['relation'] = [$value['relation']];
                 }
 
-                //Busquedas si tiene relacion o no
+                // Busquedas si tiene relacion o no
                 if (isset($value['type']) && ! empty($value['type']) && $value['type'] == 'has' && isset($value['relation']) && ! empty($value['relation'])) {
 
                     foreach ($value['relation'] as $key => $relation) {
 
-                        $findRelation = $relation; //relaciona  buscar
+                        $findRelation = $relation; // relaciona  buscar
                         if ((strpos($relation, '.') !== false)) { // si la relacion o palabra tiene "."
                             $findRelation = explode('.', $relation);
                             $findRelation = $findRelation[0]; // debo obtener el primer valor y solo este se busca en la class o modelo
                         }
-                        //si se pasa el modelo, la relacion debe existir en el modelo, pero si no se pasa el modelo se entiende que es sobre el modelo, de donde se usa esta funcion
-                        if ((! empty($model) && method_exists($model, $findRelation)) || is_null($model)) { //busco la relacion en mi modelo
+                        // si se pasa el modelo, la relacion debe existir en el modelo, pero si no se pasa el modelo se entiende que es sobre el modelo, de donde se usa esta funcion
+                        if ((! empty($model) && method_exists($model, $findRelation)) || is_null($model)) { // busco la relacion en mi modelo
                             if ($value['search'] === 1 || $value['search'] === '1') {
                                 $query->has($relation);
                             } elseif ($value['search'] === 0 || $value['search'] === '0') {
@@ -51,7 +51,7 @@ function filterComponent($query, &$request, $model = null)
                     }
                 }
 
-                //Busqueda normal
+                // Busqueda normal
                 if (! empty($value['input_type']) && isset($value['search']) && ! empty($value['search_key'])) {
 
                     if ($value['input_type'] == 'date') {
@@ -67,14 +67,14 @@ function filterComponent($query, &$request, $model = null)
                         }
                         if (isset($value['relation'])) {
                             foreach ($value['relation'] as $key => $relation) {
-                                $findRelation = $relation; //relaciona  buscar
+                                $findRelation = $relation; // relaciona  buscar
                                 if ((strpos($relation, '.') !== false)) { // si la relacion o palabra tiene "."
                                     $findRelation = explode('.', $relation);
                                     $findRelation = $findRelation[0]; // debo obtener el primer valor y solo este se busca en la class o modelo
                                 }
 
-                                //si se pasa el modelo, la relacion debe existir en el modelo, pero si no se pasa el modelo se entiende que es sobre el modelo, de donde se usa esta funcion
-                                if ((! empty($model) && method_exists($model, $findRelation)) || is_null($model)) { //busco la relacion en mi modelo
+                                // si se pasa el modelo, la relacion debe existir en el modelo, pero si no se pasa el modelo se entiende que es sobre el modelo, de donde se usa esta funcion
+                                if ((! empty($model) && method_exists($model, $findRelation)) || is_null($model)) { // busco la relacion en mi modelo
                                     $query->whereHas($relation, function ($x) use ($value, $search) {
                                         if (is_array($search)) {
                                             // Verificar si es un array de objetos con clave "value"

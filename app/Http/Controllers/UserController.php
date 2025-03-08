@@ -28,7 +28,7 @@ class UserController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->userRepository->list($request->all());
+            $data = $this->userRepository->paginate($request->all());
             $tableData = UserListResource::collection($data);
 
             return [
@@ -183,7 +183,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'User ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'User '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -197,13 +197,13 @@ class UserController extends Controller
             DB::beginTransaction();
             // Obtener el usuario autenticado
 
-            if ($request->input("type_user") == 'teacher') {
-                $user = Teacher::find($request->input("id"));
+            if ($request->input('type_user') == 'teacher') {
+                $user = Teacher::find($request->input('id'));
             }
-            if ($request->input("type_user") == 'student') {
-                $user = Student::find($request->input("id"));
+            if ($request->input('type_user') == 'student') {
+                $user = Student::find($request->input('id'));
             }
-            if ($request->input("type_user") == 'admin') {
+            if ($request->input('type_user') == 'admin') {
                 $user = $this->userRepository->find($request->input('id'));
             }
 
@@ -212,24 +212,24 @@ class UserController extends Controller
             $user->save();
 
             DB::commit();
- 
+
             $company_name = $user->company?->name;
 
             // Enviar el correo usando el job de Brevo
             BrevoProcessSendEmail::dispatch(
                 emailTo: [
                     [
-                        "name" => $user->full_name,
-                        "email" => $user->email,
-                    ]
+                        'name' => $user->full_name,
+                        'email' => $user->email,
+                    ],
                 ],
-                subject: "Contraseña Modificada",
+                subject: 'Contraseña Modificada',
                 templateId: 4,  // El ID de la plantilla de Brevo que quieres usar
                 params: [
-                    "full_name" => $user->full_name,
-                    "new_password" => $request->input('new_password'), 
-                    "date_change" => Carbon::now()->format('d/m/Y \a \l\a\s H:i:s'),
-                    "company_name" => $company_name,
+                    'full_name' => $user->full_name,
+                    'new_password' => $request->input('new_password'),
+                    'date_change' => Carbon::now()->format('d/m/Y \a \l\a\s H:i:s'),
+                    'company_name' => $company_name,
                 ],
             );
 

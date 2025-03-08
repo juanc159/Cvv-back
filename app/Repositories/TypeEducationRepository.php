@@ -23,8 +23,8 @@ class TypeEducationRepository extends BaseRepository
             }
         })
             ->where(function ($query) use ($request) {
-                if (! empty($request['searchQuery'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQuery'].'%');
+                if (! empty($request['searchQueryInfinite'])) {
+                    $query->orWhere('name', 'like', '%'.$request['searchQueryInfinite'].'%');
                 }
             })
             ->orderBy($request['sort_field'] ?? 'id', $request['sort_direction'] ?? 'asc');
@@ -65,7 +65,7 @@ class TypeEducationRepository extends BaseRepository
         })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [
                 'value' => $value->$fieldValue,
-                'title' => $value->$fieldTitle, 
+                'title' => $value->$fieldTitle,
             ];
 
             if (count($select) > 0) {

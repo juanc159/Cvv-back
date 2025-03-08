@@ -24,5 +24,7 @@ class RoutesApi
         'routes/teacher.php',
         'routes/note.php',
         'routes/dashboard.php',
+        'routes/term.php',
+        'routes/pendingRegistration.php',
     ];
 }

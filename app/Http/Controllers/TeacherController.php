@@ -19,7 +19,6 @@ use App\Repositories\TeacherPlanningRepository;
 use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
@@ -41,7 +40,7 @@ class TeacherController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->teacherRepository->list($request->all());
+            $data = $this->teacherRepository->paginate($request->all());
             $tableData = TeacherListResource::collection($data);
 
             return [
@@ -114,12 +113,12 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
+                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
 
-            //COMPLEMENTARIES
+            // COMPLEMENTARIES
             $complementaries = json_decode($request->input('complementaries'), 1);
             $arrayIds = collect($complementaries)->pluck('id');
             $this->teacherRepository->deleteArrayComplementaries($arrayIds, $data);
@@ -184,7 +183,7 @@ class TeacherController extends Controller
             $jobPositions = $this->jobPositionRepository->selectList();
             $sections = $this->sectionRepository->selectList();
 
-             $teacher = $this->teacherRepository->find($id,["complementaries"]);
+            $teacher = $this->teacherRepository->find($id, ['complementaries']);
             $form = new TeacherFormResource($teacher);
 
             return response()->json([
@@ -205,20 +204,19 @@ class TeacherController extends Controller
     {
         try {
             DB::beginTransaction();
- 
 
-              $post = $request->except(['photo', 'complementaries', 'password']);
+            $post = $request->except(['photo', 'complementaries', 'password']);
 
             $data = $this->teacherRepository->store($post);
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
+                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
 
-            //COMPLEMENTARIES
+            // COMPLEMENTARIES
             $complementaries = json_decode($request->input('complementaries'), 1);
             $arrayIds = collect($complementaries)->pluck('id');
             $this->teacherRepository->deleteArrayComplementaries($arrayIds, $data);
@@ -228,7 +226,7 @@ class TeacherController extends Controller
                     $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
                     $subjectsArray = implode(', ', $subjectsArray);
 
-                      $this->teacherComplementaryRepository->store([
+                    $this->teacherComplementaryRepository->store([
                         'id' => $value['id'] ?? null,
                         'teacher_id' => $data->id,
                         'grade_id' => $value['grade_id'],
@@ -290,7 +288,7 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Teacher ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Teacher '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -411,17 +409,12 @@ class TeacherController extends Controller
                 }
             }
 
-
-
-
             // Ordenando los header de las materias
             $headers = collect($headers)->map(function ($subjects) {
                 sort($subjects);
 
                 return $subjects;
             });
-
-
 
             if (count($students) > 0) {
                 $excel = Excel::raw(new ConsolidatedExport($students, $headers), \Maatwebsite\Excel\Excel::XLSX);
@@ -461,17 +454,17 @@ class TeacherController extends Controller
             BrevoProcessSendEmail::dispatch(
                 emailTo: [
                     [
-                        "name" => $teacher->full_name,
-                        "email" => $teacher->email,
-                    ]
+                        'name' => $teacher->full_name,
+                        'email' => $teacher->email,
+                    ],
                 ],
-                subject: "Tu contraseña ha sido reiniciada por el administrador",
+                subject: 'Tu contraseña ha sido reiniciada por el administrador',
                 templateId: 3,  // El ID de la plantilla de Brevo que quieres usar
                 params: [
-                    "full_name" => $teacher->full_name, 
-                    "user_admin" => $user_admin->full_name, 
-                    "new_password" => "123456",
-                    "company_name" => $company_name, 
+                    'full_name' => $teacher->full_name,
+                    'user_admin' => $user_admin->full_name,
+                    'new_password' => '123456',
+                    'company_name' => $company_name,
                 ],
             );
 
@@ -499,14 +492,12 @@ class TeacherController extends Controller
 
             DB::beginTransaction();
 
-
-            //obtengo los ids de los archivos
+            // obtengo los ids de los archivos
             $arrayIds = [];
             $fileCount = $request->input('files_cant');
 
-
             for ($i = 0; $i < $fileCount; $i++) {
-                $fileId = $request->input('file_id_' . $i);
+                $fileId = $request->input('file_id_'.$i);
                 if ($fileId) {
                     $arrayIds[] = $fileId;
                 }
@@ -542,8 +533,8 @@ class TeacherController extends Controller
                 ]);
 
                 if ($request->file("file_file_{$key}")) {
-                    $file =  $request->file("file_file_{$key}");
-                    $path = $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_{$key}'), 'public');
+                    $file = $request->file("file_file_{$key}");
+                    $path = $file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_{$key}'), 'public');
                     $teacherPlanning->path = $path;
                     $teacherPlanning->save();
                 }
@@ -599,15 +590,15 @@ class TeacherController extends Controller
             BrevoProcessSendEmail::dispatch(
                 emailTo: [
                     [
-                        "name" => $auth->full_name,
-                        "email" => $auth->email,
-                    ]
+                        'name' => $auth->full_name,
+                        'email' => $auth->email,
+                    ],
                 ],
-                subject: "Las planificaciones han sido reiniciadas (eliminadas)",
+                subject: 'Las planificaciones han sido reiniciadas (eliminadas)',
                 templateId: 2,  // El ID de la plantilla de Brevo que quieres usar
                 params: [
-                    "full_name" => $auth->full_name, 
-                    "company_name" => $company_name, 
+                    'full_name' => $auth->full_name,
+                    'company_name' => $company_name,
                 ],
             );
 

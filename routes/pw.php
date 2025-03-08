@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\PwController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -39,7 +38,6 @@ Route::get('/pw-dataGradeSectionNotes/{school_id}/{grade_id}/{section_id}', [PwC
 
 Route::get('/pw-pdfNote/{id}', [PwController::class, 'pdfPNote']);
 
-
 Route::get('/pw-linksMenu/{company_id}', [PwController::class, 'linksMenu']);
 Route::get('/pw-banners/{company_id}', [PwController::class, 'banners']);
 Route::get('/pw-teachers/{company_id}', [PwController::class, 'teachers']);
@@ -48,5 +46,5 @@ Route::get('/pw-services/{company_id}', [PwController::class, 'services']);
 Route::get('/pw-service/{service_id}', [PwController::class, 'service']);
 
 Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
- 
+
 Route::post('/user/changePassword', [UserController::class, 'changePassword']);

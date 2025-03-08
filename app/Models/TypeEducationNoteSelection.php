@@ -18,7 +18,6 @@ class TypeEducationNoteSelection extends Model
         ];
     }
 
-
     public function typeEducation()
     {
         return $this->belongsTo(TypeEducation::class);

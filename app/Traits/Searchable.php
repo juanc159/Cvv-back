@@ -36,13 +36,13 @@ trait Searchable
         // Si se especifican relaciones para buscar, aplicar condiciones
         if (! empty($relations)) {
             foreach ($relations as $relation => $relationColumns) {
-                $findRelation = $relation; //relaciona  buscar
+                $findRelation = $relation; // relaciona  buscar
                 if ((strpos($relation, '.') !== false)) { // si la relacion o palabra tiene "."
                     $findRelation = explode('.', $relation);
                     $findRelation = $findRelation[0]; // debo obtener el primer valor y solo este se busca en la class o modelo
                 }
 
-                if ((method_exists($this, $findRelation))) { //busco la relacion en mi modelo
+                if ((method_exists($this, $findRelation))) { // busco la relacion en mi modelo
                     $this->queryPerzonalized($query, $relation, $relationColumns, $term);
                 }
             }

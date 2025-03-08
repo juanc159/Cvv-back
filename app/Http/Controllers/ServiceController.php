@@ -21,7 +21,7 @@ class ServiceController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->serviceRepository->list($request->all());
+            $data = $this->serviceRepository->paginate($request->all());
             $tableData = ServiceListResource::collection($data);
 
             return [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Role;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -43,7 +44,7 @@ class RoleStoreRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'code' => 422,
-            'message' => 'Se evidencia algunos errores',
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
         ], 422));
     }

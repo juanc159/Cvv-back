@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Helpers\Constants;
+use App\Models\PendingRegistration;
+use App\QueryBuilder\Filters\QueryFilters;
+use App\QueryBuilder\Sort\IsActiveSort;
+use App\QueryBuilder\Sort\RelatedTableSort;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Str;
+
+class PendingRegistrationRepository extends BaseRepository
+{
+    public function __construct(PendingRegistration $modelo)
+    {
+        parent::__construct($modelo);
+    }
+
+    public function paginate($request = [])
+    {
+         
+        $query = QueryBuilder::for($this->model->query())
+            ->with(["term:id,name","students"])
+            ->select(['term_id', "section_name"]) 
+            ->allowedFilters([
+                AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                    $query->orWhere('section_name', 'like', "%$value%");
+                    $query->orWhereHas("term", function ($subQuery, $value) {
+                        $subQuery->orWhere('name', 'like', "%$value%");
+                    });
+                }),
+            ])
+            ->allowedSorts([
+                'section_name',
+                AllowedSort::custom('type_education_name', new RelatedTableSort(
+                    'pending_registrations',
+                    'terms',
+                    'name',
+                    'term_id',
+                )),
+
+            ])
+            ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+        return $query; 
+    }
+
+    public function store($request)
+    {
+        $request = $this->clearNull($request);
+
+        if (! empty($request['id'])) {
+            $data = $this->model->find($request['id']);
+        } else {
+            $data = $this->model::newModelInstance();
+        }
+
+        foreach ($request as $key => $value) {
+            $data[$key] = $request[$key];
+        }
+        $data->save();
+
+        return $data;
+    }
+
+
+    public function list($request = [], $with = [], $select = ['*'])
+    {
+        $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
+            filterComponent($query, $request);
+
+            if (! empty($request['name'])) {
+                $query->where('name', 'like', '%' . $request['name'] . '%');
+            }
+
+            if (! empty($request['company_id'])) {
+                $query->where('company_id', $request['company_id']);
+            } else {
+                $query->whereNull('company_id');
+            }
+        })
+            ->where(function ($query) use ($request) {
+                if (! empty($request['searchQueryInfinite'])) {
+                    $query->orWhere('name', 'like', '%' . $request['searchQueryInfinite'] . '%');
+                }
+            });
+
+        if (empty($request['typeData'])) {
+            $data = $data->paginate($request['perPage'] ?? Constants::ITEMS_PER_PAGE);
+        } else {
+            $data = $data->get();
+        }
+
+        return $data;
+    }
+
+    public function generateSectionName($periodName)
+    {
+        $periodName = str_replace(' ', '_', $periodName);
+        $sequence = $this->model::where('section_name', 'like', $periodName . '-%')->count() + 1;
+        $sequence = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        $randomCode = Str::random(2);
+
+        return "{$periodName}-{$sequence}-{$randomCode}";
+    }
+
+    public function findByStudentAndTerm($studentId, $termId)
+    {
+        return $this->model->where('student_id', $studentId)
+            ->where('term_id', $termId)
+            ->first();
+    }
+}

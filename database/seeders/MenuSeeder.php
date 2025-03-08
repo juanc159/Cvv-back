@@ -118,6 +118,31 @@ class MenuSeeder extends Seeder
                 'icon' => 'tabler-database-edit',
                 'requiredPermission' => 'menu.enrollments&Exits',
             ],
+            [
+                'id' => 14,
+                'order' => 140,
+                'title' => 'Periodos',
+                'to' => 'Term-List',
+                'icon' => 'tabler-calendar',
+                'requiredPermission' => 'term.list',
+            ],
+            [
+                'id' => 15,
+                'order' => 150,
+                'title' => 'Materia Pendiente',
+                'icon' => 'tabler-parking',
+                'requiredPermission' => 'menu.pendingRegistration.father',
+            ],
+            [
+                'id' => 16,
+                'order' => 160,
+                'title' => 'Materia Pendiente',
+                'to' => 'PendingSubject-List',
+                'icon' => 'tabler-parking',
+                'requiredPermission' => 'pendingRegistration.list',
+                'father' => 15,
+
+            ],
         ];
 
         // Inicializar la barra de progreso

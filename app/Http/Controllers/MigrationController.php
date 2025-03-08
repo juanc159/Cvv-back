@@ -22,10 +22,9 @@ use App\Models\TeacherPlanning;
 use App\Models\TypeDetail;
 use App\Models\TypeEducation;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class MigrationController extends Controller
 {
@@ -173,7 +172,7 @@ class MigrationController extends Controller
         }
     }
 
-    //////////////////////////////////TABLAS/////////////////////////
+    // ////////////////////////////////TABLAS/////////////////////////
 
     public function type_education($dato)
     {
@@ -394,7 +393,6 @@ class MigrationController extends Controller
         $model->save();
     }
 
-
     public function updates(Request $request)
     {
         $files = [
@@ -414,9 +412,7 @@ class MigrationController extends Controller
 
             // 2. Identificar duplicados en el CSV para reportar
             $matriculas = $rows->countBy('identity_document');
-            $duplicates = [...$duplicates, ...$matriculas->filter(fn($c) => $c > 1)->keys()];
-
-
+            $duplicates = [...$duplicates, ...$matriculas->filter(fn ($c) => $c > 1)->keys()];
 
             foreach ($rows as $row) {
                 try {
@@ -427,11 +423,12 @@ class MigrationController extends Controller
 
                     if ($students->isEmpty()) {
                         $errors[] = [
-                            'nombre_del_alumno' => $row['names'] . ' ' . $row["surnames"],
+                            'nombre_del_alumno' => $row['names'].' '.$row['surnames'],
                             'matricula' => $row['identity_document'],
-                            'error' => 'No encontrado'
+                            'error' => 'No encontrado',
                         ];
                         DB::commit();
+
                         continue;
                     }
 
@@ -451,21 +448,19 @@ class MigrationController extends Controller
                 } catch (\Exception $e) {
                     $errors[] = [
                         'matricula' => $row['identity_document'],
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                     DB::rollback();
                 }
             }
         }
 
-
-
         // 4. Retornar respuesta
         return response()->json([
             'success' => true,
             'updated' => $updated,
             'duplicates' => $duplicates,
-            'errors' => $errors
+            'errors' => $errors,
         ]);
     }
 

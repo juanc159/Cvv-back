@@ -4,12 +4,65 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\User;
+use App\QueryBuilder\Filters\QueryFilters;
+use App\QueryBuilder\Sort\IsActiveSort;
+use App\QueryBuilder\Sort\RelatedTableSort;
+use App\QueryBuilder\Sort\RoleDescriptionSort;
+use App\QueryBuilder\Sort\UserFullNameSort;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class UserRepository extends BaseRepository
 {
     public function __construct(User $modelo)
     {
         parent::__construct($modelo);
+    }
+
+    public function paginate($request = [])
+    {
+        $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
+
+        return $this->cacheService->remember($cacheKey, function () {
+
+            $query = QueryBuilder::for($this->model->query())
+                ->select('users.id', 'users.name', 'users.surname', 'users.email', 'users.role_id', 'users.is_active')
+                ->allowedFilters([
+                    'is_active',
+                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                        $query->where(function ($subQuery) use ($value) {
+                            $subQuery->orWhere('email', 'like', "%$value%");
+
+                            $subQuery->orWhereRaw("CONCAT(name, ' ', surname) LIKE ?", ["%{$value}%"]);
+
+                            $subQuery->orWhereHas('role', function ($q) use ($value) {
+                                $q->where('description', 'like', "%$value%");
+                            });
+
+                            QueryFilters::filterByText($subQuery, $value, 'is_active', [
+                                'activo' => 1,
+                                'inactivo' => 0,
+                            ]);
+                        });
+                    }),
+                ])
+                ->allowedSorts([
+                    'email',
+                    AllowedSort::custom('is_active', new IsActiveSort),
+                    AllowedSort::custom('role_description', new RelatedTableSort(
+                        'users',
+                        'roles',
+                        'description',
+                        'role_id',
+                    )), 
+                    AllowedSort::custom('full_name', new UserFullNameSort),
+
+                ])
+                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+            return $query;
+        }, Constants::REDIS_TTL);
     }
 
     public function list($request = [], $with = [], $select = ['*'], $order = [])
@@ -23,12 +76,12 @@ class UserRepository extends BaseRepository
                     $query->where('name', 'like', '%'.$request['name'].'%');
                 }
 
-                //idsAllowed
+                // idsAllowed
                 if (! empty($request['idsAllowed']) && count($request['idsAllowed']) > 0) {
                     $query->whereIn('id', $request['idsAllowed']);
                 }
 
-                //idsNotAllowed
+                // idsNotAllowed
                 if (! empty($request['idsNotAllowed']) && count($request['idsNotAllowed']) > 0) {
                     $query->whereNotIn('id', $request['idsNotAllowed']);
                 }

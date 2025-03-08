@@ -7,7 +7,6 @@ use App\Models\TypeEducationNoteSelection;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
 
-
 class TypeEducationNoteSelectionController extends Controller
 {
     public function __construct(
@@ -27,15 +26,15 @@ class TypeEducationNoteSelectionController extends Controller
             $selectedNotes[$typeEducation->id] = [];
 
             for ($i = 1; $i <= $typeEducation->cantNotes; $i++) {
-                
+
                 $selection = TypeEducationNoteSelection::where('type_education_id', $typeEducation->id)
                     ->where('note_number', $i)
                     ->first();
-                    
+
                 if ($selection) {
-                    $selectedNotes[$typeEducation->id]['note_' . $i] = $selection->is_selected;
+                    $selectedNotes[$typeEducation->id]['note_'.$i] = $selection->is_selected;
                 } else {
-                    $selectedNotes[$typeEducation->id]['note_' . $i] = false;
+                    $selectedNotes[$typeEducation->id]['note_'.$i] = false;
                     TypeEducationNoteSelection::create([
                         'type_education_id' => $typeEducation->id,
                         'note_number' => $i,
@@ -45,7 +44,7 @@ class TypeEducationNoteSelectionController extends Controller
             }
         }
 
-        return response()->json(["code" => 200, "selectedNotes" => $selectedNotes]);
+        return response()->json(['code' => 200, 'selectedNotes' => $selectedNotes]);
     }
 
     public function store(Request $request)
@@ -55,12 +54,11 @@ class TypeEducationNoteSelectionController extends Controller
         foreach ($selectedNotes as $typeEducationId => $notes) {
             foreach ($notes as $key => $value) {
 
-                $newKey = (int)str_replace('note_', '', $key);
+                $newKey = (int) str_replace('note_', '', $key);
 
                 $element = TypeEducationNoteSelection::where('type_education_id', $typeEducationId)
                     ->where('note_number', $newKey)
                     ->first();
-
 
                 if ($element) {
                     $element->update(['is_selected' => $value]);
@@ -74,6 +72,6 @@ class TypeEducationNoteSelectionController extends Controller
             }
         }
 
-        return response()->json(["code" => 200, 'message' => 'Selección de notas actualizada correctamente']);
+        return response()->json(['code' => 200, 'message' => 'Selección de notas actualizada correctamente']);
     }
 }

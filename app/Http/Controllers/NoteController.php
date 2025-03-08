@@ -10,7 +10,6 @@ use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
-use App\Models\TypeEducation;
 use App\Repositories\BlockDataRepository;
 use App\Repositories\NoteRepository;
 use App\Repositories\StudentRepository;
@@ -44,11 +43,11 @@ class NoteController extends Controller
         Cache::put('Cache_Grade', Grade::get(), now()->addMinutes(60));
         Cache::put('Cache_Section', Section::get(), now()->addMinutes(60));
 
-        $typeEducations = $this->typeEducationRepository->selectList(select: ["cantNotes"]);
+        $typeEducations = $this->typeEducationRepository->selectList(select: ['cantNotes']);
         $teachers = Teacher::get()->map(function ($item) {
             return [
-                "value" => $item->id,
-                "title" => $item->full_name,
+                'value' => $item->id,
+                'title' => $item->full_name,
             ];
         });
         $blockData = BlockData::where('name', Constants::BLOCK_PAYROLL_UPLOAD)->first()->is_active;
@@ -76,7 +75,6 @@ class NoteController extends Controller
                 ])
                     ->find($teacher_id);
 
-
                 $subjectsData = [];
                 if ($teacher) {
                     foreach ($teacher->complementaries as $complementary) {
@@ -91,7 +89,6 @@ class NoteController extends Controller
                     }
                     // return $subjectsData;
                 }
-
 
                 $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
@@ -152,7 +149,7 @@ class NoteController extends Controller
                             return array_map('trim', $item); // Aplica trim a cada valor del item
                         }, $formattedData);
 
-                        foreach ($formattedData as $kkk=> $row) {
+                        foreach ($formattedData as $kkk => $row) {
                             if (! empty($row['CÉDULA'])) {
 
                                 $grade = $this->grade($row['AÑO'], 'name');
@@ -179,7 +176,7 @@ class NoteController extends Controller
                                 if ($student) {
                                     unset($model['password']);
                                 }
- 
+
                                 $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
@@ -193,8 +190,7 @@ class NoteController extends Controller
 
                                 // return $subjectsData;
 
-
-                                foreach ($subjectsData   as $key => $sub) {
+                                foreach ($subjectsData as $key => $sub) {
                                     $model2 = [
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
@@ -214,7 +210,7 @@ class NoteController extends Controller
                                     ];
 
                                     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                        $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
+                                        $json[$xx] = isset($row[$sub->code.$xx]) ? trim($row[$sub->code.$xx]) : (isset($json[$xx]) ? $json[$xx] : null);
                                     }
 
                                     $model2['json'] = json_encode($json);
@@ -271,7 +267,7 @@ class NoteController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Carga de archivos ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Carga de archivos '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -399,11 +395,10 @@ class NoteController extends Controller
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
-
             // Agrupando por `identity_document` y `full_name` (o cualquier clave común)
             $students = $studentsCollection->reduce(function ($carry, $item) {
                 // Buscar si ya existe un registro con el mismo `identity_document` y `full_name`
-                $key = $item['identity_document'] . '|' . $item['full_name'];
+                $key = $item['identity_document'].'|'.$item['full_name'];
 
                 if (! isset($carry[$key])) {
                     $carry[$key] = $item; // Si no existe, añadir el item
@@ -453,8 +448,8 @@ class NoteController extends Controller
 
                 // Si el estudiante existe, actualizamos el campo 'photo'
                 if ($student) {
-                    // Guardar el archivo en la carpeta 'students' 
-                    $path = $file->store('company_' . $student->company_id . '/student/student_' . $student->id . $request->input('file'), 'public');
+                    // Guardar el archivo en la carpeta 'students'
+                    $path = $file->store('company_'.$student->company_id.'/student/student_'.$student->id.$request->input('file'), 'public');
 
                     // Actualizar el campo 'photo'
                     $student->$field = $path;
@@ -476,7 +471,7 @@ class NoteController extends Controller
                 // Capturar excepciones y agregar mensaje de error al array
                 $responseMessages[] = [
                     'file' => $file->getClientOriginalName(),
-                    'message' => 'Error al guardar el archivo: ' . $e->getMessage(),
+                    'message' => 'Error al guardar el archivo: '.$e->getMessage(),
                 ];
             }
 
@@ -495,7 +490,7 @@ class NoteController extends Controller
         try {
             DB::beginTransaction();
 
-            $request["typeData"] = "all";
+            $request['typeData'] = 'all';
             $students = $this->studentRepository->list($request->all());
             foreach ($students as $key => $value) {
                 $value->pdf = null;

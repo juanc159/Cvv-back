@@ -137,6 +137,24 @@ class PermissionSeeder extends Seeder
                 'description' => 'Reporte Ingresos y Egresos',
                 'menu_id' => 13,
             ],
+            [
+                'id' => 21,
+                'name' => 'term.list',
+                'description' => 'Periodo escolar',
+                'menu_id' => 14,
+            ],
+            [
+                'id' => 22,
+                'name' => 'menu.pendingRegistration.father',
+                'description' => 'Visualizar Menú Materia Pendiente',
+                'menu_id' => 15,
+            ],
+            [
+                'id' => 23,
+                'name' => 'pendingRegistration.list',
+                'description' => 'Visualizar Modulo Cargar Materias Pendientes',
+                'menu_id' => 16,
+            ],
         ];
 
         // Inicializar la barra de progreso

@@ -3,7 +3,7 @@
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
-//Rutas protegidas
+// Rutas protegidas
 Route::middleware(['check.permission:student.list'])->group(function () {
 
     /*
@@ -26,7 +26,7 @@ Route::middleware(['check.permission:student.list'])->group(function () {
 
     Route::post('/student/changeStatus', [StudentController::class, 'changeStatus']);
 
-    Route::get('/student-resetPassword/{id}', [StudentController::class, 'resetPassword']); 
+    Route::get('/student-resetPassword/{id}', [StudentController::class, 'resetPassword']);
 
     Route::get('/student/show/{id}', [StudentController::class, 'show']);
 
@@ -35,6 +35,5 @@ Route::middleware(['check.permission:student.list'])->group(function () {
     Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);
 
     Route::post('/students/statisticsExcelExport', [StudentController::class, 'statisticsExcelExport']);
-
 
 });

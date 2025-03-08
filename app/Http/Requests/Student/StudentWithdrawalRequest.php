@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -24,21 +25,21 @@ class StudentWithdrawalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id'=> 'required',
-            'date'=> 'required|date',
-            'reason'=> 'required|max:255',
+            'student_id' => 'required',
+            'date' => 'required|date',
+            'reason' => 'required|max:255',
         ];
     }
 
     public function messages(): array
     {
-        return [ 
+        return [
             'student_id.required' => 'El campo es obligatorio',
-            'date.required' => "El campo es obligatorio",
-            'date.date' => "El campo debe ser una fecha",
-            'reason.required' => "El campo es obligatorio",
-            'reason.max' => "El campo no debe ser mayor a 255 caracteres",
-            
+            'date.required' => 'El campo es obligatorio',
+            'date.date' => 'El campo debe ser una fecha',
+            'reason.required' => 'El campo es obligatorio',
+            'reason.max' => 'El campo no debe ser mayor a 255 caracteres',
+
         ];
     }
 
@@ -46,7 +47,7 @@ class StudentWithdrawalRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'code' => 422,
-            'message' => 'Validation errors',
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
         ], 422));
     }

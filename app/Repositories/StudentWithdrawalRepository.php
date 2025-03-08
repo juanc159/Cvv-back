@@ -13,7 +13,7 @@ class StudentWithdrawalRepository extends BaseRepository
 
     public function list($request = [], $with = [], $select = ['*'])
     {
-        $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {});
+        $data = $this->model->select($select)->with($with)->where(function ($query) {});
 
         if (isset($request['sortBy'])) {
             $sortBy = json_decode($request['sortBy'], 1);

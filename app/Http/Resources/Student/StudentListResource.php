@@ -21,7 +21,7 @@ class StudentListResource extends JsonResource
             'section_name' => $this->section?->name,
             'identity_document' => $this->identity_document,
             'full_name' => $this->full_name,
-            'type_education_name' => $this->typeEducation?->name,
+            'type_education_name' => $this->type_education?->name,
         ];
     }
 }

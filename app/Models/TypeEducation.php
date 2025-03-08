@@ -10,7 +10,6 @@ class TypeEducation extends Model
 {
     use HasFactory, HasUuids;
 
-
     protected function casts(): array
     {
         return [

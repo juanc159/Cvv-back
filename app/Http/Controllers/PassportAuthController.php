@@ -18,9 +18,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
-use Illuminate\Support\Facades\Password;
 
 class PassportAuthController extends Controller
 {
@@ -228,18 +228,18 @@ class PassportAuthController extends Controller
 
     public function loginTeacher($user, $token)
     {
-        //datos personales
+        // datos personales
         $obj['id'] = $user->id;
         $obj['full_name'] = $user->full_name;
         $obj['photo'] = $user->photo_url;
 
-        //colegio
+        // colegio
         $obj['company_id'] = $user->company_id;
         $obj['company'] = $user->company;
         $obj['type_user'] = 'teacher';
 
         $obj['blockData'] = false;
-        $blockData = $this->blockDataRepository->searchByName("BLOCK_PAYROLL_UPLOAD");
+        $blockData = $this->blockDataRepository->searchByName('BLOCK_PAYROLL_UPLOAD');
         if ($blockData) {
             $obj['blockData'] = $blockData->is_active;
         }
@@ -260,17 +260,17 @@ class PassportAuthController extends Controller
     public function loginStudent($user, $token)
     {
         if ($user) {
-            //datos personales
+            // datos personales
             $obj['id'] = $user->id;
             $obj['full_name'] = $user->full_name;
             $obj['photo'] = $user->photo_url;
             $obj['identity_document'] = $user->identity_document;
 
-            //colegio
+            // colegio
             $obj['company_id'] = $user->company_id;
             $obj['company'] = $user->company;
 
-            //informacion año, grado y seccion
+            // informacion año, grado y seccion
             $obj['type_education_id'] = $user->type_education_id;
             $obj['type_education_name'] = $user->typeEducation?->name;
             $obj['grade_id'] = $user->grade_id;
@@ -311,15 +311,14 @@ class PassportAuthController extends Controller
     {
         try {
 
-            $user = $this->userRepository->findByEmail($request->input("email"));
+            $user = $this->userRepository->findByEmail($request->input('email'));
 
-            if(!$user){
-                $user = $this->teacherRepository->findByEmail($request->input("email"));
+            if (! $user) {
+                $user = $this->teacherRepository->findByEmail($request->input('email'));
             }
-            
 
             // Verificar si el usuario fue encontrado
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'code' => 404,
                     'message' => 'El usuario con ese correo electrónico no existe.',
@@ -329,29 +328,27 @@ class PassportAuthController extends Controller
             // Generar el enlace de restablecimiento
             $token = Password::getRepository()->create($user);
 
-            $action_url = env("SYSTEM_URL_FRONT") . 'ResetPassword/' . $token . '?email=' . urlencode($request->input("email"));
+            $action_url = env('SYSTEM_URL_FRONT').'ResetPassword/'.$token.'?email='.urlencode($request->input('email'));
 
             // Enviar el correo usando el job de Brevo
             BrevoProcessSendEmail::dispatch(
                 emailTo: [
                     [
-                        "name" => $user->full_name,
-                        "email" => $request->input("email"),
-                    ]
+                        'name' => $user->full_name,
+                        'email' => $request->input('email'),
+                    ],
                 ],
-                subject: "Link Restablecer Contraseña",
+                subject: 'Link Restablecer Contraseña',
                 templateId: 5,  // El ID de la plantilla de Brevo que quieres usar
                 params: [
-                    "full_name" => $user->full_name,
-                    "bussines_name" => $user->company?->name,
+                    'full_name' => $user->full_name,
+                    'bussines_name' => $user->company?->name,
                     'action_url' => $action_url,
 
                 ],  // Aquí pasas los parámetros para la plantilla, por ejemplo, el texto del mensaje
             );
 
-
-
-            return  response()->json(["code" => 200, 'message' => 'Te hemos enviado por correo electrónico el enlace para restablecer tu contraseña.'], 200);
+            return response()->json(['code' => 200, 'message' => 'Te hemos enviado por correo electrónico el enlace para restablecer tu contraseña.'], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 500,
@@ -372,10 +369,9 @@ class PassportAuthController extends Controller
                 'password' => 'required|string|min:8|confirmed',
             ]);
 
-
-            $response  = Password::reset(
+            $response = Password::reset(
                 $request->only('email', 'password', 'password_confirmation', 'token'),
-                function (User $user, string $password) use ($request) {
+                function (User $user, string $password) {
 
                     // Actualizar la contraseña del usuario
                     $user->password = $password;
@@ -386,13 +382,13 @@ class PassportAuthController extends Controller
             if ($response == Password::PASSWORD_RESET) {
                 return response()->json([
                     'code' => 200,
-                    'message' => 'La contraseña ha sido cambiada correctamente.'
+                    'message' => 'La contraseña ha sido cambiada correctamente.',
                 ]);
             }
 
             return response()->json([
                 'code' => 400,
-                'message' => 'El token de restablecimiento es inválido o ha expirado.'
+                'message' => 'El token de restablecimiento es inválido o ha expirado.',
             ], 400);
         } catch (\Throwable $th) {
             return response()->json([

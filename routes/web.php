@@ -10,8 +10,6 @@ Route::get('/', function () {
 
 Route::get('/bd_table', [MigrationController::class, 'trasnferBD']);
 
-
 Route::get('/updates', [MigrationController::class, 'updates']);
-
 
 Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);

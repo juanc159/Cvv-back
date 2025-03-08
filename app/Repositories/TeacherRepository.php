@@ -4,6 +4,13 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\Teacher;
+use App\QueryBuilder\Filters\DataSelectFilter;
+use App\QueryBuilder\Filters\QueryFilters;
+use App\QueryBuilder\Sort\IsActiveSort;
+use App\QueryBuilder\Sort\RelatedTableSort;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class TeacherRepository extends BaseRepository
 {
@@ -12,13 +19,76 @@ class TeacherRepository extends BaseRepository
         parent::__construct($modelo);
     }
 
+    public function paginate($request = [])
+    {
+        $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
+
+        return $this->cacheService->remember($cacheKey, function () {
+
+        $query = QueryBuilder::for($this->model->query())
+            ->with(['typeEducation:id,name', "jobPosition:id,name"])
+            ->select(['teachers.id', 'teachers.name', 'last_name', 'email', "phone", "photo", "teachers.is_active","teachers.type_education_id","job_position_id"])
+            ->allowedFilters([
+                'name',
+                'last_name',
+                'email',
+                'phone',
+                'is_active',
+                AllowedFilter::callback('type_education_id', new DataSelectFilter),
+                AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                    $query->where(function ($subQuery) use ($value) {
+                        $subQuery->orWhere('name', 'like', "%$value%");
+                        $subQuery->orWhere('last_name', 'like', "%$value%");
+                        $subQuery->orWhere('email', 'like', "%$value%");
+                        $subQuery->orWhere('phone', 'like', "%$value%");
+
+                        $subQuery->orWhereHas('typeEducation', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+                        $subQuery->orWhereHas('jobPosition', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+
+                        QueryFilters::filterByText($subQuery, $value, 'is_active', [
+                            'activo' => 1,
+                            'inactivo' => 0,
+                        ]);
+                    });
+                }),
+            ])
+            ->allowedSorts([
+                'name',
+                'last_name',
+                'email',
+                'phone',
+                AllowedSort::custom('is_active', new IsActiveSort),
+                AllowedSort::custom('type_education_name', new RelatedTableSort(
+                    'teachers',
+                    'type_education',
+                    'name',
+                    'type_education_id',
+                )),
+                AllowedSort::custom('job_position_name', new RelatedTableSort(
+                    'teachers',
+                    'job_positions',
+                    'name',
+                    'job_position_id',
+                )),
+            ])
+            ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+        return $query;
+        }, Constants::REDIS_TTL);
+    }
+
+
     public function list($request = [], $with = [], $select = ['*'])
     {
         $data = $this->model->select($select)->with($with)->where(function ($query) use ($request) {
             filterComponent($query, $request);
 
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+                $query->where('name', 'like', '%' . $request['name'] . '%');
             }
             if (! empty($request['type_education_id'])) {
                 $query->where('type_education_id', $request['type_education_id']);
@@ -32,7 +102,7 @@ class TeacherRepository extends BaseRepository
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQueryInfinite'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQueryInfinite'].'%');
+                    $query->orWhere('name', 'like', '%' . $request['searchQueryInfinite'] . '%');
                 }
             });
 
@@ -105,7 +175,7 @@ class TeacherRepository extends BaseRepository
         })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [
                 'value' => $value->$fieldValue,
-                'title' => $value->$fieldTitle, 
+                'title' => $value->$fieldTitle,
             ];
 
             if (count($select) > 0) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Authentication;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -26,6 +27,7 @@ class PassportAuthSendResetLinkRequest extends FormRequest
         $rules = [
             'email' => 'required|email',
         ];
+
         return $rules;
     }
 
@@ -45,7 +47,7 @@ class PassportAuthSendResetLinkRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'code' => 422,
-            'message' => 'Se evidencia algunos errores',
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
         ], 422));
     }

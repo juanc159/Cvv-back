@@ -10,9 +10,9 @@ class Constants
 
     public const ROLE_SUPERADMIN_UUID = '21626ff9-4940-4143-879a-0f75b46eadb7';
 
-    public const COUNTRY_ID_COLOMBIA = '48'; //Colombia
+    public const COUNTRY_ID_COLOMBIA = '48'; // Colombia
 
-    public const COUNTRY_ID_VENEZUELA = '239'; //Venezuela
+    public const COUNTRY_ID_VENEZUELA = '239'; // Venezuela
 
     public const ITEMS_PER_PAGE = '10'; // PARA LA PAGINACIONES
 
@@ -37,4 +37,12 @@ class Constants
     public const HIGH_SCHOOL_EDUCATION = '3';
 
     public const BLOCK_PAYROLL_UPLOAD = 'BLOCK_PAYROLL_UPLOAD';
+
+
+
+    public const ERROR_MESSAGE_VALIDATION_BACK = 'Se evidencia algunos errores.';
+
+    public const ERROR_MESSAGE_TRYCATCH = 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo.';
+
+    public const REDIS_TTL = '315360000'; // 10 años en segundos
 }

@@ -3,26 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Exports\StudentStatisticsExport;
-use App\Helpers\Constants;
 use App\Http\Requests\Student\StudentStoreRequest;
 use App\Http\Requests\Student\StudentWithdrawalRequest;
 use App\Http\Resources\Student\StudentFormResource;
 use App\Http\Resources\Student\StudentListResource;
-use App\Models\Company;
-use App\Models\Grade;
-use App\Models\Section;
-use App\Models\Student;
-use App\Models\TypeEducation;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\StudentWithdrawalRepository;
 use App\Repositories\TypeEducationRepository;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Throwable;
 use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
 
 class StudentController extends Controller
 {
@@ -32,12 +26,13 @@ class StudentController extends Controller
         protected SectionRepository $sectionRepository,
         protected QueryController $queryController,
         protected StudentWithdrawalRepository $studentWithdrawalRepository,
+        protected CacheService $cacheService,
     ) {}
 
     public function list(Request $request)
     {
         try {
-            $data = $this->studentRepository->list($request->all());
+            $data = $this->studentRepository->paginate($request->all());
             $tableData = StudentListResource::collection($data);
 
             return [
@@ -103,7 +98,7 @@ class StudentController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
+                $photo = $file->store('company_'.$data->company_id.'/student/student_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -177,7 +172,7 @@ class StudentController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
+                $photo = $file->store('company_'.$data->company_id.'/student/student_'.$data->id.$request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -234,7 +229,7 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Student ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Student '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -267,18 +262,17 @@ class StudentController extends Controller
         }
     }
 
-
     public function show(Request $request, $id)
     {
         try {
             $student = $this->studentRepository->find($id);
 
             $student = [
-                "id" => $student->id,
-                "full_name" => $student->full_name,
-                "identity_document" => $student->identity_document,
-                "grade_name" => $student->grade?->name,
-                "section_name" => $student->section?->name,
+                'id' => $student->id,
+                'full_name' => $student->full_name,
+                'identity_document' => $student->identity_document,
+                'grade_name' => $student->grade?->name,
+                'section_name' => $student->section?->name,
 
             ];
 
@@ -296,15 +290,15 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check if student exists 
+            // Check if student exists
             $student = $this->studentRepository->find($request->input('student_id'));
 
-            if (!$student) {
+            if (! $student) {
                 return response()->json(['message' => 'Estudiante no encontrado'], 404);
             }
 
             $studentWithdrawal = $this->studentWithdrawalRepository->searchOne([
-                'student_id' => $request->input('student_id')
+                'student_id' => $request->input('student_id'),
             ]);
             if ($studentWithdrawal) {
                 return response()->json(['message' => 'Estudiante ya ha sido de baja'], 404);
@@ -316,6 +310,9 @@ class StudentController extends Controller
                 'date' => $request->input('date'),
                 'reason' => $request->input('reason'),
             ]);
+
+            $this->cacheService->clearByPrefix("string:students_statisticsData*");
+            $this->cacheService->clearByPrefix("string:students_paginate*");
 
             DB::commit();
 
@@ -332,7 +329,7 @@ class StudentController extends Controller
 
     public function studentStatistics(Request $request)
     {
-         $data = $this->studentRepository->studentStatisticsData($request);
+        $data = $this->studentRepository->studentStatisticsData($request->all());
 
         // return view('Exports.Student.Statistics', compact('statistics'));
 
@@ -344,7 +341,7 @@ class StudentController extends Controller
 
     public function statisticsExcelExport(Request $request)
     {
-        $data = $this->studentRepository->studentStatisticsData($request);
+        $data = $this->studentRepository->studentStatisticsData($request->all());
         $data['dateInitial'] = $request->input('dateInitial');
         $data['dateEnd'] = $request->input('dateEnd');
 
@@ -353,7 +350,6 @@ class StudentController extends Controller
         $excelBase64 = base64_encode($excel);
 
         return response()->json(['code' => 200, 'excel' => $excelBase64]);
-
 
         // return view('Exports.Student.Statistics', compact('statistics'));
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -59,7 +60,7 @@ class StudentStoreRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'code' => 422,
-            'message' => 'Validation errors',
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
         ], 422));
     }

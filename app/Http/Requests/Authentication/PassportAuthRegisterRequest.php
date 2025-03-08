@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Authentication;
 
+use App\Helpers\Constants;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -61,10 +62,9 @@ class PassportAuthRegisterRequest extends FormRequest
     public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
-            'success' => false,
-            'status' => 422,
-            'message' => 'Se evidencia algunos errores',
+            'code' => 422,
+            'message' => Constants::ERROR_MESSAGE_VALIDATION_BACK,
             'errors' => $validator->errors(),
-        ]));
+        ], 422));
     }
 }

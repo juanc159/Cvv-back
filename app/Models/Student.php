@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Cacheable;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,15 +11,20 @@ use Laravel\Passport\HasApiTokens;
 
 class Student extends Model
 {
-    use HasApiTokens, HasFactory, HasUuids, Searchable;
+    use Cacheable, HasApiTokens, HasFactory, HasUuids, Searchable;
 
     protected $guarded = [];
+
     protected $casts = [
         'password' => 'hashed',
         'first_time' => 'boolean',
         'is_active' => 'boolean',
         'password' => 'hashed',
     ];
+
+    protected $customCachePrefixes = [
+        'string:{table}_statisticsData*',
+    ]; 
 
     public function notes()
     {
@@ -69,7 +75,6 @@ class Student extends Model
         return $this->hasMany(TeacherPlanning::class, 'grade_id', 'grade_id')
             ->where('section_id', $this->section_id);
     }
-
 
     public function country()
     {

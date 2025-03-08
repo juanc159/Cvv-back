@@ -21,7 +21,7 @@ class SubjectController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->subjectRepository->list($request->all());
+            $data = $this->subjectRepository->paginate($request->all());
             $tableData = SubjectListResource::collection($data);
 
             return [
@@ -153,12 +153,11 @@ class SubjectController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Subject ' . $msg . ' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Subject '.$msg.' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
-
 }

@@ -23,7 +23,7 @@ class CompanyController extends Controller
     public function list(Request $request)
     {
         try {
-            $data = $this->companyRepository->list($request->all());
+            $data = $this->companyRepository->paginate($request->all());
             $tableData = CompanyListResource::collection($data);
 
             return [

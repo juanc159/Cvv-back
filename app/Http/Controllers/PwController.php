@@ -7,7 +7,6 @@ use App\Http\Resources\Company\CompanyPwSchoolResource;
 use App\Models\Banner;
 use App\Models\Company;
 use App\Models\CompanyDetail;
-use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\TeacherPlanning;
 use App\Repositories\BannerRepository;
@@ -66,7 +65,7 @@ class PwController extends Controller
 
         $typeEducations = $this->typeEducationRepository->selectList();
 
-        //BACHILLERATO
+        // BACHILLERATO
         $generalSecondaryEducation = $this->teacherComplementaryRepository->get()->groupBy(function ($item) {
             return $item->grade->name;
         })->map(function ($grades) use ($id) {
@@ -119,7 +118,7 @@ class PwController extends Controller
 
                 if ($subject) {
 
-                    $files = TeacherPlanning::where(function ($query) use ($value, $subject) {
+                    $files = TeacherPlanning::where(function ($query) use ($value) {
                         $query->where('teacher_id', $value->teacher_id);
                         $query->where('grade_id', $value->grade_id);
                         $query->where('section_id', $value->section_id);
@@ -134,7 +133,7 @@ class PwController extends Controller
 
                     $teachers[] = [
                         'subject_name' => $subject->name,
-                        'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
+                        'fullName' => $value['teacher']['name'].' '.$value['teacher']['last_name'],
                         'photo' => $value['teacher']['photo'],
                         'email' => $value['teacher']['email'],
                         'phone' => $value['teacher']['phone'],
@@ -149,7 +148,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name . ' ' . $section->name;
+        $title = $grade->name.' '.$section->name;
 
         return response()->json([
             'teachers' => $teachers,
@@ -177,7 +176,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name . ' ' . $section->name;
+        $title = $grade->name.' '.$section->name;
 
         return response()->json([
             'students' => $students,
@@ -189,31 +188,31 @@ class PwController extends Controller
     {
         try {
             // Verificar que Carbon::now() devuelva una instancia válida
-            $currentDate = Carbon::now(); 
-    
+            $currentDate = Carbon::now();
+
             // Configurar el locale y formatear
             $currentDate->setLocale('es');
             $formattedDate = $currentDate->translatedFormat('l, j \\de F \\de Y');
-    
+
             // Resto del código...
             $student = $this->studentRepository->find($id, [
                 'notes.subject',
                 'grade.subjects',
             ]);
-    
-            if (!$student) {
+
+            if (! $student) {
                 return response()->json([
                     'code' => 404,
                     'message' => 'Estudiante no encontrado',
                 ], 404);
             }
-    
+
             $subjectIds = $student->grade->subjects->pluck('id');
             $filteredNotes = $student->notes()
                 ->whereIn('subject_id', $subjectIds)
                 ->with('subject')
                 ->get();
-    
+
             $pdfContent = $this->studentRepository->pdf(
                 'Pdfs.StudentNote',
                 [
@@ -224,21 +223,21 @@ class PwController extends Controller
                 'Notas',
                 false
             );
-    
-            if (!$pdfContent) {
+
+            if (! $pdfContent) {
                 return response()->json([
                     'code' => 500,
                     'message' => 'Error al generar el PDF',
                 ], 500);
             }
-    
+
             $pdfBase64 = base64_encode($pdfContent);
-    
+
             return response()->json([
                 'code' => 200,
                 'pdf' => $pdfBase64,
             ], 200);
-    
+
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 500,
@@ -304,7 +303,7 @@ class PwController extends Controller
 
                 return [
                     'id' => $value->id,
-                    'fullName' => $value->name . ' ' . $value->last_name,
+                    'fullName' => $value->name.' '.$value->last_name,
                     'photo' => $value->photo,
                     'type_education_id' => $value->type_education_id,
                     'type_education_name' => $value->typeEducation?->name,
@@ -394,9 +393,9 @@ class PwController extends Controller
         try {
 
             $services = $this->serviceRepository->list([
-                "typeData" => "all",
-                "is_active" => 1,
-                "company_id" => $company_id,
+                'typeData' => 'all',
+                'is_active' => 1,
+                'company_id' => $company_id,
             ])->map(function ($value) {
                 return [
                     'id' => $value->id,
@@ -404,7 +403,6 @@ class PwController extends Controller
                     'image' => $value->image,
                 ];
             });
-
 
             return response()->json(['code' => 200, 'services' => $services]);
         } catch (\Throwable $th) {
@@ -443,7 +441,7 @@ class PwController extends Controller
             return response()->json([
                 'code' => 200,
                 'plannings' => $plannings,
-                "students_pending_subject" => $company->students_pending_subject
+                'students_pending_subject' => $company->students_pending_subject,
             ]);
         } catch (\Throwable $th) {
 

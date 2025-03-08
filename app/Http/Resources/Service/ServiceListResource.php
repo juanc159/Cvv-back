@@ -18,7 +18,6 @@ class ServiceListResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'image' => $this->image,
-            'html' => $this->html,
             'is_active' => $this->is_active,
         ];
     }

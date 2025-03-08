@@ -24,7 +24,6 @@ class TeacherComplementary extends Model
         return $this->hasOne(Teacher::class, 'id', 'teacher_id');
     }
 
-
     // Accesor para obtener las materias asociadas
     public function getSubjectsAttribute()
     {
