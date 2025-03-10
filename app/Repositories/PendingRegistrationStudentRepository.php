@@ -31,7 +31,7 @@ class PendingRegistrationStudentRepository extends BaseRepository
 
     public function getStudentsWithSubjectsByPendingRegistrationId($pendingRegistrationId)
     {
-        return $this->model::select(["id", "pending_registration_id", "student_id"])->where('pending_registration_id', $pendingRegistrationId)
+        return $this->model::with(["student:id,full_name,identity_document"])->select(["id", "pending_registration_id", "student_id"])->where('pending_registration_id', $pendingRegistrationId)
             ->with(['subjects' => function ($query) {
                 $query->select('pending_registration_subjects.subject_id', 'pending_registration_subjects.pending_registration_student_id');
             }])

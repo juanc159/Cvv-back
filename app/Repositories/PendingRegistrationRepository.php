@@ -4,9 +4,8 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\PendingRegistration;
-use App\QueryBuilder\Filters\QueryFilters;
-use App\QueryBuilder\Sort\IsActiveSort;
 use App\QueryBuilder\Sort\RelatedTableSort;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -21,31 +20,38 @@ class PendingRegistrationRepository extends BaseRepository
 
     public function paginate($request = [])
     {
-         
-        $query = QueryBuilder::for($this->model->query())
-            ->with(["term:id,name","students"])
-            ->select(['term_id', "section_name"]) 
-            ->allowedFilters([
-                AllowedFilter::callback('inputGeneral', function ($query, $value) {
-                    $query->orWhere('section_name', 'like', "%$value%");
-                    $query->orWhereHas("term", function ($subQuery, $value) {
-                        $subQuery->orWhere('name', 'like', "%$value%");
-                    });
-                }),
-            ])
-            ->allowedSorts([
-                'section_name',
-                AllowedSort::custom('type_education_name', new RelatedTableSort(
-                    'pending_registrations',
-                    'terms',
-                    'name',
-                    'term_id',
-                )),
+        $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-            ])
-            ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+        // return $this->cacheService->remember($cacheKey, function () {
 
-        return $query; 
+
+            $query = QueryBuilder::for($this->model->query())
+                ->with(["term:id,name"])
+                ->select(['pending_registrations.id', 'term_id', "section_name"])
+                ->withCount(['students'])
+                ->allowedFilters([
+                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                        $query->orWhere('section_name', 'like', "%$value%");
+                        $query->orWhereHas("term", function ($subQuery, $value) {
+                            $subQuery->orWhere('name', 'like', "%$value%");
+                        });
+                    }),
+                ])
+                ->allowedSorts([
+                    'section_name',
+                    'students_count',
+                    AllowedSort::custom('term_name', new RelatedTableSort(
+                        'pending_registrations',
+                        'terms',
+                        'name',
+                        'term_id',
+                    )),
+
+                ])
+                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+            return $query;
+        // }, Constants::REDIS_TTL);
     }
 
     public function store($request)

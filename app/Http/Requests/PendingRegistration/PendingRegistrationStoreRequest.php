@@ -37,7 +37,8 @@ class PendingRegistrationStoreRequest extends FormRequest
                     ->where(function ($query) use ($pendingRegistrationId) {
                         $query->where('company_id', $this->company_id)
                               ->where('term_id', $this->term_id)
-                              ->where('grade_id', $this->grade_id);
+                              ->where('grade_id', $this->grade_id)
+                              ->whereNull('deleted_at'); // Ignorar registros soft deleted
                         if ($pendingRegistrationId) {
                             $query->where('id', '!=', $pendingRegistrationId);
                         }
@@ -55,8 +56,9 @@ class PendingRegistrationStoreRequest extends FormRequest
                                      ->from('pending_registrations')
                                      ->where('company_id', $this->company_id)
                                      ->where('term_id', $this->term_id)
-                                     ->where('grade_id', $this->grade_id);
-                        });
+                                     ->where('grade_id', $this->grade_id)
+                                     ->whereNull('deleted_at'); // Ignorar registros soft deleted en pending_registrations
+                        })->whereNull('deleted_at'); // Ignorar registros soft deleted en pending_registration_students
                         if ($pendingRegistrationId) {
                             $query->where('pending_registration_id', '!=', $pendingRegistrationId);
                         }
@@ -88,6 +90,23 @@ class PendingRegistrationStoreRequest extends FormRequest
             'students.*.subjects.min' => 'Debe seleccionar al menos una materia pendiente para cada estudiante.',
             'students.*.subjects.*.exists' => 'Una o más materias seleccionadas no existen.',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $data = $this->all();
+
+        // Verificar si existe el array students y transformarlo
+        if (isset($data['students']) && is_array($data['students'])) {
+            $data['students'] = array_map(function ($student) {
+                if (is_array($student) && isset($student['student_id']) && is_array($student['student_id'])) {
+                    $student['student_id'] = $student['student_id']['value'] ?? null;
+                }
+                return $student;
+            }, $data['students']);
+        }
+
+        $this->merge($data);
     }
 
     public function failedValidation(Validator $validator)

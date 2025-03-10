@@ -63,7 +63,7 @@ function filterComponent($query, &$request, $model = null)
                         $search = $value['search'];
 
                         if ($value['type'] == 'LIKE' && ! is_array($search)) {
-                            $search = '%'.$value['search'].'%';
+                            $search = '%' . $value['search'] . '%';
                         }
                         if (isset($value['relation'])) {
                             foreach ($value['relation'] as $key => $relation) {
@@ -171,7 +171,7 @@ function generatePastelColor($opacity = 1.0)
 function truncate_text($text, $maxLength = 15)
 {
     if (strlen($text) > $maxLength) {
-        return substr($text, 0, $maxLength).'...';
+        return substr($text, 0, $maxLength) . '...';
     }
 
     return $text;
@@ -247,4 +247,21 @@ function recursiveJsonDecode($data)
     }
 
     return $data; // Retornamos el valor decodificado (puede ser array u objeto)
+}
+
+/**
+ * Función para obtener las iniciales del nombre completo
+ */
+function getInitials($value)
+{
+    // Dividir el nombre completo por los espacios
+    $name_parts = explode(' ', $value);
+
+    // Tomar la primera letra de cada palabra del nombre completo
+    $initials = '';
+    foreach ($name_parts as $part) {
+        $initials .= strtoupper(substr($part, 0, 1));
+    }
+
+    return $initials;
 }

@@ -143,7 +143,13 @@ class StudentRepository extends BaseRepository
                     }
                 }
             }
-        });
+        })
+            ->where(function ($query) use ($request) {
+                if (! empty($request['searchQueryInfinite'])) {
+                    $query->orWhere('full_name', 'like', '%' . $request['searchQueryInfinite'] . '%');
+                    $query->orWhere('identity_document', 'like', '%' . $request['searchQueryInfinite'] . '%'); 
+                }
+            });;
 
         if (isset($request['sortBy'])) {
             $sortBy = json_decode($request['sortBy'], 1);

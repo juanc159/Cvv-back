@@ -19,6 +19,11 @@ class PendingRegistrationStudent extends Model
         return $this->belongsTo(PendingRegistration::class, 'pending_registration_id');
     }
 
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
     public function subjects(): HasMany
     {
         return $this->hasMany(PendingRegistrationSubject::class, 'pending_registration_student_id');

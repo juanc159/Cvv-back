@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PendingRegistration\PendingRegistrationStoreRequest;
-use App\Http\Resources\PendingRegistration\PendingRegistrationFormResource;
+use App\Http\Requests\PendingRegistration\PendingRegistrationStoreRequest; 
 use App\Http\Resources\PendingRegistration\PendingRegistrationPaginateResource;
+use App\Http\Resources\Student\StudentSelectInifiniteResource;
 use App\Repositories\PendingRegistrationRepository;
 use App\Repositories\PendingRegistrationStudentRepository;
 use App\Repositories\PendingRegistrationSubjectRepository;
 use App\Repositories\TermRepository;
+use App\Repositories\TypeEducationRepository;
 use App\Traits\HttpResponseTrait;
 use Illuminate\Http\Request;
 
@@ -21,12 +22,13 @@ class PendingRegistrationController extends Controller
         protected PendingRegistrationStudentRepository $pendingRegistrationStudentRepository,
         protected PendingRegistrationSubjectRepository $pendingRegistrationSubjectRepository,
         protected TermRepository $termRepository,
+        protected TypeEducationRepository $typeEducationRepository,
     ) {}
 
     public function paginate(Request $request)
     {
         return $this->execute(function () use ($request) {
-            $data = $this->pendingRegistrationRepository->paginate($request->all());
+             $data = $this->pendingRegistrationRepository->paginate($request->all());
             $tableData = PendingRegistrationPaginateResource::collection($data);
 
             return [
@@ -40,9 +42,43 @@ class PendingRegistrationController extends Controller
         });
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return $this->execute(function () {});
+        return $this->execute(function () use($request) {
+
+            $terms= $this->termRepository->selectList(); 
+
+            $typeEducations = $this->typeEducationRepository->list(
+                request: [
+                    'typeData' => 'all',
+                ],
+                with: ['grades.subjects']
+            )->map(function ($value) use ($request) {
+                return [
+                    'value' => $value->id,
+                    'title' => $value->name,
+                    'grades' => $value->grades->where('company_id', $request['company_id'])->values()->map(function ($value2) {
+                        return [
+                            'value' => $value2->id,
+                            'title' => $value2->name,
+                            'subjects' => $value2->subjects->map(function ($value3) {
+                                return [
+                                    'value' => $value3->id,
+                                    'title' => $value3->name,
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            });
+
+            return [
+                'code' => 200,
+                'terms' => $terms,
+                'typeEducations' => $typeEducations,
+            ];
+
+        });
     }
 
 
@@ -61,6 +97,7 @@ class PendingRegistrationController extends Controller
             $pendingRegistration = $this->pendingRegistrationRepository->store([
                 'company_id' => $request->input('company_id'),
                 'term_id' => $term_id,
+                'type_education_id' => $request->input('type_education_id'),
                 'grade_id' => $request->input('grade_id'),
                 'section_name' => $sectionName,
             ]);
@@ -93,9 +130,36 @@ class PendingRegistrationController extends Controller
 
 
 
-    public function edit($id)
+    public function edit(Request $request,$id)
     {
-        return $this->execute(function () use ($id) {
+        return $this->execute(function () use ($request,$id) {
+
+            $terms= $this->termRepository->selectList(); 
+
+            $typeEducations = $this->typeEducationRepository->list(
+                request: [
+                    'typeData' => 'all',
+                ],
+                with: ['grades.subjects']
+            )->map(function ($value) use ($request) {
+                return [
+                    'value' => $value->id,
+                    'title' => $value->name,
+                    'grades' => $value->grades->where('company_id', $request['company_id'])->values()->map(function ($value2) {
+                        return [
+                            'value' => $value2->id,
+                            'title' => $value2->name,
+                            'subjects' => $value2->subjects->map(function ($value3) {
+                                return [
+                                    'value' => $value3->id,
+                                    'title' => $value3->name,
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            }); 
+ 
             // Fetch the pending registration by ID
             $pendingRegistration = $this->pendingRegistrationRepository->find($id);
 
@@ -109,17 +173,20 @@ class PendingRegistrationController extends Controller
             // Fetch associated students and their subjects
             $studentsData = $this->pendingRegistrationStudentRepository
                 ->getStudentsWithSubjectsByPendingRegistrationId($id)
-                ->map(function ($student) {
+                ->map(function ($item) {
                     return [
-                        'student_id' => $student->student_id,
-                        'subjects' => $student->subjects->pluck('subject_id')->toArray(),
+                        'student_id' => new StudentSelectInifiniteResource($item->student),
+                        'subjects' => $item->subjects->pluck('subject_id')->toArray(),
+                        'id' => $item->id,
                     ];
                 })->toArray();
 
             // Prepare the response data
             $responseData = [
+                'id' => $pendingRegistration->id,
                 'company_id' => $pendingRegistration->company_id,
                 'term_id' => $pendingRegistration->term_id,
+                'type_education_id' => $pendingRegistration->type_education_id,
                 'grade_id' => $pendingRegistration->grade_id,
                 'section_name' => $pendingRegistration->section_name,
                 'students' => $studentsData,
@@ -127,7 +194,59 @@ class PendingRegistrationController extends Controller
 
             return [
                 'code' => 200,
-                'data' => $responseData,
+                'form' => $responseData,
+                'terms' => $terms,
+                'typeEducations' => $typeEducations,
+            ];
+        });
+    }
+    public function show(Request $request,$id)
+    {
+        return $this->execute(function () use ($request,$id) {
+ 
+            // Fetch the pending registration by ID
+            $pendingRegistration = $this->pendingRegistrationRepository->find($id,["term","grade","type_education"]);
+
+            if (!$pendingRegistration) {
+                return [
+                    'code' => 404,
+                    'message' => 'Registro no encontrado',
+                ];
+            }
+
+            // Fetch associated students and their subjects
+            $studentsData = $this->pendingRegistrationStudentRepository
+                ->getStudentsWithSubjectsByPendingRegistrationId($id)
+                ->map(function ($item) {
+                    return [
+                        'student_id' => new StudentSelectInifiniteResource($item->student),
+                        'subjects' => $item->subjects->map(function($item){
+                            return [
+                                "id" => $item->subject_id,
+                                "name" => $item->subject->name,
+                            ];
+                        }),
+                        'id' => $item->id,
+                    ];
+                })->toArray();
+
+            // Prepare the response data
+            $responseData = [
+                'id' => $pendingRegistration->id,
+                'company_id' => $pendingRegistration->company_id,
+                'term_id' => $pendingRegistration->term_id,
+                'term_name' => $pendingRegistration->term?->name,
+                'type_education_id' => $pendingRegistration->type_education_id,
+                'type_education_name' => $pendingRegistration->type_education?->name,
+                'grade_id' => $pendingRegistration->grade_id,
+                'grade_name' => $pendingRegistration->grade?->name,
+                'section_name' => $pendingRegistration->section_name,
+                'students' => $studentsData,
+            ];
+
+            return [
+                'code' => 200,
+                'form' => $responseData, 
             ];
         });
     }
@@ -147,6 +266,7 @@ class PendingRegistrationController extends Controller
                 'id' => $id,
                 'company_id' => $request->input('company_id'),
                 'term_id' => $request->input('term_id'),
+                'type_education_id' => $request->input('type_education_id'),
                 'grade_id' => $request->input('grade_id'),
                 'section_name' => $request->input('section_name', $pendingRegistration->section_name),
             ]);
@@ -157,7 +277,7 @@ class PendingRegistrationController extends Controller
                 ->pluck('student_id', 'id')
                 ->toArray();
 
-            $newStudentIds = array_column($studentsInput, 'student_id');
+            $newStudentIds = array_column($studentsInput, 'id');
 
             // Eliminar estudiantes que ya no están en la lista
             foreach ($currentStudents as $currentStudentId => $studentId) {

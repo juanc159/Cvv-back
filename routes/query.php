@@ -13,3 +13,4 @@ Route::get('/selectCities/country/{country_id}', [QueryController::class, 'selec
 Route::post('/selectInifiniteTypeEducation', [QueryController::class, 'selectInifiniteTypeEducation']);
 Route::post('/selectInfiniteGrade', [QueryController::class, 'selectInfiniteGrade']);
 Route::post('/selectInfiniteSection', [QueryController::class, 'selectInfiniteSection']);
+Route::post('/selectInfiniteStudent', [QueryController::class, 'selectInfiniteStudent']);

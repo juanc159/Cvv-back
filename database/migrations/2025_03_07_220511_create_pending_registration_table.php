@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('company_id')->constrained(); 
             $table->foreignUuid('term_id')->constrained();
+            $table->foreignUuid('type_education_id')->constrained('type_education');
             $table->foreignUuid('grade_id')->constrained();
             $table->string('section_name');
             $table->softDeletes();

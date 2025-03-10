@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\Country\CountrySelectResource;
 use App\Http\Resources\Grade\GradeSelectInifiniteResource;
+use App\Http\Resources\Student\StudentSelectInifiniteResource;
 use App\Http\Resources\TypeEducation\TypeEducationSelectResource;
 use App\Repositories\CityRepository;
 use App\Repositories\CountryRepository;
 use App\Repositories\GradeRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\StateRepository;
+use App\Repositories\StudentRepository;
 use App\Repositories\TypeEducationRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ class QueryController extends Controller
         protected TypeEducationRepository $typeEducationRepository,
         protected GradeRepository $gradeRepository,
         protected SectionRepository $sectionRepository,
+        protected StudentRepository $studentRepository,
     ) {}
 
     public function selectInfiniteCountries(Request $request)
@@ -109,6 +112,17 @@ class QueryController extends Controller
             'code' => 200,
             'section_arrayInfo' => $dataSection,
             'section_countLinks' => $section->lastPage(),
+        ];
+    }
+    public function selectInfiniteStudent(Request $request)
+    {
+        $student = $this->studentRepository->list($request->all());
+        $dataStudent = StudentSelectInifiniteResource::collection($student);
+
+        return [
+            'code' => 200,
+            'student_arrayInfo' => $dataStudent,
+            'student_countLinks' => $student->lastPage(),
         ];
     }
 }

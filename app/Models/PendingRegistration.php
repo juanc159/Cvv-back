@@ -12,11 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PendingRegistration extends Model
 {
     use HasUuids,SoftDeletes,Cacheable;
- 
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class);
-    }
+  
  
     public function term(): BelongsTo
     {
@@ -24,6 +20,10 @@ class PendingRegistration extends Model
     }
 
    
+    public function type_education(): BelongsTo
+    {
+        return $this->belongsTo(TypeEducation::class);
+    }
     public function grade(): BelongsTo
     {
         return $this->belongsTo(Grade::class);
