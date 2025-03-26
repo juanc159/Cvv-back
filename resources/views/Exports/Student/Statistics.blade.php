@@ -22,6 +22,7 @@
                 <th colspan="3" style=" text-align: center; border-right: 2px solid #666; background-color: #dc3545; color: white; padding: 12px; font-size: 15px;">Egresos</th>
                 <th colspan="3" style=" text-align: center; background-color: #28a745; color: white; padding: 12px; font-size: 15px;">Matrícula Actual</th>
                 <th colspan="3" style=" text-align: center; background-color: #FFCC80; color: white; padding: 12px; font-size: 15px;">Extranjeros</th>
+                <th colspan="3" style=" text-align: center; background-color: #b99af3; color: white; padding: 12px; font-size: 15px;">Nacionales</th>
             </tr>
             <tr style="background-color: #f8f9fa; color: #333; font-weight: bold; text-align: center;">
                 <th></th>
@@ -49,6 +50,7 @@
                     'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'current' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
+                    'nationals' => ['male' => 0, 'female' => 0, 'total' => 0],
                 ];
                 $subtotals = [
                     'initial' => ['male' => 0, 'female' => 0, 'total' => 0],
@@ -56,6 +58,7 @@
                     'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'current' => ['male' => 0, 'female' => 0, 'total' => 0],
                     'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
+                    'nationals' => ['male' => 0, 'female' => 0, 'total' => 0],
                 ];
             @endphp
             @foreach($statistics as $stat)
@@ -77,6 +80,9 @@
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['male'] }}</td>
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['female'] }}</td>
                         <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['total'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['male'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['female'] }}</td>
+                        <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['total'] }}</td>
                     </tr>
                     @php
                         // Reiniciar los subtotales para el nuevo tipo de educación
@@ -86,6 +92,7 @@
                             'withdrawals' => ['male' => 0, 'female' => 0, 'total' => 0],
                             'current' => ['male' => 0, 'female' => 0, 'total' => 0],
                             'foreign' => ['male' => 0, 'female' => 0, 'total' => 0],
+                            'nationals' => ['male' => 0, 'female' => 0, 'total' => 0],
                         ];
                     @endphp
                 @endif
@@ -115,6 +122,9 @@
                     <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #FFE0B2;">{{ $stat['foreign']['male'] }}</td>
                     <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #FFE0B2;">{{ $stat['foreign']['female'] }}</td>
                     <td style="text-align: center; padding: 12px; background-color: #FFE0B2;">{{ $stat['foreign']['total'] }}</td>
+                    <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #d3c4f0;">{{ $stat['nationals']['male'] }}</td>
+                    <td style="text-align: center; padding: 12px; border-right: 1px solid #ddd; background-color: #d3c4f0;">{{ $stat['nationals']['female'] }}</td>
+                    <td style="text-align: center; padding: 12px; background-color: #d3c4f0;">{{ $stat['nationals']['total'] }}</td>
                     @php
                         // Acumular los totales y subtotales
                         $totals['initial']['male'] += $stat['initial']['male'];
@@ -132,6 +142,9 @@
                         $totals['foreign']['male'] += $stat['foreign']['male'];
                         $totals['foreign']['female'] += $stat['foreign']['female'];
                         $totals['foreign']['total'] += $stat['foreign']['total'];
+                        $totals['nationals']['male'] += $stat['nationals']['male'];
+                        $totals['nationals']['female'] += $stat['nationals']['female'];
+                        $totals['nationals']['total'] += $stat['nationals']['total'];
         
                         $subtotals['initial']['male'] += $stat['initial']['male'];
                         $subtotals['initial']['female'] += $stat['initial']['female'];
@@ -148,6 +161,9 @@
                         $subtotals['foreign']['male'] += $stat['foreign']['male'];
                         $subtotals['foreign']['female'] += $stat['foreign']['female'];
                         $subtotals['foreign']['total'] += $stat['foreign']['total'];
+                        $subtotals['nationals']['male'] += $stat['nationals']['male'];
+                        $subtotals['nationals']['female'] += $stat['nationals']['female'];
+                        $subtotals['nationals']['total'] += $stat['nationals']['total'];
                     @endphp
                 </tr>
             @endforeach
@@ -169,6 +185,9 @@
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['male'] }}</td>
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['female'] }}</td>
                     <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['foreign']['total'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['male'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['female'] }}</td>
+                    <td style="text-align: center; padding: 12px; font-size: 16px; background-color: #e9ecef;">{{ $subtotals['nationals']['total'] }}</td>
                 </tr>
             @endif
             <tr style="font-weight: bold; background-color: #f2f2f2; text-align: center;">
@@ -188,6 +207,9 @@
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['male'] }}</td>
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['female'] }}</td>
                 <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['foreign']['total'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['nationals']['male'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['nationals']['female'] }}</td>
+                <td style="text-align: center; padding: 12px; font-size: 16px;background-color: #e9ecef;">{{ $totals['nationals']['total'] }}</td>
             </tr>
         </tbody>
         

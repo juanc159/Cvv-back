@@ -29,6 +29,7 @@ class PendingRegistrationStoreRequest extends FormRequest
 
         return [
             'company_id' => ['required', 'exists:companies,id'],
+            'code' => ['required'],
             'term_id' => ['required', 'exists:terms,id'],
             'grade_id' => [
                 'required',
@@ -74,6 +75,7 @@ class PendingRegistrationStoreRequest extends FormRequest
         return [
             'company_id.required' => 'La compañía es obligatoria.',
             'company_id.exists' => 'La compañía seleccionada no existe.',
+            'code.required' => 'El código escolar es obligatorio.',
             'term_id.required' => 'El periodo escolar es obligatorio.',
             'term_id.exists' => 'El periodo escolar seleccionado no existe.',
             'grade_id.required' => 'El grado es obligatorio.',

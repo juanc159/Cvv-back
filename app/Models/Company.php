@@ -17,6 +17,11 @@ class Company extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $customCachePrefixes = [
+        'string:{table}_listPw*',
+        'string:{table}_findPw*',
+    ];
+
     public function state()
     {
         return $this->hasOne(State::class, 'id', 'state_id');

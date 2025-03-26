@@ -12,6 +12,7 @@ use App\Models\TeacherPlanning;
 use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
 use App\Repositories\GradeRepository;
+use App\Repositories\PendingRegistrationRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\StudentRepository;
@@ -19,10 +20,14 @@ use App\Repositories\SubjectRepository;
 use App\Repositories\TeacherComplementaryRepository;
 use App\Repositories\TeacherPlanningRepository;
 use App\Repositories\TypeEducationRepository;
+use App\Services\CacheService;
+use App\Traits\HttpResponseTrait;
 use Carbon\Carbon;
 
 class PwController extends Controller
 {
+    use HttpResponseTrait;
+
     public function __construct(
         private CompanyRepository $companyRepository,
         private BannerRepository $bannerRepository,
@@ -34,6 +39,8 @@ class PwController extends Controller
         private SubjectRepository $subjectRepository,
         private ServiceRepository $serviceRepository,
         private TeacherPlanningRepository $teacherPlanningRepository,
+        private PendingRegistrationRepository $pendingRegistrationRepository,
+        private CacheService $cacheService,
     ) {
         $this->companyRepository = $companyRepository;
         $this->bannerRepository = $bannerRepository;
@@ -49,8 +56,18 @@ class PwController extends Controller
 
     public function dataPrincipal()
     {
-        $banners = $this->bannerRepository->list(['typeData' => 'all', 'company_id' => null], select: ['id', 'path']);
-        $companies = $this->companyRepository->list(['typeData' => 'all'], select: ['id', 'name', 'image_principal']);
+        $cacheKey = $this->cacheService->generateKey("banners_listPw", ['typeData' => 'all', 'company_id' => null], 'string');
+        $banners = $this->cacheService->remember($cacheKey, function () {
+            return $this->bannerRepository->list(['typeData' => 'all', 'company_id' => null], select: ['id', 'path']);
+        }, Constants::REDIS_TTL);
+
+
+        $cacheKey = $this->cacheService->generateKey("companies_listPw", ['typeData' => 'all'], 'string');
+        $companies = $this->cacheService->remember($cacheKey, function () {
+            return $this->companyRepository->list(['typeData' => 'all'], select: ['id', 'name', 'image_principal']);
+        }, Constants::REDIS_TTL);
+
+
 
         return response()->json([
             'banners' => $banners,
@@ -133,7 +150,7 @@ class PwController extends Controller
 
                     $teachers[] = [
                         'subject_name' => $subject->name,
-                        'fullName' => $value['teacher']['name'].' '.$value['teacher']['last_name'],
+                        'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
                         'photo' => $value['teacher']['photo'],
                         'email' => $value['teacher']['email'],
                         'phone' => $value['teacher']['phone'],
@@ -148,7 +165,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'teachers' => $teachers,
@@ -176,7 +193,7 @@ class PwController extends Controller
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name.' '.$section->name;
+        $title = $grade->name . ' ' . $section->name;
 
         return response()->json([
             'students' => $students,
@@ -237,7 +254,6 @@ class PwController extends Controller
                 'code' => 200,
                 'pdf' => $pdfBase64,
             ], 200);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 500,
@@ -278,7 +294,13 @@ class PwController extends Controller
     public function banners($company_id)
     {
         try {
-            $banners = Banner::select('path')->where('company_id', $company_id)->where('is_active', 1)->get();
+            $cacheKey = $this->cacheService->generateKey("banners_wherePw", ["company_id" =>$company_id], 'string');
+
+            $banners = $this->cacheService->remember($cacheKey, function () use ($company_id) {
+                return Banner::select('path')->where('company_id', $company_id)->where('is_active', 1)->get();
+            }, Constants::REDIS_TTL);
+
+
 
             return response()->json(['code' => 200, 'banners' => $banners]);
         } catch (\Throwable $th) {
@@ -290,32 +312,36 @@ class PwController extends Controller
     public function teachers($company_id)
     {
         try {
+            $cacheKey = $this->cacheService->generateKey("teachers_wherePw", ["company_id" =>$company_id], 'string');
 
-            $teachers = Teacher::where('company_id', $company_id)->where('is_active', 1)->orderBy('order')->get()->map(function ($value) {
-                $grade_name = '';
-                $section_name = '';
+            $teachers = $this->cacheService->remember($cacheKey, function () use ($company_id) {
+                return Teacher::where('company_id', $company_id)->where('is_active', 1)->orderBy('order')->get()->map(function ($value) {
+                    $grade_name = '';
+                    $section_name = '';
 
-                $info = $value->complementaries->first();
-                if ($info) {
-                    $grade_name = $info->grade?->name;
-                    $section_name = $info->section?->name;
-                }
+                    $info = $value->complementaries->first();
+                    if ($info) {
+                        $grade_name = $info->grade?->name;
+                        $section_name = $info->section?->name;
+                    }
 
-                return [
-                    'id' => $value->id,
-                    'fullName' => $value->name.' '.$value->last_name,
-                    'photo' => $value->photo,
-                    'type_education_id' => $value->type_education_id,
-                    'type_education_name' => $value->typeEducation?->name,
-                    'email' => $value->email,
-                    'phone' => $value->phone,
-                    'job_position_id' => $value->job_position_id,
-                    'jobPosition' => $value->jobPosition?->name,
-                    'backgroundColor' => generarColorPastelAleatorio(70),
-                    'grade_name' => $grade_name,
-                    'section_name' => $section_name,
-                ];
-            });
+                    return [
+                        'id' => $value->id,
+                        'fullName' => $value->name . ' ' . $value->last_name,
+                        'photo' => $value->photo,
+                        'type_education_id' => $value->type_education_id,
+                        'type_education_name' => $value->typeEducation?->name,
+                        'email' => $value->email,
+                        'phone' => $value->phone,
+                        'job_position_id' => $value->job_position_id,
+                        'jobPosition' => $value->jobPosition?->name,
+                        'backgroundColor' => generarColorPastelAleatorio(70),
+                        'grade_name' => $grade_name,
+                        'section_name' => $section_name,
+                    ];
+                });
+            }, Constants::REDIS_TTL);
+
 
             $tabsData = [];
 
@@ -364,11 +390,16 @@ class PwController extends Controller
     public function contactData($company_id)
     {
         try {
-            $company = Company::with([
-                'details' => function ($q) {
-                    $q->whereIn('type_detail_id', [6, 7, 8, 13, 14, 15]);
-                },
-            ])->find($company_id);
+            $cacheKey = $this->cacheService->generateKey("teachers_findPw", ["company_id" =>$company_id], 'string');
+            $company = $this->cacheService->remember($cacheKey, function () use ($company_id) {
+                return Company::with([
+                    'details' => function ($q) {
+                        $q->whereIn('type_detail_id', [6, 7, 8, 13, 14, 15]);
+                    },
+                ])->find($company_id);
+            }, Constants::REDIS_TTL);
+
+            
 
             $contactData['details'] = $company->details?->map(function ($value) {
                 return [
@@ -392,11 +423,18 @@ class PwController extends Controller
     {
         try {
 
-            $services = $this->serviceRepository->list([
+            $filter = [
                 'typeData' => 'all',
                 'is_active' => 1,
                 'company_id' => $company_id,
-            ])->map(function ($value) {
+            ];
+            $cacheKey = $this->cacheService->generateKey("services_listPw", $filter, 'string');
+            $services = $this->cacheService->remember($cacheKey, function () use ($filter) {
+                return $this->serviceRepository->list($filter,select: ['id', 'title', 'image']);
+            }, Constants::REDIS_TTL);
+
+            
+            $services->map(function ($value) {
                 return [
                     'id' => $value->id,
                     'title' => $value->title,
@@ -423,29 +461,93 @@ class PwController extends Controller
         }
     }
 
+
     public function materiaPendiente($company_id)
     {
-        try {
-            $plannings = TeacherPlanning::with([
-                'subject',
-                'grade',
-                'section',
-            ])->whereHas('teacher', function ($q) use ($company_id) {
-                $q->where('company_id', $company_id);
-                $q->where('name', 'Materia');
-                $q->where('last_name', 'Pendiente');
-            })->get()->groupBy(['grade.name', 'section.name', 'subject.name']);
+        return $this->runTransaction(function () use ($company_id) {
+
+            // Buscar los pending_registrations asociados a la compañía
+            $pendingRegistrations = $this->pendingRegistrationRepository
+                ->findByCompanyId($company_id)
+                ->map(function ($pendingRegistration) {
+                    // Agrupar archivos por subject_name
+                    $groupedFiles = $pendingRegistration->files
+                        ->map(function ($file) {
+                            return [
+                                'id' => $file->id,
+                                'subject_id' => $file->subject_id,
+                                'subject_name' => $file->subject?->name ?? 'Sin materia', // Valor por defecto si no hay materia
+                                'path' => $file->path,
+                                'name' => $file->name,
+                                'created_at' => $file->created_at->toDateTimeString(),
+                                'updated_at' => $file->updated_at->toDateTimeString(),
+                            ];
+                        })
+                        ->groupBy('subject_name')
+                        ->map(function ($files, $subject_name) {
+                            return [
+                                'subject_name' => $subject_name,
+                                'files' => $files->map(function ($file) {
+                                    // Excluimos subject_name del objeto file para evitar redundancia
+                                    return [
+                                        'id' => $file['id'],
+                                        'subject_id' => $file['subject_id'],
+                                        'path' => $file['path'],
+                                        'name' => $file['name'],
+                                        'created_at' => $file['created_at'],
+                                        'updated_at' => $file['updated_at'],
+                                    ];
+                                }),
+                            ];
+                        })
+                        ->values(); // Convertimos a un array indexado
+
+                    return [
+                        'id' => $pendingRegistration->id,
+                        'term_name' => $pendingRegistration->term?->name,
+                        'grade_name' => $pendingRegistration->grade?->name,
+                        'section_name' => $pendingRegistration->section_name,
+                        'files_by_subject' => $groupedFiles, // Nueva clave con los archivos agrupados
+                    ];
+                });
+
+            $term_name = $pendingRegistrations->first();
+            if ($term_name) {
+                $term_name = $term_name["term_name"];
+            }
 
             $company = $this->companyRepository->find($company_id);
-
-            return response()->json([
+            return [
                 'code' => 200,
-                'plannings' => $plannings,
+                'pendingRegistrations' => $pendingRegistrations,
+                'term_name' => $term_name,
                 'students_pending_subject' => $company->students_pending_subject,
-            ]);
-        } catch (\Throwable $th) {
+            ];
+        });
 
-            return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
-        }
+
+
+        // try {
+        //     $plannings = TeacherPlanning::with([
+        //         'subject',
+        //         'grade',
+        //         'section',
+        //     ])->whereHas('teacher', function ($q) use ($company_id) {
+        //         $q->where('company_id', $company_id);
+        //         $q->where('name', 'Materia');
+        //         $q->where('last_name', 'Pendiente');
+        //     })->get()->groupBy(['grade.name', 'section.name', 'subject.name']);
+
+        //     $company = $this->companyRepository->find($company_id);
+
+        //     return response()->json([
+        //         'code' => 200,
+        //         'plannings' => $plannings,
+        //         'students_pending_subject' => $company->students_pending_subject,
+        //     ]);
+        // } catch (\Throwable $th) {
+
+        //     return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
+        // }
     }
 }

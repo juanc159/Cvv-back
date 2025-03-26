@@ -21,7 +21,7 @@ class BannerRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function () use ($request) {
 
             $query = QueryBuilder::for($this->model->query())
                 ->select(['id', 'path', 'is_active'])
@@ -38,7 +38,13 @@ class BannerRepository extends BaseRepository
                 ])
                 ->allowedSorts([
                     AllowedSort::custom('is_active', new IsActiveSort),
-                ])
+                ])->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('company_id', $request['company_id']);
+                    } else {
+                        $query->whereNull('company_id');
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;
@@ -51,7 +57,7 @@ class BannerRepository extends BaseRepository
             filterComponent($query, $request);
 
             if (! empty($request['name'])) {
-                $query->where('name', 'like', '%'.$request['name'].'%');
+                $query->where('name', 'like', '%' . $request['name'] . '%');
             }
 
             if (! empty($request['company_id'])) {
@@ -62,7 +68,7 @@ class BannerRepository extends BaseRepository
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQueryInfinite'])) {
-                    $query->orWhere('name', 'like', '%'.$request['searchQueryInfinite'].'%');
+                    $query->orWhere('name', 'like', '%' . $request['searchQueryInfinite'] . '%');
                 }
             });
 

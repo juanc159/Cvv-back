@@ -8,6 +8,7 @@ class RoutesApi
     public const ROUTES_API = [
         'routes/api.php',
         'routes/pw.php',
+        'routes/todo.php',
     ];
 
     // esto es para las apis que si requieran auth

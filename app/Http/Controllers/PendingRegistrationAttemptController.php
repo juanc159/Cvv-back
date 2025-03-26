@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PendingRegistration\PendingRegistrationAttemptStoreRequest;
-use App\Models\PendingRegistrationAttempt;
 use App\Repositories\PendingRegistrationAttemptRepository;
 use App\Traits\HttpResponseTrait;
 use Illuminate\Support\Carbon;
@@ -43,7 +42,6 @@ class PendingRegistrationAttemptController extends Controller
             return [
                 'code' => 200,
                 'data' => $attempts,
-                'message' => 'Intentos recuperados exitosamente',
             ];
         });
     }
@@ -62,7 +60,7 @@ class PendingRegistrationAttemptController extends Controller
             $note = $data['note'];
             $attemptDate = $data['attempt_date'];
 
-            // Verificar si ya existen 4 intentos para esta materia y alumno
+            // Verificar si ya existen 4 momentos para esta materia y alumno
             $existingAttempts = $this->pendingRegistrationAttemptRepository->countData([
                 "pending_registration_id" => $pendingRegistrationId,
                 "student_id" => $studentId,
@@ -72,8 +70,8 @@ class PendingRegistrationAttemptController extends Controller
             if ($existingAttempts >= 4) {
                 return [
                     'code' => 422,
-                    'message' => 'Se ha alcanzado el límite de 4 intentos para esta materia.',
-                    'errors' => ['attempt_number' => ['Límite de intentos alcanzado.']],
+                    'message' => 'Se ha alcanzado el límite de 4 momentos para esta materia.',
+                    'errors' => ['attempt_number' => ['Límite de momentos alcanzado.']],
                 ];
             }
 
@@ -93,7 +91,7 @@ class PendingRegistrationAttemptController extends Controller
             return [
                 'code' => 200,
                 'data' => $attempt,
-                'message' => 'Intento creado exitosamente',
+                'message' => 'Momento creado exitosamente',
             ];
         });
     }
@@ -106,7 +104,7 @@ class PendingRegistrationAttemptController extends Controller
             return [
                 'code' => 200,
                 'data' => $attempt,
-                'message' => 'Intento recuperado exitosamente',
+                'message' => 'Momento recuperado exitosamente',
             ];
         });
     }
@@ -129,7 +127,20 @@ class PendingRegistrationAttemptController extends Controller
             return [
                 'code' => 200,
                 'data' => $attempt,
-                'message' => 'Intento actualizado exitosamente',
+                'message' => 'Momento actualizado exitosamente',
+            ];
+        });
+    }
+    public function delete($id)
+    {
+        return $this->runTransaction(function ()  use ($id) {
+
+            $attempt = $this->pendingRegistrationAttemptRepository->delete($id);
+
+            return [
+                'code' => 200,
+                'data' => $attempt,
+                'message' => 'Momento eliminado exitosamente',
             ];
         });
     }

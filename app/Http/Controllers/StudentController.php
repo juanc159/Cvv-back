@@ -13,6 +13,7 @@ use App\Repositories\StudentWithdrawalRepository;
 use App\Repositories\TypeEducationRepository;
 use App\Services\CacheService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
@@ -344,6 +345,13 @@ class StudentController extends Controller
         $data = $this->studentRepository->studentStatisticsData($request->all());
         $data['dateInitial'] = $request->input('dateInitial');
         $data['dateEnd'] = $request->input('dateEnd');
+
+        if (empty( $data['dateInitial'])) {
+            $data['dateInitial'] = Carbon::now()->startOfMonth()->toDateString();
+        }
+        if (empty($data['dateEnd'])) {
+            $data['dateEnd'] = Carbon::now()->endOfMonth()->toDateString();
+        }
 
         $excel = Excel::raw(new StudentStatisticsExport($data), \Maatwebsite\Excel\Excel::XLSX);
 

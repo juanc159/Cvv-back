@@ -11,4 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     use Cacheable, HasFactory,HasUuids , Searchable;
+
+    protected $guarded = [];
+
+    protected $customCachePrefixes = [
+        'string:{table}_listPw*', 
+    ];
 }

@@ -58,7 +58,7 @@ class BannerController extends Controller
 
             if ($request->file('path')) {
                 $file = $request->file('path');
-                $path = $file->store('/banners/banner_'.$data->id.$request->input('path'), 'public');
+                $path = $file->store('/banners/banner_' . $data->id . $request->input('path'), 'public');
                 $data->path = $path;
                 $data->save();
             }
@@ -104,7 +104,7 @@ class BannerController extends Controller
 
             if ($request->file('path')) {
                 $file = $request->file('path');
-                $path = $file->store('/banners/banner_'.$data->id.$request->input('path'), 'public');
+                $path = $file->store('/banners/banner_' . $data->id . $request->input('path'), 'public');
                 $data->path = $path;
                 $data->save();
             }
@@ -161,7 +161,7 @@ class BannerController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Banner '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Banner ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 

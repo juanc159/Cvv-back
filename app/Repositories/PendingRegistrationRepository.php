@@ -4,12 +4,10 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\PendingRegistration;
-use App\QueryBuilder\Sort\RelatedTableSort;
-use Illuminate\Support\Facades\DB;
+use App\QueryBuilder\Sort\RelatedTableSort; 
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
-use Spatie\QueryBuilder\QueryBuilder;
-use Illuminate\Support\Str;
+use Spatie\QueryBuilder\QueryBuilder; 
 
 class PendingRegistrationRepository extends BaseRepository
 {
@@ -25,32 +23,36 @@ class PendingRegistrationRepository extends BaseRepository
         // return $this->cacheService->remember($cacheKey, function () {
 
 
-            $query = QueryBuilder::for($this->model->query())
-                ->with(["term:id,name"])
-                ->select(['pending_registrations.id', 'term_id', "section_name"])
-                ->withCount(['students'])
-                ->allowedFilters([
-                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
-                        $query->orWhere('section_name', 'like', "%$value%");
-                        $query->orWhereHas("term", function ($subQuery, $value) {
-                            $subQuery->orWhere('name', 'like', "%$value%");
-                        });
-                    }),
-                ])
-                ->allowedSorts([
-                    'section_name',
-                    'students_count',
-                    AllowedSort::custom('term_name', new RelatedTableSort(
-                        'pending_registrations',
-                        'terms',
-                        'name',
-                        'term_id',
-                    )),
+        $query = QueryBuilder::for($this->model->query())
+            ->with(["term:id,name"])
+            ->select(['pending_registrations.id', 'term_id', "section_name"])
+            ->withCount(['students'])
+            ->allowedFilters([
+                AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                    $query->orWhere('section_name', 'like', "%$value%");
+                    $query->orWhereHas("term", function ($subQuery) use ( $value) {
+                        $subQuery->where('name', 'like', "%$value%");
+                    });
+                }),
+            ])
+            ->allowedSorts([
+                'section_name',
+                'students_count',
+                AllowedSort::custom('term_name', new RelatedTableSort(
+                    'pending_registrations',
+                    'terms',
+                    'name',
+                    'term_id',
+                )),
 
-                ])
-                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+            ]);
 
-            return $query;
+        if (empty($request['typeData'])) {
+            $query = $query->paginate($request['perPage'] ?? Constants::ITEMS_PER_PAGE);
+        } else {
+            $query = $query->get();
+        }
+        return $query;
         // }, Constants::REDIS_TTL);
     }
 
@@ -103,14 +105,13 @@ class PendingRegistrationRepository extends BaseRepository
         return $data;
     }
 
-    public function generateSectionName($periodName)
+    public function generateSectionName($periodName, $code)
     {
         $periodName = str_replace(' ', '_', $periodName);
         $sequence = $this->model::where('section_name', 'like', $periodName . '-%')->count() + 1;
         $sequence = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-        $randomCode = Str::random(2);
 
-        return "{$periodName}-{$sequence}-{$randomCode}";
+        return "{$periodName}-{$sequence}-{$code}";
     }
 
     public function findByStudentAndTerm($studentId, $termId)
@@ -119,4 +120,13 @@ class PendingRegistrationRepository extends BaseRepository
             ->where('term_id', $termId)
             ->first();
     }
+
+    public function findByCompanyId($company_id)
+    {
+        return $this->model::with(['company', 'term', 'type_education', 'grade'])
+            ->where('company_id', $company_id)
+            ->get();
+    }
+
+   
 }

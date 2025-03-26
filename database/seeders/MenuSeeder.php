@@ -131,18 +131,8 @@ class MenuSeeder extends Seeder
                 'order' => 150,
                 'title' => 'Materia Pendiente',
                 'icon' => 'tabler-parking',
-                'requiredPermission' => 'menu.pendingRegistration.father',
-            ],
-            [
-                'id' => 16,
-                'order' => 160,
-                'title' => 'Materia Pendiente',
-                'to' => 'PendingRegistration-List',
-                'icon' => 'tabler-parking',
                 'requiredPermission' => 'pendingRegistration.list',
-                'father' => 15,
-
-            ],
+            ], 
         ];
 
         // Inicializar la barra de progreso

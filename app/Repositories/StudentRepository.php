@@ -147,7 +147,7 @@ class StudentRepository extends BaseRepository
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQueryInfinite'])) {
                     $query->orWhere('full_name', 'like', '%' . $request['searchQueryInfinite'] . '%');
-                    $query->orWhere('identity_document', 'like', '%' . $request['searchQueryInfinite'] . '%'); 
+                    $query->orWhere('identity_document', 'like', '%' . $request['searchQueryInfinite'] . '%');
                 }
             });;
 
@@ -339,64 +339,125 @@ class StudentRepository extends BaseRepository
     public function studentStatisticsData($request = [])
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_statisticsData", $request, 'string');
-        return $this->cacheService->remember($cacheKey, function () use ($request) {
+        // return $this->cacheService->remember($cacheKey, function () use ($request) {
 
-            $companyId = $request["company_id"];
+        $companyId = $request["company_id"];
 
-            // Obtener rango de fechas para el periodo seleccionado
-            $dateInitial = $request["dateInitial"];
-            $dateEnd = $request["dateEnd"];
+        // Obtener rango de fechas para el periodo seleccionado
+        $dateInitial = $request["dateInitial"];
+        $dateEnd = $request["dateEnd"];
 
-            if (empty($dateInitial)) {
-                $dateInitial = Carbon::now()->startOfMonth()->toDateString();
-            }
-            if (empty($dateEnd)) {
-                $dateEnd = Carbon::now()->endOfMonth()->toDateString();
-            }
+        if (empty($dateInitial)) {
+            $dateInitial = Carbon::now()->startOfMonth()->toDateString();
+        }
+        if (empty($dateEnd)) {
+            $dateEnd = Carbon::now()->endOfMonth()->toDateString();
+        }
 
-            $typeEducations = TypeEducation::with(['grades.sections'])->get();
+        $typeEducations = TypeEducation::with(['grades.sections'])->get();
 
 
-            $type_education_id = $typeEducations->pluck('id')->toArray();
+        $type_education_id = $typeEducations->pluck('id')->toArray();
 
-            $allCombinations = collect();
+        $allCombinations = collect();
 
-            foreach ($typeEducations as $key => $typeEducation) {
+        foreach ($typeEducations as $key => $typeEducation) {
 
-                // Verificamos si el tipo de educación tiene grados
-                if ($typeEducation->grades->isEmpty()) {
-                    // Si no tiene grados, agregamos la combinación con un valor por defecto o nulo
-                    $allCombinations->push([
-                        'type_education_name' => $typeEducation->name,
-                        'grade_name' => 'No tiene grados', // Valor por defecto cuando no hay grados
-                        'section_name' => 'No tiene secciones', // Valor por defecto cuando no hay secciones
-                    ]);
-                } else {
-                    foreach ($typeEducation->grades as $grade) {
-                        // Verificamos si el grado tiene secciones
-                        if ($grade->sections->isEmpty()) {
-                            // Si no tiene secciones, agregamos la combinación con un valor por defecto
+            // Verificamos si el tipo de educación tiene grados
+            if ($typeEducation->grades->isEmpty()) {
+                // Si no tiene grados, agregamos la combinación con un valor por defecto o nulo
+                $allCombinations->push([
+                    'type_education_name' => $typeEducation->name,
+                    'grade_name' => 'No tiene grados', // Valor por defecto cuando no hay grados
+                    'section_name' => 'No tiene secciones', // Valor por defecto cuando no hay secciones
+                ]);
+            } else {
+                foreach ($typeEducation->grades as $grade) {
+                    // Verificamos si el grado tiene secciones
+                    if ($grade->sections->isEmpty()) {
+                        // Si no tiene secciones, agregamos la combinación con un valor por defecto
+                        $allCombinations->push([
+                            'type_education_name' => $typeEducation->name,
+                            'grade_name' => $grade->name,
+                            'section_name' => 'No tiene secciones', // Valor por defecto cuando no hay secciones
+                        ]);
+                    } else {
+                        foreach ($grade->sections as $section) {
+                            // Si tiene secciones, agregamos la combinación de type_education, grade y section
                             $allCombinations->push([
                                 'type_education_name' => $typeEducation->name,
                                 'grade_name' => $grade->name,
-                                'section_name' => 'No tiene secciones', // Valor por defecto cuando no hay secciones
+                                'section_name' => $section->name,
                             ]);
-                        } else {
-                            foreach ($grade->sections as $section) {
-                                // Si tiene secciones, agregamos la combinación de type_education, grade y section
-                                $allCombinations->push([
-                                    'type_education_name' => $typeEducation->name,
-                                    'grade_name' => $grade->name,
-                                    'section_name' => $section->name,
-                                ]);
-                            }
                         }
                     }
                 }
             }
+        }
 
-            // Consulta Matrícula Inicial (estudiantes activos antes del periodo)
-            $initialMatriculation = Student::selectRaw('
+        // Consulta Matrícula Inicial (estudiantes activos antes del periodo)
+        $initialMatriculation = Student::selectRaw('
+        type_education.name as type_education_name,
+        grades.name as grade_name,
+        sections.name as section_name,
+        COUNT(*) as total,
+        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+
+        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+        SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+        SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
+
+        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+        SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
+        SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
+    ')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->where('students.real_entry_date', '<', $dateInitial)
+            ->whereNotExists(function ($query) use ($dateInitial) {
+                $query->select(DB::raw(1))
+                    ->from('student_withdrawals')
+                    ->whereRaw('student_withdrawals.student_id = students.id')
+                    ->where('student_withdrawals.date', '<', $dateInitial);
+            })
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
+
+        // Consulta Nuevos Ingresos (matriculados en el periodo actual)
+        $newEntries = Student::selectRaw('
+        type_education.name as type_education_name,
+        grades.name as grade_name,
+        sections.name as section_name,
+        COUNT(*) as total,
+        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+
+
+        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
+
+        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
+    ')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
+
+        // Consulta Egresos (retirados en el periodo actual)
+        $withdrawnStudents = Student::selectRaw('
         type_education.name as type_education_name,
         grades.name as grade_name,
         sections.name as section_name,
@@ -406,206 +467,188 @@ class StudentRepository extends BaseRepository
 
         SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
        SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
+       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
+
+        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+       SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
+       SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
     ')
-                ->join('grades', 'students.grade_id', '=', 'grades.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
-                ->join('companies', 'students.company_id', '=', 'companies.id')
-                ->where('students.company_id', $companyId)
-                ->whereIn('students.type_education_id', $type_education_id)
-                ->where('students.real_entry_date', '<', $dateInitial)
-                ->whereNotExists(function ($query) use ($dateInitial) {
-                    $query->select(DB::raw(1))
-                        ->from('student_withdrawals')
-                        ->whereRaw('student_withdrawals.student_id = students.id')
-                        ->where('student_withdrawals.date', '<', $dateInitial);
-                })
-                ->groupBy('type_education.name', 'grades.name', 'sections.name')
-                ->get();
+            ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->join('companies', 'students.company_id', '=', 'companies.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereDate('student_withdrawals.date', '>=', $dateInitial)
+            ->whereDate('student_withdrawals.date', '<=', $dateEnd)
+            ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->get();
 
-            // Consulta Nuevos Ingresos (matriculados en el periodo actual)
-            $newEntries = Student::selectRaw('
-        type_education.name as type_education_name,
-        grades.name as grade_name,
-        sections.name as section_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+        // Inicializar el array de estadísticas con todas las combinaciones posibles
+        $statistics = [];
+        foreach ($allCombinations as $combination) {
+            $key = $combination['type_education_name'] . '-' . $combination['grade_name'] . '-' . $combination['section_name'];
+            $statistics[$key] = [
+                'type_education_name' => $combination['type_education_name'],
+                'grade_name' => $combination['grade_name'],
+                'section_name' => $combination['section_name'],
+                'initial' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
+                    'total_nationals' => 0,
+                    'male_nationals' => 0,
+                    'female_nationals' => 0,
 
-
-        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
-    ')
-                ->join('grades', 'students.grade_id', '=', 'grades.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
-                ->join('companies', 'students.company_id', '=', 'companies.id')
-                ->where('students.company_id', $companyId)
-                ->whereIn('students.type_education_id', $type_education_id)
-                ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
-                ->groupBy('type_education.name', 'grades.name', 'sections.name')
-                ->get();
-
-            // Consulta Egresos (retirados en el periodo actual)
-            $withdrawnStudents = Student::selectRaw('
-        type_education.name as type_education_name,
-        grades.name as grade_name,
-        sections.name as section_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
-
-        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign
-    ')
-                ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
-                ->join('grades', 'students.grade_id', '=', 'grades.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
-                ->join('companies', 'students.company_id', '=', 'companies.id')
-                ->where('students.company_id', $companyId)
-                ->whereIn('students.type_education_id', $type_education_id)
-                ->whereDate('student_withdrawals.date', '>=', $dateInitial)
-                ->whereDate('student_withdrawals.date', '<=', $dateEnd)
-                ->groupBy('type_education.name', 'grades.name', 'sections.name')
-                ->get();
-
-            // Inicializar el array de estadísticas con todas las combinaciones posibles
-            $statistics = [];
-            foreach ($allCombinations as $combination) {
-                $key = $combination['type_education_name'] . '-' . $combination['grade_name'] . '-' . $combination['section_name'];
-                $statistics[$key] = [
-                    'type_education_name' => $combination['type_education_name'],
-                    'grade_name' => $combination['grade_name'],
-                    'section_name' => $combination['section_name'],
-                    'initial' => [
-                        'total' => 0,
-                        'male' => 0,
-                        'female' => 0,
-                        'total_foreign' => 0,
-                        'male_foreign' => 0,
-                        'female_foreign' => 0,
-
-                    ],
-                    'new_entries' => [
-                        'total' => 0,
-                        'male' => 0,
-                        'female' => 0,
-                        'total_foreign' => 0,
-                        'male_foreign' => 0,
-                        'female_foreign' => 0,
-                    ],
-                    'withdrawals' => [
-                        'total' => 0,
-                        'male' => 0,
-                        'female' => 0,
-                        'total_foreign' => 0,
-                        'male_foreign' => 0,
-                        'female_foreign' => 0,
-                    ],
-                    'current' => [
-                        'total' => 0,
-                        'male' => 0,
-                        'female' => 0,
-                    ],
-                    'foreign' => [
-                        'total' => 0,
-                        'male' => 0,
-                        'female' => 0,
-                    ],
+                ],
+                'new_entries' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
+                    'total_nationals' => 0,
+                    'male_nationals' => 0,
+                    'female_nationals' => 0,
+                ],
+                'withdrawals' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                    'total_foreign' => 0,
+                    'male_foreign' => 0,
+                    'female_foreign' => 0,
+                    'total_nationals' => 0,
+                    'male_nationals' => 0,
+                    'female_nationals' => 0,
+                ],
+                'current' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                ],
+                'foreign' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                ],
+                'nationals' => [
+                    'total' => 0,
+                    'male' => 0,
+                    'female' => 0,
+                ],
+            ];
+        }
+ 
+        // Procesar matrícula inicial
+        foreach ($initialMatriculation as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            if (isset($statistics[$key])) {
+                $statistics[$key]['initial'] = [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
+                    'total_nationals' => $item->total_nationals,
+                    'male_nationals' => $item->male_nationals,
+                    'female_nationals' => $item->female_nationals,
                 ];
             }
+        }
 
-            // Procesar matrícula inicial
-            foreach ($initialMatriculation as $item) {
-                $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
-                if (isset($statistics[$key])) {
-                    $statistics[$key]['initial'] = [
-                        'total' => $item->total,
-                        'male' => $item->male,
-                        'female' => $item->female,
-                        'total_foreign' => $item->total_foreign,
-                        'male_foreign' => $item->male_foreign,
-                        'female_foreign' => $item->female_foreign,
-                    ];
-                }
-            }
-
-            // Procesar nuevos ingresos
-            foreach ($newEntries as $item) {
-                $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
-                if (isset($statistics[$key])) {
-                    $statistics[$key]['new_entries'] = [
-                        'total' => $item->total,
-                        'male' => $item->male,
-                        'female' => $item->female,
-                        'total_foreign' => $item->total_foreign,
-                        'male_foreign' => $item->male_foreign,
-                        'female_foreign' => $item->female_foreign,
-                    ];
-                }
-            }
-
-            // Procesar egresos
-            foreach ($withdrawnStudents as $item) {
-                $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
-                if (isset($statistics[$key])) {
-                    $statistics[$key]['withdrawals'] = [
-                        'total' => $item->total,
-                        'male' => $item->male,
-                        'female' => $item->female,
-                        'total_foreign' => $item->total_foreign,
-                        'male_foreign' => $item->male_foreign,
-                        'female_foreign' => $item->female_foreign,
-                    ];
-                }
-            }
-
-            // Calcular matrícula actual
-            foreach ($statistics as $key => $stat) {
-                $statistics[$key]['current'] = [
-                    'total' => $stat['initial']['total'] + $stat['new_entries']['total'] - $stat['withdrawals']['total'],
-                    'male' => $stat['initial']['male'] + $stat['new_entries']['male'] - $stat['withdrawals']['male'],
-                    'female' => $stat['initial']['female'] + $stat['new_entries']['female'] - $stat['withdrawals']['female'],
+        // Procesar nuevos ingresos
+        foreach ($newEntries as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            if (isset($statistics[$key])) {
+                $statistics[$key]['new_entries'] = [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
+                    'total_nationals' => $item->total_nationals,
+                    'male_nationals' => $item->male_nationals,
+                    'female_nationals' => $item->female_nationals,
                 ];
             }
+        }
 
-            // Procesar extrangeros
-            foreach ($statistics as $key => $stat) {
-                $statistics[$key]['foreign'] = [
-                    'total' => $stat['initial']['total_foreign'] + $stat['new_entries']['total_foreign'] - $stat['withdrawals']['total_foreign'],
-                    'male' => $stat['initial']['male_foreign'] + $stat['new_entries']['male_foreign'] - $stat['withdrawals']['male_foreign'],
-                    'female' => $stat['initial']['female_foreign'] + $stat['new_entries']['female_foreign'] - $stat['withdrawals']['female_foreign'],
+        // Procesar egresos
+        foreach ($withdrawnStudents as $item) {
+            $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;
+            if (isset($statistics[$key])) {
+                $statistics[$key]['withdrawals'] = [
+                    'total' => $item->total,
+                    'male' => $item->male,
+                    'female' => $item->female,
+                    'total_foreign' => $item->total_foreign,
+                    'male_foreign' => $item->male_foreign,
+                    'female_foreign' => $item->female_foreign,
+                    'total_nationals' => $item->total_nationals,
+                    'male_nationals' => $item->male_nationals,
+                    'female_nationals' => $item->female_nationals,
                 ];
             }
+        }
 
-            // Nueva consulta para estudiantes retirados
-            $withdrawnStudents = Student::select([
-                'students.identity_document',
-                'students.full_name',
-                'students.birthday',
-                'students.gender',
-                'grades.name as grade_name',
-                'sections.name as section_name',
-                'student_withdrawals.date as withdrawal_date',
-                'student_withdrawals.reason',
-            ])
-                ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
-                ->join('grades', 'students.grade_id', '=', 'grades.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
-                ->where('students.company_id', $companyId)
-                ->whereDate('student_withdrawals.date', '>=', $dateInitial)
-                ->whereDate('student_withdrawals.date', '<=', $dateEnd)
-                ->whereIn('students.type_education_id', $type_education_id)
-                ->orderBy('student_withdrawals.date', 'desc')
-                ->get();
+        // Calcular matrícula actual
+        foreach ($statistics as $key => $stat) {
+            $statistics[$key]['current'] = [
+                'total' => $stat['initial']['total'] + $stat['new_entries']['total'] - $stat['withdrawals']['total'],
+                'male' => $stat['initial']['male'] + $stat['new_entries']['male'] - $stat['withdrawals']['male'],
+                'female' => $stat['initial']['female'] + $stat['new_entries']['female'] - $stat['withdrawals']['female'],
+            ];
+        }
 
-            // Consulta Nuevos Ingresos (matriculados en el periodo actual)
-            $entriesStudents = Student::selectRaw('
+        // Procesar extrangeros
+        foreach ($statistics as $key => $stat) {
+            $statistics[$key]['foreign'] = [
+                'total' => $stat['initial']['total_foreign'] + $stat['new_entries']['total_foreign'] - $stat['withdrawals']['total_foreign'],
+                'male' => $stat['initial']['male_foreign'] + $stat['new_entries']['male_foreign'] - $stat['withdrawals']['male_foreign'],
+                'female' => $stat['initial']['female_foreign'] + $stat['new_entries']['female_foreign'] - $stat['withdrawals']['female_foreign'],
+            ];
+        }
+        // Procesar extrangeros
+        foreach ($statistics as $key => $stat) {
+            $statistics[$key]['nationals'] = [
+                'total' => $stat['initial']['total_nationals'] + $stat['new_entries']['total_nationals'] - $stat['withdrawals']['total_nationals'],
+                'male' => $stat['initial']['male_nationals'] + $stat['new_entries']['male_nationals'] - $stat['withdrawals']['male_nationals'],
+                'female' => $stat['initial']['female_nationals'] + $stat['new_entries']['female_nationals'] - $stat['withdrawals']['female_nationals'],
+            ];
+        }
+
+        // Nueva consulta para estudiantes retirados
+        $withdrawnStudents = Student::select([
+            'students.identity_document',
+            'students.full_name',
+            'students.birthday',
+            'students.gender',
+            'grades.name as grade_name',
+            'sections.name as section_name',
+            'student_withdrawals.date as withdrawal_date',
+            'student_withdrawals.reason',
+        ])
+            ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereDate('student_withdrawals.date', '>=', $dateInitial)
+            ->whereDate('student_withdrawals.date', '<=', $dateEnd)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->orderBy('student_withdrawals.date', 'desc')
+            ->get();
+
+        // Consulta Nuevos Ingresos (matriculados en el periodo actual)
+        $entriesStudents = Student::selectRaw('
                 students.identity_document,
                 students.full_name,
                 students.birthday,
@@ -615,22 +658,22 @@ class StudentRepository extends BaseRepository
                 grades.name as grade_name,
                 sections.name as section_name
             ')
-                ->join('grades', 'students.grade_id', '=', 'grades.id')
-                ->join('sections', 'students.section_id', '=', 'sections.id')
-                ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
-                ->where('students.company_id', $companyId)
-                ->whereIn('students.type_education_id', $type_education_id)
-                ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
-                ->orderBy('students.real_entry_date', 'desc')
-                ->get();
+            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
+            ->where('students.company_id', $companyId)
+            ->whereIn('students.type_education_id', $type_education_id)
+            ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
+            ->orderBy('students.real_entry_date', 'desc')
+            ->get();
 
-            return [
-                'statistics' => $statistics,
-                'withdrawnStudents' => $withdrawnStudents,
-                'entriesStudents' => $entriesStudents,
-                'dateInitial' => $dateInitial,
-                'dateEnd' => $dateEnd,
-            ];
-        }, Constants::REDIS_TTL);
+        return [
+            'statistics' => $statistics,
+            'withdrawnStudents' => $withdrawnStudents,
+            'entriesStudents' => $entriesStudents,
+            'dateInitial' => $dateInitial,
+            'dateEnd' => $dateEnd,
+        ];
+        // }, Constants::REDIS_TTL);
     }
 }

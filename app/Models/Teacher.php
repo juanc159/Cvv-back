@@ -19,6 +19,11 @@ class Teacher extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected $customCachePrefixes = [
+        'string:{table}_wherePw*',
+        'string:{table}_findPw*',
+    ];
+
     public function complementaries()
     {
         return $this->hasMany(TeacherComplementary::class, 'teacher_id', 'id');

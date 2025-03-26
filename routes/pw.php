@@ -45,6 +45,9 @@ Route::get('/pw-contactData/{company_id}', [PwController::class, 'contactData'])
 Route::get('/pw-services/{company_id}', [PwController::class, 'services']);
 Route::get('/pw-service/{service_id}', [PwController::class, 'service']);
 
-Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
 
 Route::post('/user/changePassword', [UserController::class, 'changePassword']);
+
+//materia pendiente nueva version
+Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
+

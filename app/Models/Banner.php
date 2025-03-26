@@ -15,4 +15,11 @@ class Banner extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected $customCachePrefixes = [
+        'string:{table}_list*',
+        'string:{table}_listPw*',
+        'string:{table}_wherePw*',
+
+    ];
 }
