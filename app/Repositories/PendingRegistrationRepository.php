@@ -111,7 +111,7 @@ class PendingRegistrationRepository extends BaseRepository
         $sequence = $this->model::where('section_name', 'like', $periodName . '-%')->count() + 1;
         $sequence = str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
-        return "{$periodName}-{$sequence}-{$code}";
+        return "{$periodName}-{$code}";
     }
 
     public function findByStudentAndTerm($studentId, $termId)
