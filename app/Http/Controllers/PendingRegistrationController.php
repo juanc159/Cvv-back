@@ -379,9 +379,25 @@ class PendingRegistrationController extends Controller
 
              $pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
 
-           return $attempts = $this->pendingRegistrationAttemptRepository->list([
+            return$attempts = $this->pendingRegistrationAttemptRepository->list([
                 "pending_registration_id" => $pendingRegistration->id
-            ], ['student', 'subject']);
+            ], ['student', 'subject'])->map(function ($attempt) {
+                return [
+                    'id' => $attempt->id,
+                    'student_id' => [
+                        'value' => $attempt->student->id,
+                        'title' => $attempt->student->full_name,
+                    ],
+                    'subject_id' => [
+                        'value' => $attempt->subject->id,
+                        'title' => $attempt->subject->name,
+                    ],
+                    'attempt_number' => $attempt->attempt_number, // Asegúrate de incluir este campo
+                    'note' => $attempt->note,
+                    'attempt_date' => Carbon::parse($attempt->attempt_date)->format("d-m-Y"),
+                    'approved' => $attempt->approved,
+                ];
+            });
 
 
             // Fetch associated students and their subjects 
