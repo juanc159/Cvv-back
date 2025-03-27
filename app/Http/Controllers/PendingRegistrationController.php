@@ -374,12 +374,13 @@ class PendingRegistrationController extends Controller
         $data = $this->pendingRegistrationRepository->paginate($request->all());
 
         $responseData = [];
+        $attempts = [];
 
         foreach ($data as $key => $pendingRegistration) {
 
             $pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
 
-            $attempts = $this->pendingRegistrationAttemptRepository->list([
+            $arrayData = $this->pendingRegistrationAttemptRepository->list([
                 "pending_registration_id" => $pendingRegistration->id
             ], ['student', 'subject'])->map(function ($attempt) {
                 return [
@@ -398,6 +399,8 @@ class PendingRegistrationController extends Controller
                     'approved' => $attempt->approved,
                 ];
             });
+
+            $attempts = array_merge($attempts, $arrayData);
 
 
             // Fetch associated students and their subjects 
@@ -433,7 +436,7 @@ class PendingRegistrationController extends Controller
             ];
         }
 
-        // return $attempts;
+        return $attempts;
 
         $excel = Excel::raw(new PendingRegistrationExport($responseData, $attempts), \Maatwebsite\Excel\Excel::XLSX);
 
