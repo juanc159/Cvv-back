@@ -371,13 +371,13 @@ class PendingRegistrationController extends Controller
     public function excelExport(Request $request)
     {
         $request["typeData"] = "all";
-        return$data = $this->pendingRegistrationRepository->paginate($request->all());
+        $data = $this->pendingRegistrationRepository->paginate($request->all());
 
         $responseData = [];
 
         foreach ($data as $key => $pendingRegistration) {
 
-            $pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
+            return$pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
 
             $attempts = $this->pendingRegistrationAttemptRepository->list([
                 "pending_registration_id" => $pendingRegistration->id
