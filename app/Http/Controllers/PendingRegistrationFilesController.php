@@ -35,7 +35,7 @@ class PendingRegistrationFilesController extends Controller
             return [
                 'code' => 200,
                 'pendingRegistration' => $pendingRegistration,
-                'subjects' => $subjects,
+                'subjects' => $subjects->values(),
             ];
         });
     }
