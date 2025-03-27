@@ -400,7 +400,7 @@ class PendingRegistrationController extends Controller
                 ];
             });
 
-            $attempts = array_merge($attempts, $arrayData);
+            $attempts = array_merge($attempts, $arrayData->toArray());
 
 
             // Fetch associated students and their subjects 
