@@ -56,7 +56,7 @@ class PendingRegistrationController extends Controller
 
             $typeEducations = $this->typeEducationRepository->list(
                 request: [
-                    'typeData' => 'all', 
+                    'typeData' => 'all',
                 ],
                 with: ['grades.subjects']
             )->map(function ($value) use ($request) {
@@ -377,9 +377,9 @@ class PendingRegistrationController extends Controller
 
         foreach ($data as $key => $pendingRegistration) {
 
-             $pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
+            $pendingRegistration = $this->pendingRegistrationRepository->find($pendingRegistration->id);
 
-            return$attempts = $this->pendingRegistrationAttemptRepository->list([
+            $attempts = $this->pendingRegistrationAttemptRepository->list([
                 "pending_registration_id" => $pendingRegistration->id
             ], ['student', 'subject'])->map(function ($attempt) {
                 return [
@@ -405,7 +405,7 @@ class PendingRegistrationController extends Controller
                 ->getStudentsWithSubjectsByPendingRegistrationId($pendingRegistration->id)
                 ->map(function ($item) {
                     return [
-                        'student_id' => json_decode(json_encode(new StudentSelectInifiniteResource($item->student)),1) ,
+                        'student_id' => json_decode(json_encode(new StudentSelectInifiniteResource($item->student)), 1),
                         'subjects' => $item->subjects->map(function ($item) {
                             return [
                                 "id" => $item->subject_id,
@@ -433,9 +433,9 @@ class PendingRegistrationController extends Controller
             ];
         }
 
-         return $attempts;
+        return $attempts;
 
-        $excel = Excel::raw(new PendingRegistrationExport($responseData,$attempts), \Maatwebsite\Excel\Excel::XLSX);
+        $excel = Excel::raw(new PendingRegistrationExport($responseData, $attempts), \Maatwebsite\Excel\Excel::XLSX);
 
         $excelBase64 = base64_encode($excel);
 
