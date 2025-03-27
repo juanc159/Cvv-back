@@ -381,7 +381,7 @@ class PendingRegistrationController extends Controller
 
            return $attempts = $this->pendingRegistrationAttemptRepository->list([
                 "pending_registration_id" => $pendingRegistration->id
-            ]);
+            ], ['student', 'subject']);
 
 
             // Fetch associated students and their subjects 
