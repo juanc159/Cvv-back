@@ -433,7 +433,7 @@ class PendingRegistrationController extends Controller
             ];
         }
 
-         return $responseData;
+         return $attempts;
 
         $excel = Excel::raw(new PendingRegistrationExport($responseData,$attempts), \Maatwebsite\Excel\Excel::XLSX);
 
