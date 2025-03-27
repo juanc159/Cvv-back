@@ -131,6 +131,7 @@ class MenuSeeder extends Seeder
                 'order' => 150,
                 'title' => 'Materia Pendiente',
                 'icon' => 'tabler-parking',
+                'to' => 'PendingRegistration-List',
                 'requiredPermission' => 'pendingRegistration.list',
             ], 
         ];
