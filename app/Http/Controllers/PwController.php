@@ -230,6 +230,13 @@ class PwController extends Controller
                 ->with('subject')
                 ->get();
 
+
+                return [
+                    'student' => $student,
+                    'filteredNotes' => $filteredNotes,
+                    'date' => $formattedDate,
+                ];
+
             $pdfContent = $this->studentRepository->pdf(
                 'Pdfs.StudentNote',
                 [
