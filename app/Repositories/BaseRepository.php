@@ -275,22 +275,20 @@ class BaseRepository
      * @param  bool  $landscape  Si es true, usa orientación horizontal
      * @return \Illuminate\Http\Response
      */
-    public function pdf($vista, $data = [], $nombre = 'archivo', $is_stream = true, $landscape = false)
+    public function pdf($vista, $data = [], $nombre = 'archivo', $is_stream = true, $landspace = false)
     {
-        $cacheKey = $this->cacheService->generateKey("pdf_{$vista}", $data, 'string');
-        $pdfContent = $this->cacheService->remember($cacheKey, function () use ($vista, $data, $landscape) {
-            $pdf = \PDF::loadView($vista, compact('data'));
-            if ($landscape) {
-                $pdf->setPaper('legal', 'landscape');
-            }
+        $pdf = \PDF::loadview($vista, compact('data'));
+        if ($landspace == true) {
+            $pdf->setPaper('legal', 'landscape');
+        }
+        // dd('pasí');
 
-            return $pdf->output();
-        }); // Usa el defaultTtl de CacheService
-
-        $nombre .= '.pdf';
-        $pdf = \PDF::loadHTML($pdfContent);
-
-        return $is_stream ? $pdf->stream($nombre) : $pdf->download($nombre);
+        $nombre = $nombre.'.pdf';
+        if ($is_stream) {
+            return $pdf->stream($nombre);
+        } else {
+            return $pdf->download($nombre);
+        }
     }
 
     /**
