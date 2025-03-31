@@ -231,13 +231,7 @@ class PwController extends Controller
                 ->get();
 
 
-                // return [
-                //     'student' => $student,
-                //     'filteredNotes' => $filteredNotes,
-                //     'date' => $formattedDate,
-                // ];
-
-          return  $pdfContent = $this->studentRepository->pdf(
+            $pdfContent = $this->studentRepository->pdf(
                 'Pdfs.StudentNote',
                 [
                     'student' => $student,
@@ -301,7 +295,7 @@ class PwController extends Controller
     public function banners($company_id)
     {
         try {
-            $cacheKey = $this->cacheService->generateKey("banners_wherePw", ["company_id" =>$company_id], 'string');
+            $cacheKey = $this->cacheService->generateKey("banners_wherePw", ["company_id" => $company_id], 'string');
 
             $banners = $this->cacheService->remember($cacheKey, function () use ($company_id) {
                 return Banner::select('path')->where('company_id', $company_id)->where('is_active', 1)->get();
@@ -319,7 +313,7 @@ class PwController extends Controller
     public function teachers($company_id)
     {
         try {
-            $cacheKey = $this->cacheService->generateKey("teachers_wherePw", ["company_id" =>$company_id], 'string');
+            $cacheKey = $this->cacheService->generateKey("teachers_wherePw", ["company_id" => $company_id], 'string');
 
             $teachers = $this->cacheService->remember($cacheKey, function () use ($company_id) {
                 return Teacher::where('company_id', $company_id)->where('is_active', 1)->orderBy('order')->get()->map(function ($value) {
@@ -397,7 +391,7 @@ class PwController extends Controller
     public function contactData($company_id)
     {
         try {
-            $cacheKey = $this->cacheService->generateKey("teachers_findPw", ["company_id" =>$company_id], 'string');
+            $cacheKey = $this->cacheService->generateKey("teachers_findPw", ["company_id" => $company_id], 'string');
             $company = $this->cacheService->remember($cacheKey, function () use ($company_id) {
                 return Company::with([
                     'details' => function ($q) {
@@ -406,7 +400,7 @@ class PwController extends Controller
                 ])->find($company_id);
             }, Constants::REDIS_TTL);
 
-            
+
 
             $contactData['details'] = $company->details?->map(function ($value) {
                 return [
@@ -437,10 +431,10 @@ class PwController extends Controller
             ];
             $cacheKey = $this->cacheService->generateKey("services_listPw", $filter, 'string');
             $services = $this->cacheService->remember($cacheKey, function () use ($filter) {
-                return $this->serviceRepository->list($filter,select: ['id', 'title', 'image']);
+                return $this->serviceRepository->list($filter, select: ['id', 'title', 'image']);
             }, Constants::REDIS_TTL);
 
-            
+
             $services->map(function ($value) {
                 return [
                     'id' => $value->id,
