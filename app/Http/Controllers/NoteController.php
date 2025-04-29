@@ -409,7 +409,7 @@ class NoteController extends Controller
             }, []);
 
             // Reordenar los estudiantes por full_name con localización para español
-            $collator = new \Collator('es_ES'); // Configura el locale para español
+            $collator = new \Collator('es_ES.utf8'); // Configura el locale para español
             $collator->setStrength(\Collator::PRIMARY); // Ignora diferencias de mayúsculas/minúsculas
 
             $students = collect($students)->sortBy(function ($student) use ($collator) {
