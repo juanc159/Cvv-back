@@ -408,9 +408,13 @@ class NoteController extends Controller
                 return $carry;
             }, []);
 
-            $students = collect($students)->sortBy(function ($student) {
-                return strtolower($student['full_name']); // Ignora mayúsculas/minúsculas
-            })->values()->toArray();
+            // Reordenar los estudiantes por full_name con localización para español
+            $collator = new \Collator('es_ES'); // Configura el locale para español
+            $collator->setStrength(\Collator::PRIMARY); // Ignora diferencias de mayúsculas/minúsculas
+
+            $students = collect($students)->sortBy(function ($student) use ($collator) {
+                return $student['full_name'];
+            }, SORT_REGULAR, false, $collator)->values()->toArray();
 
             $type_education_id = $request->input('type_education_id');
 
