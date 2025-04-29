@@ -99,7 +99,7 @@ class StudentController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/student/student_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -173,7 +173,7 @@ class StudentController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/student/student_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -230,7 +230,7 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Student '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Student ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -330,7 +330,20 @@ class StudentController extends Controller
 
     public function studentStatistics(Request $request)
     {
-        $data = $this->studentRepository->studentStatisticsData($request->all());
+        $data['dateInitial'] = $request->input('dateInitial');
+        $data['dateEnd'] = $request->input('dateEnd');
+
+        if (empty($data['dateInitial'])) {
+            $data['dateInitial'] = Carbon::now()->startOfMonth()->toDateString();
+            $request["dateInitial"] = $data['dateInitial'];
+        }
+        if (empty($data['dateEnd'])) {
+            $data['dateEnd'] = Carbon::now()->endOfMonth()->toDateString();
+            $request["dateEnd"] = $data['dateEnd'];
+        }
+ 
+
+           $data = $this->studentRepository->studentStatisticsData($request->all());
 
         // return view('Exports.Student.Statistics', compact('statistics'));
 
@@ -342,16 +355,19 @@ class StudentController extends Controller
 
     public function statisticsExcelExport(Request $request)
     {
-        $data = $this->studentRepository->studentStatisticsData($request->all());
         $data['dateInitial'] = $request->input('dateInitial');
         $data['dateEnd'] = $request->input('dateEnd');
 
-        if (empty( $data['dateInitial'])) {
+        if (empty($data['dateInitial'])) {
             $data['dateInitial'] = Carbon::now()->startOfMonth()->toDateString();
+            $request["dateInitial"] = $data['dateInitial'];
         }
         if (empty($data['dateEnd'])) {
             $data['dateEnd'] = Carbon::now()->endOfMonth()->toDateString();
+            $request["dateEnd"] = $data['dateEnd'];
         }
+ 
+           $data = $this->studentRepository->studentStatisticsData($request->all());
 
         $excel = Excel::raw(new StudentStatisticsExport($data), \Maatwebsite\Excel\Excel::XLSX);
 

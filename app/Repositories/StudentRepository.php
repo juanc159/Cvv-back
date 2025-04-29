@@ -354,7 +354,14 @@ class StudentRepository extends BaseRepository
             $dateEnd = Carbon::now()->endOfMonth()->toDateString();
         }
 
-        $typeEducations = TypeEducation::with(['grades.sections'])->get();
+
+        $typeEducations = TypeEducation::with([
+            'grades.sections' => function ($query) {
+                // $query->whereHas('teacher', function ($query) {
+                //     $query->where('is_active', true);
+                // });
+            }
+        ])->get();
 
 
         $type_education_id = $typeEducations->pluck('id')->toArray();
@@ -426,6 +433,7 @@ class StudentRepository extends BaseRepository
                     ->where('student_withdrawals.date', '<', $dateInitial);
             })
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
             ->get();
 
         // Consulta Nuevos Ingresos (matriculados en el periodo actual)
@@ -454,6 +462,7 @@ class StudentRepository extends BaseRepository
             ->whereIn('students.type_education_id', $type_education_id)
             ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
             ->get();
 
         // Consulta Egresos (retirados en el periodo actual)
@@ -483,6 +492,7 @@ class StudentRepository extends BaseRepository
             ->whereDate('student_withdrawals.date', '>=', $dateInitial)
             ->whereDate('student_withdrawals.date', '<=', $dateEnd)
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
+            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
             ->get();
 
         // Inicializar el array de estadísticas con todas las combinaciones posibles
@@ -544,7 +554,7 @@ class StudentRepository extends BaseRepository
                 ],
             ];
         }
- 
+
         // Procesar matrícula inicial
         foreach ($initialMatriculation as $item) {
             $key = $item->type_education_name . '-' . $item->grade_name . '-' . $item->section_name;

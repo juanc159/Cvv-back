@@ -210,7 +210,7 @@ class NoteController extends Controller
                                     ];
 
                                     for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                        $json[$xx] = isset($row[$sub->code.$xx]) ? trim($row[$sub->code.$xx]) : (isset($json[$xx]) ? $json[$xx] : null);
+                                        $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
                                     }
 
                                     $model2['json'] = json_encode($json);
@@ -267,7 +267,7 @@ class NoteController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Carga de archivos '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Carga de archivos ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -395,12 +395,11 @@ class NoteController extends Controller
             // Convertir el array a una colección
             $studentsCollection = collect($students);
 
-            // Agrupando por `identity_document` y `full_name` (o cualquier clave común)
+            // Agrupando por `identity_document` y `full_name`
             $students = $studentsCollection->reduce(function ($carry, $item) {
-                // Buscar si ya existe un registro con el mismo `identity_document` y `full_name`
-                $key = $item['identity_document'].'|'.$item['full_name'];
+                $key = $item['identity_document'] . '|' . $item['full_name'];
 
-                if (! isset($carry[$key])) {
+                if (!isset($carry[$key])) {
                     $carry[$key] = $item; // Si no existe, añadir el item
                 } else {
                     $carry[$key] = array_merge($carry[$key], $item); // Si existe, fusionar
@@ -408,6 +407,9 @@ class NoteController extends Controller
 
                 return $carry;
             }, []);
+
+            // Reordenar los estudiantes por full_name después de la agrupación
+            $students = collect($students)->sortBy('full_name')->values()->toArray();
 
             $type_education_id = $request->input('type_education_id');
 
@@ -449,7 +451,7 @@ class NoteController extends Controller
                 // Si el estudiante existe, actualizamos el campo 'photo'
                 if ($student) {
                     // Guardar el archivo en la carpeta 'students'
-                    $path = $file->store('company_'.$student->company_id.'/student/student_'.$student->id.$request->input('file'), 'public');
+                    $path = $file->store('company_' . $student->company_id . '/student/student_' . $student->id . $request->input('file'), 'public');
 
                     // Actualizar el campo 'photo'
                     $student->$field = $path;
@@ -471,7 +473,7 @@ class NoteController extends Controller
                 // Capturar excepciones y agregar mensaje de error al array
                 $responseMessages[] = [
                     'file' => $file->getClientOriginalName(),
-                    'message' => 'Error al guardar el archivo: '.$e->getMessage(),
+                    'message' => 'Error al guardar el archivo: ' . $e->getMessage(),
                 ];
             }
 
