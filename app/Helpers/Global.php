@@ -265,3 +265,23 @@ function getInitials($value)
 
     return $initials;
 }
+
+
+function normalizeSpanishString($string)
+{
+    // Convertir a minúsculas
+    $string = mb_strtolower($string, 'UTF-8');
+
+    // Reemplazar caracteres especiales con sus equivalentes para ordenación
+    $replacements = [
+        'á' => 'a',
+        'é' => 'e',
+        'í' => 'i',
+        'ó' => 'o',
+        'ú' => 'u',
+        'ü' => 'u',
+        'ñ' => 'n{', // Usamos n{ para que 'ñ' se ordene después de 'n' pero antes de 'o'
+    ];
+
+    return strtr($string, $replacements);
+}

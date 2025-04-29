@@ -408,13 +408,15 @@ class NoteController extends Controller
                 return $carry;
             }, []);
 
-            // Reordenar los estudiantes por full_name con localización para español
-            $collator = new \Collator('es_ES.utf8'); // Configura el locale para español
-            $collator->setStrength(\Collator::PRIMARY); // Ignora diferencias de mayúsculas/minúsculas
-
-            $students = collect($students)->sortBy(function ($student) use ($collator) {
-                return $student['full_name'];
-            }, SORT_REGULAR, false, $collator)->values()->toArray();
+           // Reemplaza tu código de ordenación actual con este:
+        $students = collect($students)->sortBy(function ($student) {
+            // Extraer el apellido que viene antes de la coma
+            $nameParts = explode(',', $student['full_name']);
+            $lastName = trim($nameParts[0] ?? '');
+            
+            // Usar Collator para ordenar correctamente según las reglas del español
+            return normalizeSpanishString($lastName);
+        })->values()->toArray();
 
             $type_education_id = $request->input('type_education_id');
 
@@ -512,4 +514,6 @@ class NoteController extends Controller
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
+
+   
 }
