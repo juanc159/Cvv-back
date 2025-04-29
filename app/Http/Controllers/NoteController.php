@@ -408,8 +408,9 @@ class NoteController extends Controller
                 return $carry;
             }, []);
 
-            // Reordenar los estudiantes por full_name después de la agrupación
-            $students = collect($students)->sortBy('full_name')->values()->toArray();
+            $students = collect($students)->sortBy(function ($student) {
+                return strtolower($student['full_name']); // Ignora mayúsculas/minúsculas
+            })->values()->toArray();
 
             $type_education_id = $request->input('type_education_id');
 
