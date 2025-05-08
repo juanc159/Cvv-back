@@ -95,13 +95,16 @@ class NoteController extends Controller
                 $sheets = count($import);
                 for ($j = 0; $j < $sheets; $j++) {
 
+
                     for ($i = 0; $i < $typeEducation->cantNotes; $i++) {
                         // Suponiendo que solo hay una hoja en el archivo Excel
                         $data = $import[$j];
 
+
                         // Obtener las claves y eliminarlas de $data
                         $keys = array_shift($data);
                         $formattedData = [];
+
 
                         foreach ($data as $row) {
                             $formattedRow = [];
@@ -110,6 +113,8 @@ class NoteController extends Controller
                             }
                             $formattedData[] = $formattedRow;
                         }
+
+
 
                         // $groupedCedulas = collect($formattedData)
                         //     ->filter(function ($item) {
@@ -149,11 +154,12 @@ class NoteController extends Controller
                             return array_map('trim', $item); // Aplica trim a cada valor del item
                         }, $formattedData);
 
+
                         foreach ($formattedData as $kkk => $row) {
                             if (! empty($row['CÉDULA'])) {
 
                                 $grade = $this->grade($row['AÑO'], 'name');
-                                $section = $this->section($row['SECCIÓN'], 'name');
+                                // $section = $this->section($row['SECCIÓN'], 'name');
 
                                 $student = $this->studentRepository->searchOne([
                                     'identity_document' => $row['CÉDULA'],
@@ -177,10 +183,14 @@ class NoteController extends Controller
                                     unset($model['password']);
                                 }
 
-                                $student = $this->studentRepository->store($model);
+                                // $student = $this->studentRepository->store($model); /// decomentar
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
 
+
+                                if (!$teacher) {
+                                    $subjectsData = [];
+                                }
                                 if (count($subjectsData) == 0) {
 
                                     $grade = $typeEducation->grades->where('id', $grade->id)->first();
@@ -188,7 +198,9 @@ class NoteController extends Controller
                                     $subjectsData = $grade->subjects;
                                 }
 
+
                                 // return $subjectsData;
+
 
                                 foreach ($subjectsData as $key => $sub) {
                                     $model2 = [
@@ -408,15 +420,15 @@ class NoteController extends Controller
                 return $carry;
             }, []);
 
-           // Reemplaza tu código de ordenación actual con este:
-        $students = collect($students)->sortBy(function ($student) {
-            // Extraer el apellido que viene antes de la coma
-            $nameParts = explode(',', $student['full_name']);
-            $lastName = trim($nameParts[0] ?? '');
-            
-            // Usar Collator para ordenar correctamente según las reglas del español
-            return normalizeSpanishString($lastName);
-        })->values()->toArray();
+            // Reemplaza tu código de ordenación actual con este:
+            $students = collect($students)->sortBy(function ($student) {
+                // Extraer el apellido que viene antes de la coma
+                $nameParts = explode(',', $student['full_name']);
+                $lastName = trim($nameParts[0] ?? '');
+
+                // Usar Collator para ordenar correctamente según las reglas del español
+                return normalizeSpanishString($lastName);
+            })->values()->toArray();
 
             $type_education_id = $request->input('type_education_id');
 
@@ -514,6 +526,4 @@ class NoteController extends Controller
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
         }
     }
-
-   
 }

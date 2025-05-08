@@ -15,4 +15,8 @@ class Note extends Model
     {
         return $this->hasOne(Subject::class, 'id', 'subject_id');
     }
+    public function student()
+    {
+        return $this->hasOne(student::class, 'id', 'student_id');
+    }
 }
