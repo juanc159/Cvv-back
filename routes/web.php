@@ -6,11 +6,11 @@ use App\Models\Note;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return Note::with(["student" => function ($query) {
-        $query->where("type_education_id", 3);
-    }])->whereHas("student", function ($query) {
-        $query->where("type_education_id", 3);
-    })->get();
+    // return Note::with(["student" => function ($query) {
+    //     $query->where("type_education_id", 3);
+    // }])->whereHas("student", function ($query) {
+    //     $query->where("type_education_id", 3);
+    // })->get();
     return view('welcome');
 });
 
