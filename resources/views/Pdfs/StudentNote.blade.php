@@ -20,7 +20,7 @@
         margin-top: 2.5cm;
         margin-left: 0cm;
         margin-right: 0cm;
-        margin-bottom: 2.2cm;
+        margin-bottom: 1cm;
 
     }
 
@@ -232,55 +232,6 @@
                 @endforeach
             </table>
 
-            <!-- Nueva sección: Materias pendientes -->
-            @if ($data['pendingAttempts']->isNotEmpty())
-                <div style="margin-top: 30px;">
-                    <h3
-                        style="
-    text-align: center;
-    color: #1a75ff;
-    font-size: 16px;
-    background-color: #e6f2ff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    display: inline-block;
-    margin: 0 auto;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);">
-                        Reporte de Materias Pendientes
-                    </h3>
-
-                    <table class="pending-table">
-                        @foreach ($data['pendingAttempts'] as $subjectId => $attempts)
-                            <tr>
-                                <td>
-                                    <div class="subject-title">
-                                        {{ $attempts->first()->subject->name }}
-                                    </div>
-                                    <table class="moments-table">
-                                        <tr>
-                                            <th>Momento</th>
-                                            <th>Nota</th>
-                                            <th>Fecha</th>
-                                        </tr>
-                                        @foreach ($attempts as $attempt)
-                                            <tr>
-                                                <td>Momento {{ $attempt->attempt_number }}</td>
-                                                <td
-                                                    class="{{ $attempt->note !== null ? ($attempt->note >= 10 ? 'approved-note' : 'pending-note') : 'pending-note' }}">
-                                                    {{ $attempt->note === null ? '-' : number_format($attempt->note, 0) }}
-                                                </td>
-                                                <td>{{ $attempt->attempt_date ? $attempt->attempt_date->format('d-m-Y') : '-' }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </table>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </table>
-                </div>
-            @endif
-
             <!-- Pie de página del contenido -->
             <div style="width: 100%; text-align: center; margin-top: 50px;">
                 <span style="font-size: 12px; font-style: italic;">U.E. COLEGIO VIRGEN DEL VALLE ¡DÓNDE LA EDUCACIÓN DEL
@@ -298,6 +249,58 @@
                     </td>
                 </tr>
             </table>
+
+
+            <!-- Nueva sección: Materias pendientes -->
+            @if ($data['pendingAttempts']->isNotEmpty())
+                <div style="page-break-before: always; margin-top: 30px;">
+                    <h3
+                        style="
+            text-align: center;
+            color: #1a75ff;
+            font-size: 16px;
+            background-color: #e6f2ff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 0 auto;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);">
+                        Reporte de Materias Pendientes
+                    </h3>
+                    <table class="pending-table">
+                        @foreach ($data['pendingAttempts'] as $subjectId => $attempts)
+                            <tr>
+                                <td>
+                                    <div class="subject-title">{{ $attempts->first()->subject->name }}</div>
+                                    <<table class="moments-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Momento</th>
+                                                <th>Nota</th>
+                                                <th>Fecha</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($attempts as $attempt)
+                                                <tr>
+                                                    <td>{{ $attempt->attempt_number }}</td>
+                                                    <td
+                                                        class="{{ $attempt->note !== null ? ($attempt->note >= 10 ? 'approved-note' : 'pending-note') : 'pending-note' }}">
+                                                        {{ $attempt->note === null ? 'Pendiente' : number_format($attempt->note, 0) }}
+                                                    </td>
+                                                    <td>{{ $attempt->attempt_date ? $attempt->attempt_date->format('d-m-Y') : 'No programada' }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                    </table>
+                    </td>
+                    </tr>
+            @endforeach
+            </table>
+        </div>
+        @endif
+
         </div>
     </main>
 
