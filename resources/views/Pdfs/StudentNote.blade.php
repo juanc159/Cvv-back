@@ -187,7 +187,7 @@
             <!-- Tabla de notas -->
             <table class="notes-table">
                 <tr>
-                    <th> </th>
+                    <th>Materia </th>
                     @for ($i = 1; $i <= $data['student']['type_education']['cantNotes']; $i++)
                         @php
                             $isNoteSelected = false;
