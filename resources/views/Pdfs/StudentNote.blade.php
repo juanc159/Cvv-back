@@ -233,7 +233,7 @@
             </table>
 
             <!-- Pie de página del contenido -->
-            <div style="width: 100%; text-align: center; margin-top: 50px;">
+            <div style="width: 100%; text-align: center; margin-top: 10px;">
                 <span style="font-size: 12px; font-style: italic;">U.E. COLEGIO VIRGEN DEL VALLE ¡DÓNDE LA EDUCACIÓN DEL
                     FUTURO ES HOY!</span>
             </div>
