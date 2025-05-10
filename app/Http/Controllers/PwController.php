@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\CompanyDetail;
 use App\Models\Teacher;
 use App\Models\TeacherPlanning;
+use App\Models\Term;
 use App\Repositories\BannerRepository;
 use App\Repositories\CompanyRepository;
 use App\Repositories\GradeRepository;
@@ -534,30 +535,70 @@ class PwController extends Controller
                 'students_pending_subject' => $company->students_pending_subject,
             ];
         });
+    }
+
+    public function downloadStudyCertificate($id)
+    {
+        try {
+
+            $term = Term::where("is_active", 1)->first();
 
 
+            // Obtener la fecha actual y formatearla en palabras
+            $currentDate = Carbon::now();
+            $currentDate->setLocale('es');
+            $day = $currentDate->day;
+            $month = $currentDate->monthName;
+            $year = $currentDate->year;
+            $formattedDate = "los $day días del mes de $month de dos mil $year";
 
-        // try {
-        //     $plannings = TeacherPlanning::with([
-        //         'subject',
-        //         'grade',
-        //         'section',
-        //     ])->whereHas('teacher', function ($q) use ($company_id) {
-        //         $q->where('company_id', $company_id);
-        //         $q->where('name', 'Materia');
-        //         $q->where('last_name', 'Pendiente');
-        //     })->get()->groupBy(['grade.name', 'section.name', 'subject.name']);
+            // Consultar el estudiante con sus relaciones
+            $student = $this->studentRepository->find($id, [
+                'grade',
+                'section',
+                'type_education',
+                'company',
+            ]);
 
-        //     $company = $this->companyRepository->find($company_id);
+            if (!$student) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'Estudiante no encontrado',
+                ], 404);
+            }
 
-        //     return response()->json([
-        //         'code' => 200,
-        //         'plannings' => $plannings,
-        //         'students_pending_subject' => $company->students_pending_subject,
-        //     ]);
-        // } catch (\Throwable $th) {
+            // Generar el PDF
+            $pdfContent = $this->studentRepository->pdf(
+                'Pdfs.StudyCertificate',
+                [
+                    'student' => $student,
+                    'date' => $formattedDate,
+                    'term' => $term,
+                ],
+                'Constancia_de_Estudios_' . $student->full_name,
+                true // Forzar descarga
+            );
 
-        //     return response()->json(['code' => 500, 'message' => 'Error Al Buscar Los Datos', $th->getMessage(), $th->getLine()]);
-        // }
+            if (!$pdfContent) {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Error al generar el PDF',
+                ], 500);
+            }
+
+            $pdfBase64 = base64_encode($pdfContent);
+
+            return response()->json([
+                'code' => 200,
+                'pdf' => $pdfBase64,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error al procesar la solicitud',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 500);
+        }
     }
 }

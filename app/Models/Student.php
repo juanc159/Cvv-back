@@ -48,7 +48,7 @@ class Student extends Model
 
     public function company()
     {
-        return $this->hasOne(Company::class, 'id', 'company_id');
+        return $this->belongsTo(Company::class);
     }
 
     public function user()
