@@ -20,7 +20,7 @@
         margin-top: 2.5cm;
         margin-left: 0cm;
         margin-right: 0cm;
-        margin-bottom: 1cm;
+        margin-bottom: 0.2cm;
 
     }
 
