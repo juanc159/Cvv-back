@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ejemplo de Botón Bootstrap</title>
+    <title>Notas del Estudiante</title>
 </head>
 <style>
     @page {
@@ -13,17 +13,17 @@
 
     * {
         font-family: 'Roboto', sans-serif !important;
+
     }
 
-    /** Defina ahora los márgenes reales de cada página en el PDF **/
     body {
         margin-top: 2.5cm;
         margin-left: 0cm;
         margin-right: 0cm;
         margin-bottom: 2.2cm;
+
     }
 
-    /** Definir las reglas del encabezado **/
     header {
         position: fixed;
         top: 0cm;
@@ -32,7 +32,6 @@
         height: 3cm;
     }
 
-    /** Definir las reglas del pie de página **/
     footer {
         position: fixed;
         bottom: 0cm;
@@ -45,44 +44,116 @@
         font-size: 12px;
         width: 100%;
         border-spacing: 5px;
-        /* Ajusta el valor según la cantidad de espacio que desees */
     }
 
     td {
         border-radius: 5px;
         padding: 5px;
-        /* Agrega un relleno para separar el contenido de los bordes */
     }
 
     .text-media {
         font-size: 14px;
     }
+
+    /* Estilo para la tabla de notas */
+    .notes-table {
+        width: 500px;
+        margin: 0 auto;
+    }
+
+    .notes-table th,
+    .notes-table td {
+        border: 1px solid #777;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .pending-table {
+        width: 90%;
+        margin: 30px auto;
+        border-collapse: collapse;
+        background-color: #fff8f0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        font-size: 13px;
+    }
+
+    .pending-table th {
+        background-color: #1a75ff;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    .pending-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        vertical-align: top;
+    }
+
+    .moments-table {
+        width: 100%;
+        margin-top: 8px;
+        border-collapse: collapse;
+    }
+
+    .moments-table th {
+        background-color: #ffe0cc;
+        color: #333;
+        padding: 6px;
+        font-size: 12px;
+        border: 1px solid #ccc;
+    }
+
+    .moments-table td {
+        border: 1px solid #ccc;
+        padding: 5px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .pending-note {
+        background-color: #ffe6e6 !important;
+        color: #d60000;
+        font-weight: bold;
+    }
+
+    .approved-note {
+        background-color: #e6ffe6 !important;
+        color: #006400;
+        font-weight: bold;
+    }
+
+    .subject-title {
+        background-color: #cce6ff;
+        padding: 6px 10px;
+        font-weight: bold;
+        font-size: 13px;
+        border-left: 4px solid #1a75ff;
+        border-bottom: 1px solid #ccc;
+    }
 </style>
 
 <body>
-
-
-
     <!-- IMAGEN DE ENCABEZADO -->
     <header>
         <img src="{{ public_path('img/header.png') }}" style="width: 100%;">
     </header>
 
     <footer>
-        {{-- <img src="https://tracegt.housebl.com:7443/images/FOOTER.jpg" style="width: 100%;"> --}}
+        <!-- Puedes agregar un pie de página si lo deseas -->
     </footer>
 
     <main>
-
         <div
-            style="text-align: center; background-image: url({{ public_path('img/background.jpg') }});  background-repeat: no-repeat ;  background-position: center; background-size: 50% auto;">
-
+            style="text-align: center; background-image: url({{ public_path('img/background.jpg') }}); background-repeat: no-repeat; background-position: center; background-size: 50% auto;">
             <table>
                 <tr>
                     <td colspan="2" style="text-align: center">
                         <b>
-                            <label style=" color: #000 !important; font-size: 20px; ">Calificaciones Acumulativas <br>
-                                {{ $data['student']['type_education']['name'] }}</label></b>
+                            <label style="color: #000 !important; font-size: 20px;">Calificaciones Acumulativas <br>
+                                {{ $data['student']['type_education']['name'] }}</label>
+                        </b>
                     </td>
                 </tr>
                 <tr>
@@ -112,10 +183,11 @@
                     </td>
                 </tr>
             </table>
-            <table style="width: 500px;" align="center">
 
+            <!-- Tabla de notas -->
+            <table class="notes-table">
                 <tr>
-                    <th>&nbsp;</th>
+                    <th> </th>
                     @for ($i = 1; $i <= $data['student']['type_education']['cantNotes']; $i++)
                         @php
                             $isNoteSelected = false;
@@ -126,32 +198,19 @@
                                 }
                             }
                         @endphp
-
                         @if ($isNoteSelected)
                             <th>NOTA {{ $i }}</th>
                         @endif
                     @endfor
                 </tr>
-
-
                 @foreach ($data['filteredNotes'] as $key => $nota)
                     <tr>
-                        <td style="text-align: center; font-size: 15px;"><span> {{ $nota['subject']['name'] }}</span>
+                        <td style="text-align: center; font-size: 15px;"><span>{{ $nota['subject']['name'] }}</span>
                         </td>
-
                         @php
-                            $valores = json_decode($nota['json'], true); // Decodificar como array asociativo
+                            $valores = json_decode($nota['json'], true);
                             $noteSelections = $data['student']['type_education']->note_selections;
                         @endphp
-                        {{-- @foreach ($valores as $key => $val)
-                            <td
-                                style="border: 1px solid rgb(119, 119, 119); padding-left: 8px; padding-right: 8px; padding: 4px; text-align: center;">
-                                <span>{{ $val }}</span>
-                            </td>
-                        @endforeach --}}
-
-
-
                         @foreach ($valores as $key => $val)
                             @php
                                 $isNoteSelected = false;
@@ -162,41 +221,79 @@
                                     }
                                 }
                             @endphp
-
-                            @if ($isNoteSelected )
-                                <td style="border: 1px solid rgb(119, 119, 119); padding-left: 8px; padding-right: 8px; padding: 4px; text-align: center;">
+                            @if ($isNoteSelected)
+                                <td
+                                    style="border: 1px solid rgb(119, 119, 119); padding-left: 8px; padding-right: 8px; padding: 4px; text-align: center;">
                                     <span>{{ $val }}</span>
                                 </td>
                             @endif
                         @endforeach
-
-
-
-
-                </tr>
+                    </tr>
                 @endforeach
-
-
             </table>
+
+            <!-- Nueva sección: Materias pendientes -->
+            @if ($data['pendingAttempts']->isNotEmpty())
+                <div style="margin-top: 30px;">
+                    <h3
+                        style="
+    text-align: center;
+    color: #1a75ff;
+    font-size: 16px;
+    background-color: #e6f2ff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 0 auto;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);">
+                        Reporte de Materias Pendientes
+                    </h3>
+
+                    <table class="pending-table">
+                        @foreach ($data['pendingAttempts'] as $subjectId => $attempts)
+                            <tr>
+                                <td>
+                                    <div class="subject-title">
+                                        {{ $attempts->first()->subject->name }}
+                                    </div>
+                                    <table class="moments-table">
+                                        <tr>
+                                            <th>Momento</th>
+                                            <th>Nota</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                        @foreach ($attempts as $attempt)
+                                            <tr>
+                                                <td>Momento {{ $attempt->attempt_number }}</td>
+                                                <td
+                                                    class="{{ $attempt->note !== null ? ($attempt->note >= 10 ? 'approved-note' : 'pending-note') : 'pending-note' }}">
+                                                    {{ $attempt->note === null ? '-' : number_format($attempt->note, 0) }}
+                                                </td>
+                                                <td>{{ $attempt->attempt_date ? $attempt->attempt_date->format('d-m-Y') : '-' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            @endif
+
+            <!-- Pie de página del contenido -->
             <div style="width: 100%; text-align: center; margin-top: 50px;">
                 <span style="font-size: 12px; font-style: italic;">U.E. COLEGIO VIRGEN DEL VALLE ¡DÓNDE LA EDUCACIÓN DEL
-                    FUTURO ES HOYs!</span>
+                    FUTURO ES HOY!</span>
             </div>
-            <table style="500px">
+            <table style="width: 500px;" align="center">
                 <tr>
                     <td align="center">
                         <img src="{{ public_path('img/firma.png') }}" style="max-width: 150px !important;">
-                        {{-- <img src="https://quwonh.stripocdn.email/content/guids/CABINET_9f6aac012eefaebdd0a78bd7310efde25b299a63237f8900b2018ccd3e36252a/images/captura_de_pantalla_20240128_225603.png"
-                            style="max-width: 150px !important;"> --}}
                     </td>
                 </tr>
                 <tr>
                     <td align="center">
-                        @php
-
-                        @endphp
-
-
                         <span>{{ $data['date'] }}</span>
                     </td>
                 </tr>
@@ -204,10 +301,6 @@
         </div>
     </main>
 
-    <!-- Incluye el script de jQuery (requerido por Bootstrap) y Bootstrap desde un CDN -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>

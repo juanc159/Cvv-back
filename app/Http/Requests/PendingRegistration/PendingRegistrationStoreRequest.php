@@ -37,9 +37,9 @@ class PendingRegistrationStoreRequest extends FormRequest
                 Rule::unique('pending_registrations')
                     ->where(function ($query) use ($pendingRegistrationId) {
                         $query->where('company_id', $this->company_id)
-                              ->where('term_id', $this->term_id)
-                              ->where('grade_id', $this->grade_id)
-                              ->whereNull('deleted_at'); // Ignorar registros soft deleted
+                            ->where('term_id', $this->term_id)
+                            ->where('grade_id', $this->grade_id)
+                            ->whereNull('deleted_at'); // Ignorar registros soft deleted
                         if ($pendingRegistrationId) {
                             $query->where('id', '!=', $pendingRegistrationId);
                         }
@@ -54,11 +54,11 @@ class PendingRegistrationStoreRequest extends FormRequest
                     ->where(function ($query) use ($pendingRegistrationId) {
                         $query->whereIn('pending_registration_id', function ($subQuery) {
                             $subQuery->select('id')
-                                     ->from('pending_registrations')
-                                     ->where('company_id', $this->company_id)
-                                     ->where('term_id', $this->term_id)
-                                     ->where('grade_id', $this->grade_id)
-                                     ->whereNull('deleted_at'); // Ignorar registros soft deleted en pending_registrations
+                                ->from('pending_registrations')
+                                ->where('company_id', $this->company_id)
+                                ->where('term_id', $this->term_id)
+                                ->where('grade_id', $this->grade_id)
+                                ->whereNull('deleted_at'); // Ignorar registros soft deleted en pending_registrations
                         })->whereNull('deleted_at'); // Ignorar registros soft deleted en pending_registration_students
                         if ($pendingRegistrationId) {
                             $query->where('pending_registration_id', '!=', $pendingRegistrationId);

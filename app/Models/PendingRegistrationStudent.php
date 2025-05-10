@@ -28,5 +28,15 @@ class PendingRegistrationStudent extends Model
     {
         return $this->hasMany(PendingRegistrationSubject::class, 'pending_registration_student_id');
     }
- 
+
+
+    public function pendingRegistrationSubjects()
+    {
+        return $this->hasMany(PendingRegistrationSubject::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
+    }
 }

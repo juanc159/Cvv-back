@@ -61,7 +61,7 @@ class PendingRegistration extends Model
             // Agregar los archivos (o array vacío) a la materia
             return [
                 'subject' => $subject,
-                'files' => $files->isEmpty() ? [] : $files->map(function($f){
+                'files' => $files->isEmpty() ? [] : $files->map(function ($f) {
                     return [
                         'id' => $f->id,
                         'name' => $f->name,
@@ -71,7 +71,7 @@ class PendingRegistration extends Model
             ];
         });
     }
- 
+
     public function files(): HasMany
     {
         return $this->hasMany(PendingRegistrationFile::class, 'pending_registration_id');

@@ -24,7 +24,7 @@ class Student extends Model
 
     protected $customCachePrefixes = [
         'string:{table}_statisticsData*',
-    ]; 
+    ];
 
     public function notes()
     {
@@ -106,5 +106,15 @@ class Student extends Model
     public function isWithdrawn(): bool
     {
         return $this->withdrawal()->exists();
+    }
+
+    public function pendingRegistrationStudents()
+    {
+        return $this->hasMany(PendingRegistrationStudent::class);
+    }
+
+    public function pendingRegistrationAttempts()
+    {
+        return $this->hasMany(PendingRegistrationAttempt::class);
     }
 }

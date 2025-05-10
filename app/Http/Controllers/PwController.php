@@ -230,6 +230,14 @@ class PwController extends Controller
                 ->with('subject')
                 ->get();
 
+            /// Obtener materias pendientes con sus intentos
+            $pendingAttempts = $student->pendingRegistrationAttempts()
+                ->with('subject')
+                ->get()
+                ->groupBy('subject_id')
+                ->map(function ($attempts) {
+                    return $attempts->sortBy('attempt_number');
+                });
 
             $pdfContent = $this->studentRepository->pdf(
                 'Pdfs.StudentNote',
@@ -237,6 +245,7 @@ class PwController extends Controller
                     'student' => $student,
                     'filteredNotes' => $filteredNotes,
                     'date' => $formattedDate,
+                    'pendingAttempts' => $pendingAttempts,
                 ],
                 'Notas',
                 false

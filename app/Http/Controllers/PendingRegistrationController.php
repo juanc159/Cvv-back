@@ -91,9 +91,9 @@ class PendingRegistrationController extends Controller
     public function store(PendingRegistrationStoreRequest $request)
     {
         return $this->runTransaction(function () use ($request) {
-            $term_id = $request->input("term_id");
-            $code = $request->input("code");
-            $students = $request->input("students");
+            $term_id = $request->term_id;
+            $code = $request->code;
+            $students = $request->students;
 
             // Generar el nombre de la sección
             $term = $this->termRepository->find($term_id);
@@ -101,10 +101,10 @@ class PendingRegistrationController extends Controller
 
             // Crear el registro de la sección en pending_registrations
             $pendingRegistration = $this->pendingRegistrationRepository->store([
-                'company_id' => $request->input('company_id'),
+                'company_id' => $request->company_id,
                 'term_id' => $term_id,
-                'type_education_id' => $request->input('type_education_id'),
-                'grade_id' => $request->input('grade_id'),
+                'type_education_id' => $request->type_education_id,
+                'grade_id' => $request->grade_id,
                 'code' => $code,
                 'section_name' => $sectionName,
             ]);
@@ -127,10 +127,11 @@ class PendingRegistrationController extends Controller
                 );
             }
 
-            return [
+            return  [
                 'code' => 200,
                 'message' => 'Materias pendientes registradas correctamente',
                 'section' => $sectionName,
+                'pending_registration_id' => $pendingRegistration->id,
             ];
         }, debug: false);
     }
@@ -296,7 +297,7 @@ class PendingRegistrationController extends Controller
                 ->pluck('student_id', 'id')
                 ->toArray();
 
-            $newStudentIds = array_column($studentsInput, 'id');
+            $newStudentIds = array_column($studentsInput, 'student_id');
 
             // Eliminar estudiantes que ya no están en la lista
             foreach ($currentStudents as $currentStudentId => $studentId) {
@@ -304,6 +305,7 @@ class PendingRegistrationController extends Controller
                     $this->pendingRegistrationStudentRepository->delete($currentStudentId);
                 }
             }
+
 
             // Procesar cada estudiante enviado
             foreach ($studentsInput as $studentData) {
@@ -320,6 +322,10 @@ class PendingRegistrationController extends Controller
                         $subjects
                     );
                 } else {
+                    // return [
+                    //     "pending_registration_id" => $pendingRegistration->id,
+                    //     "student_id" => $studentId,
+                    // ];
                     // Crear nuevo estudiante y agregar sus materias
                     $pendingRegistrationStudent = $this->pendingRegistrationStudentRepository->store([
                         'pending_registration_id' => $pendingRegistration->id,
