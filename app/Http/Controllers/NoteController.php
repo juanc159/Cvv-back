@@ -183,7 +183,7 @@ class NoteController extends Controller
                                     unset($model['password']);
                                 }
 
-                                // $student = $this->studentRepository->store($model); /// decomentar
+                                $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
 
