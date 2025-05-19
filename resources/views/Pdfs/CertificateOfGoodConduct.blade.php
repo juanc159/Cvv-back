@@ -148,8 +148,8 @@
                     de
                     la UNIDAD EDUCATIVA COLEGIO VIRGEN DEL VALLE, ubicada en la localidad Arjona municipio Cárdenas, por
                     medio de la presente hace
-                    constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a) de la
-                    "AQUI VA EL TIPO DE DOCUMENTO" N°
+                    constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a)
+                    {{ $data['student']['type_document_name'] }} N°
                     <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V' : 'E' }}
                         {{ $data['student']['identity_document'] }}</strong>,
                     quien cursó el {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE

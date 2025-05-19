@@ -180,6 +180,7 @@ class DocumentController extends Controller
                 'section',
                 'type_education',
                 'company',
+                'type_document',
             ]);
 
             if (!$student) {
@@ -191,6 +192,25 @@ class DocumentController extends Controller
 
             // Limpiar comas del nombre completo
             $student->full_name = str_replace(',', '', $student->full_name);
+
+            $type_document = $student->type_document?->name;
+            $type_document_name = "";
+            switch ($type_document) {
+                case 'Cédula de identidad':
+                    $type_document_name = " de la cédula de identidad";
+                    break;
+                case 'Cédula escolar':
+                    $type_document_name = " de la cédula escolar";
+                    break;
+                case 'Número de pasaporte':
+                    $type_document_name = " del Número de pasaporte";
+                    break;
+
+                default:
+                    $type_document_name = "";
+                    break;
+            }
+            $student->type_document_name = $type_document_name;
 
             // Preparar datos para el PDF, incluyendo información adicional si existe
             $pdfData = [
