@@ -194,7 +194,7 @@ class DocumentController extends Controller
             $student->full_name = str_replace(',', '', $student->full_name);
 
             $type_document = $student->type_document?->name;
-            $type_document_name = " del documento ";
+            $type_document_name = "";
             switch ($type_document) {
                 case 'Cédula de identidad':
                     $type_document_name = " de la cédula de identidad";
@@ -207,7 +207,7 @@ class DocumentController extends Controller
                     break;
 
                 default:
-                    $type_document_name = "";
+                    $type_document_name = " del documento ";
                     break;
             }
             $student->type_document_name = $type_document_name;
