@@ -10,6 +10,7 @@ use App\Http\Resources\Student\StudentListResource;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\StudentWithdrawalRepository;
+use App\Repositories\TypeDocumentRepository;
 use App\Repositories\TypeEducationRepository;
 use App\Services\CacheService;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class StudentController extends Controller
         protected QueryController $queryController,
         protected StudentWithdrawalRepository $studentWithdrawalRepository,
         protected CacheService $cacheService,
+        protected TypeDocumentRepository $typeDocumentRepository,
     ) {}
 
     public function list(Request $request)
@@ -73,11 +75,14 @@ class StudentController extends Controller
                 ];
             });
 
+            $typeDocuments = $this->typeDocumentRepository->selectList();
+
             $sections = $this->sectionRepository->selectList();
 
             return response()->json([
                 'code' => 200,
                 'typeEducations' => $typeEducations,
+                'typeDocuments' => $typeDocuments,
                 'sections' => $sections,
                 ...$selectInfiniteCountries,
 
@@ -146,12 +151,15 @@ class StudentController extends Controller
                 ];
             });
 
+            $typeDocuments = $this->typeDocumentRepository->selectList();
+
             $sections = $this->sectionRepository->selectList();
 
             return response()->json([
                 'code' => 200,
                 'form' => $form,
                 'typeEducations' => $typeEducations,
+                'typeDocuments' => $typeDocuments,
                 'sections' => $sections,
                 ...$selectInfiniteCountries,
 
@@ -341,9 +349,9 @@ class StudentController extends Controller
             $data['dateEnd'] = Carbon::now()->endOfMonth()->toDateString();
             $request["dateEnd"] = $data['dateEnd'];
         }
- 
 
-           $data = $this->studentRepository->studentStatisticsData($request->all());
+
+        $data = $this->studentRepository->studentStatisticsData($request->all());
 
         // return view('Exports.Student.Statistics', compact('statistics'));
 
@@ -366,8 +374,8 @@ class StudentController extends Controller
             $data['dateEnd'] = Carbon::now()->endOfMonth()->toDateString();
             $request["dateEnd"] = $data['dateEnd'];
         }
- 
-           $data = $this->studentRepository->studentStatisticsData($request->all());
+
+        $data = $this->studentRepository->studentStatisticsData($request->all());
 
         $excel = Excel::raw(new StudentStatisticsExport($data), \Maatwebsite\Excel\Excel::XLSX);
 

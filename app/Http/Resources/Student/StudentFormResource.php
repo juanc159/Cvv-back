@@ -19,6 +19,7 @@ class StudentFormResource extends JsonResource
             'id' => $this->id,
             'company_id' => $this->company_id,
             'type_education_id' => $this->type_education_id,
+            'type_document_id' => $this->type_document_id,
             'grade_id' => $this->grade_id,
             'section_id' => $this->section_id,
             'identity_document' => $this->identity_document,
@@ -31,6 +32,7 @@ class StudentFormResource extends JsonResource
             'country_id' => new CountrySelectResource($this->country),
             'state_id' => $this->state_id,
             'city_id' => $this->city_id,
+            'nationalized' => $this->nationalized,
         ];
     }
 }

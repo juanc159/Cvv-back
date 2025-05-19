@@ -149,6 +149,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Menú Materia Pendiente',
                 'menu_id' => 15,
             ],
+            [
+                'id' => 23,
+                'name' => 'documents.menu',
+                'description' => 'Visualizar Menú Documentos',
+                'menu_id' => 16,
+            ],
         ];
 
         // Inicializar la barra de progreso

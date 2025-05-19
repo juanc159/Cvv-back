@@ -56,6 +56,13 @@ class StudentStoreRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            "nationalized" => formattedElement($this->nationalized)
+        ]);
+    }
+
     public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([

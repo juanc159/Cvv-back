@@ -27,8 +27,8 @@ class StudentRepository extends BaseRepository
         return $this->cacheService->remember($cacheKey, function () {
 
             $query = QueryBuilder::for($this->model->query())
-                ->with(['type_education:id,name', 'grade:id,name', 'section:id,name'])
-                ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document'])
+                ->with(['type_education:id,name', 'grade:id,name', 'section:id,name', 'type_document:id,name'])
+                ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id'])
                 ->allowedFilters([
                     'full_name',
                     'identity_document',
@@ -60,6 +60,9 @@ class StudentRepository extends BaseRepository
                             $subQuery->orWhereHas('type_education', function ($q) use ($value) {
                                 $q->where('name', 'like', "%$value%");
                             });
+                            $subQuery->orWhereHas('type_document', function ($q) use ($value) {
+                                $q->where('name', 'like', "%$value%");
+                            });
                         });
                     }),
                 ])
@@ -83,6 +86,12 @@ class StudentRepository extends BaseRepository
                         'sections',
                         'name',
                         'section_id',
+                    )),
+                    AllowedSort::custom('type_document_name', new RelatedTableSort(
+                        'students',
+                        'type_documents',
+                        'name',
+                        'type_document_id',
                     )),
 
                 ])
@@ -186,16 +195,31 @@ class StudentRepository extends BaseRepository
         return $data;
     }
 
-    public function selectList($request = [], $with = [], $select = [], $fieldValue = 'id', $fieldTitle = 'name')
+    public function selectList($request = [], $with = [], $select = [], $fieldValue = 'id', $fieldTitle = 'name', $limit = null)
     {
-        $data = $this->model->with($with)->where(function ($query) use ($request) {
+        $query = $this->model->with($with)->where(function ($query) use ($request) {
             if (! empty($request['idsAllowed'])) {
                 $query->whereIn('id', $request['idsAllowed']);
             }
-        })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
+        });
+
+        $query->where(function ($query) use ($request) {
+            if (! empty($request['string'])) {
+                $value = strval($request['string']);
+                $query->orWhere('identity_document', 'like', '%' . $value . '%');
+                $query->orWhere('full_name', 'like', '%' . $value . '%');
+            }
+        });
+
+        // Aplica el límite si está definido
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        $data = $query->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [
                 'value' => $value->$fieldValue,
-                'title' => $value->$fieldTitle,
+                'title' => $value->type_document?->name . ' - ' . $value->identity_document . ' - ' . $value->full_name,
             ];
 
             if (count($select) > 0) {
@@ -404,21 +428,19 @@ class StudentRepository extends BaseRepository
 
         // Consulta Matrícula Inicial (estudiantes activos antes del periodo)
         $initialMatriculation = Student::selectRaw('
-        type_education.name as type_education_name,
-        grades.name as grade_name,
-        sections.name as section_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
-
-        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
-        SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-        SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
-
-        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
-        SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
-        SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
-    ')
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+    SUM(CASE WHEN students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+    SUM(CASE WHEN students.gender = "M" AND (students.nationalized = 0 AND students.country_id != companies.country_id) THEN 1 ELSE 0 END) as male_foreign,
+    SUM(CASE WHEN students.gender = "F" AND (students.nationalized = 0 AND students.country_id != companies.country_id) THEN 1 ELSE 0 END) as female_foreign,
+    SUM(CASE WHEN students.nationalized = 1 OR students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+    SUM(CASE WHEN students.gender = "M" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as male_nationals,
+    SUM(CASE WHEN students.gender = "F" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as female_nationals
+')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
@@ -433,27 +455,24 @@ class StudentRepository extends BaseRepository
                     ->where('student_withdrawals.date', '<', $dateInitial);
             })
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
-            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
+            ->havingRaw('COUNT(*) > 0')
             ->get();
 
         // Consulta Nuevos Ingresos (matriculados en el periodo actual)
         $newEntries = Student::selectRaw('
-        type_education.name as type_education_name,
-        grades.name as grade_name,
-        sections.name as section_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
-
-
-        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
-
-        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
-    ')
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+    SUM(CASE WHEN students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+    SUM(CASE WHEN students.gender = "M" AND students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+    SUM(CASE WHEN students.gender = "F" AND students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
+    SUM(CASE WHEN students.nationalized = 1 OR students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+    SUM(CASE WHEN students.gender = "M" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as male_nationals,
+    SUM(CASE WHEN students.gender = "F" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as female_nationals
+')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->join('type_education', 'students.type_education_id', '=', 'type_education.id')
@@ -462,26 +481,24 @@ class StudentRepository extends BaseRepository
             ->whereIn('students.type_education_id', $type_education_id)
             ->whereBetween('students.real_entry_date', [$dateInitial, $dateEnd])
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
-            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
+            ->havingRaw('COUNT(*) > 0')
             ->get();
 
         // Consulta Egresos (retirados en el periodo actual)
         $withdrawnStudents = Student::selectRaw('
-        type_education.name as type_education_name,
-        grades.name as grade_name,
-        sections.name as section_name,
-        COUNT(*) as total,
-        SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
-        SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
-
-        SUM(CASE WHEN students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
-
-        SUM(CASE WHEN students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
-       SUM(CASE WHEN students.gender = "M" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as male_nationals,
-       SUM(CASE WHEN students.gender = "F" AND students.country_id = companies.country_id THEN 1 ELSE 0 END) as female_nationals
-    ')
+    type_education.name as type_education_name,
+    grades.name as grade_name,
+    sections.name as section_name,
+    COUNT(*) as total,
+    SUM(CASE WHEN students.gender = "M" THEN 1 ELSE 0 END) as male,
+    SUM(CASE WHEN students.gender = "F" THEN 1 ELSE 0 END) as female,
+    SUM(CASE WHEN students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as total_foreign,
+    SUM(CASE WHEN students.gender = "M" AND students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as male_foreign,
+    SUM(CASE WHEN students.gender = "F" AND students.nationalized = 0 AND students.country_id != companies.country_id THEN 1 ELSE 0 END) as female_foreign,
+    SUM(CASE WHEN students.nationalized = 1 OR students.country_id = companies.country_id THEN 1 ELSE 0 END) as total_nationals,
+    SUM(CASE WHEN students.gender = "M" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as male_nationals,
+    SUM(CASE WHEN students.gender = "F" AND (students.nationalized = 1 OR students.country_id = companies.country_id) THEN 1 ELSE 0 END) as female_nationals
+')
             ->join('student_withdrawals', 'students.id', '=', 'student_withdrawals.student_id')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
@@ -492,7 +509,7 @@ class StudentRepository extends BaseRepository
             ->whereDate('student_withdrawals.date', '>=', $dateInitial)
             ->whereDate('student_withdrawals.date', '<=', $dateEnd)
             ->groupBy('type_education.name', 'grades.name', 'sections.name')
-            ->havingRaw('COUNT(*) > 0') // Filtra grupos con al menos un estudiante
+            ->havingRaw('COUNT(*) > 0')
             ->get();
 
         // Inicializar el array de estadísticas con todas las combinaciones posibles

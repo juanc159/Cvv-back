@@ -133,7 +133,15 @@ class MenuSeeder extends Seeder
                 'icon' => 'tabler-parking',
                 'to' => 'PendingRegistration-List',
                 'requiredPermission' => 'pendingRegistration.list',
-            ], 
+            ],
+            [
+                'id' => 16,
+                'order' => 160,
+                'title' => 'Constancias',
+                'icon' => 'tabler-file',
+                'to' => 'Documents-Index',
+                'requiredPermission' => 'documents.menu',
+            ],
         ];
 
         // Inicializar la barra de progreso

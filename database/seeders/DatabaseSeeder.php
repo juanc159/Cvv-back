@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             TypeEducationSeeder::class,
             SectionSeeder::class,
             JobPositionSeeder::class,
+            TypeDocumentSeeder::class,
         ]);
 
         $client = new ClientRepository;

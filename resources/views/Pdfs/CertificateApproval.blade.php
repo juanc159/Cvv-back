@@ -136,7 +136,7 @@
                 <tr>
                     <td colspan="2" style="text-align: center">
                         <b>
-                            <label class="title">CONSTANCIA DE ESTUDIOS</label>
+                            <label class="title">CONSTANCIA DE APROBACIÓN</label>
                         </b>
                     </td>
                 </tr>
@@ -151,9 +151,10 @@
                     constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a) de la
                     "AQUI VA EL TIPO DE DOCUMENTO" N°
                     <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V' : 'E' }}
-                        {{ $data['student']['identity_document'] }}</strong>, cursa estudios en esta Institución en el
+                        {{ $data['student']['identity_document'] }}</strong>,
+                    cursó y aprobó en esta Institución el
                     {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
-                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, para este
+                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, en el
                     {{ strtolower($data['term']['name']) }}.
                 </p>
                 <p>

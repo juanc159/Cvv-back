@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Constancia de Estudios</title>
+    <title>Constancia de Inscripción</title>
 </head>
 <style>
     @page {
@@ -92,7 +92,6 @@
         right: 1cm;
         text-align: right;
         font-size: 14px;
-        /* Aumentado de 12px a 14px para que las letras sean más grandes */
         line-height: 1.5;
         width: 40%;
     }
@@ -106,7 +105,6 @@
         border: none;
         border-top: 1px solid #000;
         width: 220px;
-        /* Aumentado de 100px a 120px para que la línea sea más visible */
         margin: 5px 0;
         margin-left: auto;
     }
@@ -116,6 +114,51 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+    }
+
+    .fee-table {
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+    }
+
+    .fee-table td {
+        padding: 5px 10px;
+        font-size: 16px;
+        vertical-align: middle;
+        /* Alineación vertical centrada */
+    }
+
+    .fee-table .concept {
+        text-align: left;
+    }
+
+    .fee-table .amount {
+        text-align: right;
+        white-space: nowrap;
+        /* Evita que el $ y el número se separen */
+    }
+
+    .fee-table .amount span {
+        display: inline-block;
+        vertical-align: middle;
+        /* Alinea el $ con el número */
+    }
+
+    .fee-table .underline-row td {
+        border-bottom: 1px solid #000;
+    }
+
+    .fee-table .total-row .concept {
+        font-weight: bold;
+    }
+
+    .fee-table .total-row .amount {
+        font-weight: bold;
+        font-size: 18px;
+        padding-top: 2px;
+        /* Ajuste de espaciado superior */
     }
 </style>
 
@@ -136,7 +179,7 @@
                 <tr>
                     <td colspan="2" style="text-align: center">
                         <b>
-                            <label class="title">CONSTANCIA DE ESTUDIOS</label>
+                            <label class="title">CONSTANCIA DE INSCRIPCIÓN</label>
                         </b>
                     </td>
                 </tr>
@@ -151,11 +194,36 @@
                     constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a) de la
                     "AQUI VA EL TIPO DE DOCUMENTO" N°
                     <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V' : 'E' }}
-                        {{ $data['student']['identity_document'] }}</strong>, cursa estudios en esta Institución en el
-                    {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
-                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, para este
+                        {{ $data['student']['identity_document'] }}</strong>,
+                    está inscrito para cursar el {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
+                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, en el año escolar
                     {{ strtolower($data['term']['name']) }}.
                 </p>
+                <p>
+                    INICIAL, en el año escolar 2024-2025, cuyo monto de inscripción es el siguiente:
+                </p>
+                <table class="fee-table">
+                    <tr>
+                        <td class="concept">Inscripción:</td>
+                        <td class="amount">$
+                            {{ number_format($data['additionalInfo']['registrationFee'], 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="concept">Mensualidad Septiembre</td>
+                        <td class="amount">$ {{ number_format($data['additionalInfo']['monthlyFee'], 2) }}
+                        </td>
+                    </tr>
+                    <tr class="underline-row">
+                        <td class="concept">Consejo Educativo</td>
+                        <td class="amount">$
+                            {{ number_format($data['additionalInfo']['educationalCouncilFee'], 2) }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td class="concept">TOTAL</td>
+                        <td class="amount">$
+                            {{ number_format($data['additionalInfo']['totalAmount'], 2) }}</td>
+                    </tr>
+                </table>
                 <p>
                     Se expide la presente constancia a petición de parte interesada para los fines legales que estime
                     conveniente realizar.

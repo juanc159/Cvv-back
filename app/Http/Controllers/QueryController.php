@@ -125,4 +125,14 @@ class QueryController extends Controller
             'student_countLinks' => $student->lastPage(),
         ];
     }
+
+    public function autoCompleteDataStudents(Request $request)
+    {
+        $data = $this->studentRepository->selectList($request->all(), fieldTitle: 'full_name', limit: 10);
+
+        return [
+            'code' => 200,
+            'data' => $data,
+        ];
+    }
 }

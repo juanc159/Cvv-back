@@ -19,6 +19,7 @@ class Student extends Model
         'password' => 'hashed',
         'first_time' => 'boolean',
         'is_active' => 'boolean',
+        'nationalized' => 'boolean',
         'password' => 'hashed',
     ];
 
@@ -116,5 +117,11 @@ class Student extends Model
     public function pendingRegistrationAttempts()
     {
         return $this->hasMany(PendingRegistrationAttempt::class);
+    }
+
+
+    public function type_document()
+    {
+        return $this->belongsTo(TypeDocument::class);
     }
 }

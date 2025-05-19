@@ -136,7 +136,7 @@
                 <tr>
                     <td colspan="2" style="text-align: center">
                         <b>
-                            <label class="title">CONSTANCIA DE ESTUDIOS</label>
+                            <label class="title">PERMISO DE AUSENCIA ESCOLAR</label>
                         </b>
                     </td>
                 </tr>
@@ -151,10 +151,17 @@
                     constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a) de la
                     "AQUI VA EL TIPO DE DOCUMENTO" N°
                     <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V' : 'E' }}
-                        {{ $data['student']['identity_document'] }}</strong>, cursa estudios en esta Institución en el
-                    {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
-                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, para este
-                    {{ strtolower($data['term']['name']) }}.
+                        {{ $data['student']['identity_document'] }}</strong>,
+
+
+                    estudiante del {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
+                    {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, en nuestra institución,
+                    para ausentarse de sus actividades escolares a partir del día
+                    {{ \Carbon\Carbon::parse($data['additionalInfo']['startDate'])->locale('es')->isoFormat('dddd D \d\e MMMM') }},
+                    debiendo integrarse a sus actividades escolares regulares a partir del día
+                    {{ \Carbon\Carbon::parse($data['additionalInfo']['endDate'])->locale('es')->isoFormat('dddd D \d\e MMMM') }}.
+
+
                 </p>
                 <p>
                     Se expide la presente constancia a petición de parte interesada para los fines legales que estime
