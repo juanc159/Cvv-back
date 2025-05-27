@@ -126,7 +126,7 @@
     </header>
 
     <footer>
-        <p>Arjona, calle principal con carrera 2, N° 2-02. Municipio Cárdenas</p>
+        <p>Arjona, calle principal con carrera 2, N° 2-02. municipio Cárdenas estado Táchira</p>
         <p>Teléfonos: 0276-3946955-3940162 / 04147375276</p>
     </footer>
 
@@ -144,9 +144,10 @@
 
             <div class="indented-text">
                 <p>
-                    Quien suscribe, LCDA. LUCENI MORENO DE ARCINIEGAS, cédula de Identidad N. V-11.507.972, directora
+                    Quien suscribe, LCDA. LUCENI MORENO DE ARCINIEGAS, cédula de Identidad N° V-11507972, directora
                     de
-                    la UNIDAD EDUCATIVA COLEGIO VIRGEN DEL VALLE, ubicada en la localidad Arjona municipio Cárdenas, por
+                    la UNIDAD EDUCATIVA COLEGIO VIRGEN DEL VALLE, ubicada en la localidad Arjona municipio Cárdenas
+                    estado Táchira, por
                     medio de la presente hace
                     constar que el Sr(a): <strong>{{ $data['additionalInfo']['name'] }}</strong>, portador(a) de la
                     cédula de identidad
