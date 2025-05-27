@@ -151,7 +151,7 @@
                     medio de la presente hace
                     constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a)
                     {{ $data['student']['type_document_name'] }} N°
-                    <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V' : 'E' }}
+                    <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V-' : 'E-' }}
                         {{ $data['student']['identity_document'] }}</strong>
                     , está inscrito(a) para cursar estudios en esta Institución en el
                     {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
