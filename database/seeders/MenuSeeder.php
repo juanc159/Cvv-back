@@ -139,8 +139,25 @@ class MenuSeeder extends Seeder
                 'order' => 160,
                 'title' => 'Constancias',
                 'icon' => 'tabler-file',
-                'to' => 'Documents-Index',
                 'requiredPermission' => 'documents.menu',
+            ],
+            [
+                'id' => 17,
+                'order' => 170,
+                'title' => 'Individuales',
+                'icon' => 'tabler-file',
+                'to' => 'Documents-Individual',
+                'father' => 16,
+                'requiredPermission' => 'documents.individual',
+            ],
+            [
+                'id' => 18,
+                'order' => 180,
+                'title' => 'Masivas',
+                'icon' => 'tabler-file',
+                'to' => 'Documents-Masive',
+                'father' => 16,
+                'requiredPermission' => 'documents.masive',
             ],
         ];
 

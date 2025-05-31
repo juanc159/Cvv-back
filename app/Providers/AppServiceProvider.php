@@ -13,8 +13,8 @@ class AppServiceProvider extends ServiceProvider
      * Register any application services.
      */
     public function register(): void
-    { 
-        $this->app->bind(TodoInterface::class,TodoRepository::class);
+    {
+        $this->app->bind(TodoInterface::class, TodoRepository::class);
     }
 
     /**
@@ -22,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Carbon\Carbon::setLocale(config('app.locale'));
     }
 }

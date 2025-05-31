@@ -703,4 +703,15 @@ class StudentRepository extends BaseRepository
         ];
         // }, Constants::REDIS_TTL);
     }
+
+
+    public function getStudentsByGradeAndCompany($grade_id, $company_id)
+    {
+        $identityDocument = $this->model->where('grade_id', $grade_id)
+            ->where('company_id', $company_id)
+            ->where('is_active', true)
+            ->get();
+
+        return $identityDocument;
+    }
 }

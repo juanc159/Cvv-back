@@ -152,8 +152,20 @@ class PermissionSeeder extends Seeder
             [
                 'id' => 23,
                 'name' => 'documents.menu',
-                'description' => 'Visualizar Menú Documentos',
+                'description' => 'Visualizar Menú Constancias',
                 'menu_id' => 16,
+            ],
+            [
+                'id' => 24,
+                'name' => 'documents.individual',
+                'description' => 'Visualizar Constancias Individuales',
+                'menu_id' => 17,
+            ],
+            [
+                'id' => 25,
+                'name' => 'documents.masive',
+                'description' => 'Visualizar Constancias Masivas',
+                'menu_id' => 18,
             ],
         ];
 
