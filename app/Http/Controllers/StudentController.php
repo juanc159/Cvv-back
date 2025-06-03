@@ -385,4 +385,20 @@ class StudentController extends Controller
 
         // return view('Exports.Student.Statistics', compact('statistics'));
     }
+
+    public function saveLiterals(Request $request)
+    {
+        $students = $request->input('students');
+
+        foreach ($students as $studentData) {
+            $student = $this->studentRepository->find($studentData['id']);
+            $student->literal = $studentData['literal'];
+            $student->save();
+        }
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Registros actualizados correctamente',
+        ]);
+    }
 }

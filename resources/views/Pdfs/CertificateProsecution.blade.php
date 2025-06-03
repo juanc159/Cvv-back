@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificado de Educación Inicial</title>
 </head>
 <style>
     @page {
@@ -16,19 +15,16 @@
     }
 
     body {
-        margin-top: 2.5cm;
+        margin-top: 4cm;
+        /* Increased to accommodate taller header */
         margin-left: 0cm;
         margin-right: 0cm;
         margin-bottom: 3cm;
-        min-height: calc(100% - 5.5cm);
+        min-height: calc(100% - 7cm);
+        /* Adjusted for new body margin */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        background-image: url({{ public_path('img/background.jpg') }});
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-size: 70% auto;
-        background-attachment: fixed;
     }
 
     header {
@@ -36,7 +32,37 @@
         top: 0cm;
         left: 0cm;
         right: 0cm;
-        height: 3cm;
+        height: 4cm;
+        /* Increased to fit both images */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* Center content horizontally */
+    }
+
+    header .main-logo {
+        margin-top: 2cm;
+        margin-bottom: 2.5cm;
+        width: 40%;
+        /* Match the width of the indented-text for alignment */
+        max-width: 600px;
+        /* Prevent oversized images */
+        display: block;
+        margin-left: 2cm;
+        /* Retain original alignment */
+        margin-right: auto;
+    }
+
+    header .escudo-logo {
+        /* Space between images */
+        width: 10%;
+        /* Smaller size for the escudo */
+        max-width: 100px;
+        /* Smaller max-width */
+        display: block;
+        margin-left: -1.3cm;
+        margin-right: 0px;
+        /* Center horizontally */
     }
 
     footer {
@@ -75,39 +101,27 @@
         font-size: 16px;
         line-height: 1.5;
         margin-top: 0.5cm;
-        /* Reducido de un margen mayor */
     }
 
     .title-container {
         margin-top: 0.5cm;
-        /* Espacio moderado arriba */
         margin-bottom: 0.3cm;
-        /* Espacio reducido abajo para acercarse al texto siguiente */
         width: 100%;
-        /* Asegura que el contenedor ocupe todo el ancho */
     }
 
     .title {
         color: #000 !important;
         font-size: 18px;
-        /* Tamaño de fuente ajustado para que sea similar al de la imagen */
         font-weight: bold;
-        /* Asegura que el texto esté en negrita */
         text-align: center;
-        /* Centrado horizontal */
         line-height: 1.2;
-        /* Ajusta el espacio entre las dos líneas */
     }
 
     .title-container hr {
         border: none;
-        /* Elimina el borde predeterminado */
         border-top: 1px solid #000;
-        /* Línea fina negra */
         width: 50%;
-        /* Ancho relativo al contenedor */
         margin: 0 auto 0.2cm auto;
-        /* Centra la línea y deja espacio debajo */
     }
 
     .signature-table {
@@ -123,21 +137,16 @@
         border: 1px solid #000;
         padding: 10px;
         text-align: left;
-        /* Alinea el contenido horizontalmente a la izquierda */
         vertical-align: top;
-        /* Alinea el contenido verticalmente a la parte superior */
     }
 
     .signature-table p {
         margin: 0;
-        /* Elimina márgenes para que el texto quede pegado arriba */
         text-align: left;
-        /* Asegura alineación a la izquierda para los párrafos */
     }
 
     .signature-table .signature-row {
         height: 150px;
-        /* Mantiene el espacio aumentado para firmas y sellos */
     }
 
     .content-container {
@@ -145,11 +154,8 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-        /* Ajustado para que el contenido suba */
         page-break-inside: avoid;
-        /* Evita que el contenedor se divida entre páginas */
         min-height: 0;
-        /* Permite que el contenido se ajuste */
     }
 
     /* Salto de página para cada estudiante, asegurando que cada uno sea independiente */
@@ -165,12 +171,11 @@
 <body>
     <!-- IMAGEN DE ENCABEZADO -->
     <header>
-        <img src="{{ public_path('img/header.png') }}" style="width: 100%;">
+        <img src="{{ public_path('img/Header-Mpppd.png') }}" class="main-logo">
+        <img src="{{ public_path('img/escudo_de_venezuela.png') }}" class="escudo-logo">
     </header>
 
     <footer>
-        <p>Arjona, calle principal con carrera 2, N° 2-02. municipio Cárdenas estado Táchira</p>
-        <p>Teléfonos: 0276-3946955-3940162 / 04147375276</p>
     </footer>
 
     <main>
@@ -179,7 +184,6 @@
                 <table class="title-container">
                     <tr>
                         <td colspan="2" style="text-align: center;">
-                            <hr> <!-- Línea horizontal encima del título -->
                             <b>
                                 <label class="title">CONSTANCIA DE PROSECUCIÓN</label>
                                 <br>
@@ -211,7 +215,7 @@
                         cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
                     <p>
-                        Certificado que se expide en <strong>Arjona</strong>, a <strong>{{ $data['date'] }}</strong>.
+                        Certificado que se expide en <strong>Arjona</strong>, a {!! $data['date'] !!}.
                     </p>
                 </div>
 

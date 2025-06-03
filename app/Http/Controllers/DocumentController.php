@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Grade;
 use App\Models\Term;
 use App\Repositories\GradeRepository;
+use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Traits\HttpResponseTrait;
 use Illuminate\Support\Carbon;
+use Illuminate\Http\Request;
+
 
 class DocumentController extends Controller
 {
@@ -16,6 +19,7 @@ class DocumentController extends Controller
     public function __construct(
         protected StudentRepository $studentRepository,
         protected GradeRepository $gradeRepository,
+        protected SectionRepository $sectionRepository,
 
     ) {}
 
@@ -171,10 +175,10 @@ class DocumentController extends Controller
             $currentDate = Carbon::now();
             if ($currentDate) {
                 $currentDate->setLocale('es');
-                $day = $currentDate->day;
+                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                 $month = $currentDate->monthName;
                 $year = $currentDate->year;
-                $formattedDate = "los $day días del mes de $month de dos mil $year";
+                $formattedDate = "los $day días del mes de $month de $year";
             } else {
                 $day = $month = $year = '';
                 $formattedDate = '';
@@ -211,7 +215,6 @@ class DocumentController extends Controller
                 case 'Número de pasaporte':
                     $type_document_name = " del Número de pasaporte";
                     break;
-
                 default:
                     $type_document_name = " del documento ";
                     break;
@@ -251,6 +254,21 @@ class DocumentController extends Controller
         });
     }
 
+    public function masiveCertificatesData()
+    {
+        return $this->execute(function () {
+            $sections = $this->sectionRepository->selectList();
+            $greades = $this->gradeRepository->selectList();
+
+
+            return [
+                "code" => 200,
+                "sections" => $sections,
+                "greades" => $greades,
+
+            ];
+        });
+    }
 
 
     /**
@@ -293,18 +311,23 @@ class DocumentController extends Controller
             $currentDate = Carbon::now();
             if ($currentDate) {
                 $currentDate->setLocale('es');
-                $day = $currentDate->day;
+                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                 $month = $currentDate->monthName;
                 $year = $currentDate->year;
-                $formattedDate = "los $day días del mes de $month de dos mil $year";
+                $formattedDate = "los <strong>$day</strong> días del mes de <strong>$month</strong> de <strong>$year</strong>";
             } else {
                 $day = $month = $year = '';
                 $formattedDate = '';
             }
 
+            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id, $request);
 
-            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id);
-
+            if (count($students) === 0) {
+                return [
+                    'code' => 400,
+                    'message' => "No se encontraron estudiantes.",
+                ];
+            }
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
             $students = $students->map(function ($student) use ($spanishMonths, $levelToRoman) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
@@ -318,26 +341,22 @@ class DocumentController extends Controller
                 $prefix = $student['country_id'] == $student->company->country_id ? 'V-' : 'E-';
                 $student['identity_document'] = $prefix . $identityDocument;
 
-
                 // Procesar birth_place: construir dinámicamente con city y state
                 $cityName = $student->city->name ?? 'NO POSSEE'; // Valor por defecto si no existe
                 $stateName = $student->state->name ?? 'NO POSSEE'; // Valor por defecto si no existe
                 $birthPlace = "Municipio $cityName, del Estado $stateName";
                 $student['birth_place'] = $birthPlace;
 
-
-                // Procesar birthday: formatear como "12 de Marzo del 2020" usando el array de meses
+                // Procesar birthday: formatear como "01 de Marzo del 2020" usando el array de meses
                 if (!empty($student['birthday'])) {
                     $birthDate = Carbon::parse($student['birthday']);
-                    $day = $birthDate->day;
+                    $day = str_pad($birthDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                     $month = $spanishMonths[$birthDate->month];
                     $year = $birthDate->year;
                     $student['birthday'] = "$day de $month del $year";
                 } else {
                     $student['birthday'] = 'Fecha no disponible'; // Valor por defecto si no hay fecha
                 }
-
-
 
                 // Procesar numGroup: mapear el nivel a número romano
                 $gradeName = $student['grade']['name'] ?? 'NO POSEE'; // Valor por defecto si no existe
@@ -352,7 +371,6 @@ class DocumentController extends Controller
                 'grade' => $grade,
                 'students' => $students,
                 'term' => $term,
-
             ];
 
             // Generar el PDF
@@ -411,16 +429,23 @@ class DocumentController extends Controller
             $currentDate = Carbon::now();
             if ($currentDate) {
                 $currentDate->setLocale('es');
-                $day = $currentDate->day;
+                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                 $month = $currentDate->monthName;
                 $year = $currentDate->year;
-                $formattedDate = "los $day días del mes de $month de dos mil $year";
+                $formattedDate = "los <strong>$day</strong> días del mes de <strong>$month</strong> de <strong>$year</strong>";
             } else {
                 $day = $month = $year = '';
                 $formattedDate = '';
             }
 
-            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id);
+            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id, $request);
+
+            if (count($students) === 0) {
+                return [
+                    'code' => 400,
+                    'message' => "No se encontraron estudiantes.",
+                ];
+            }
 
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
             $students = $students->map(function ($student) use ($spanishMonths) {
@@ -528,18 +553,21 @@ class DocumentController extends Controller
             $currentOrder = $grade->order;
             $nextGrade = $grades->firstWhere('order', $currentOrder + 1);
 
+            $nextGradeNameWithType = 'NO POSSE';
+            $titlePdf = 'CONSTANCIA DE PROSECUCIÓN';
+            $subTitlePdf = 'EN EL NIVEL DE EDUCACIÓN PRIMARIA';
 
             // Si el grado actual es 6to Grado, forzamos "1er Año" como siguiente
             if ($currentOrder === 9) {
-                $nextGradeNameWithType = '1er Año de Educación Secundaria';
+                $nextGradeNameWithType = '1er Año del Nivel de Educación Media';
+                $titlePdf = 'CERTIFICADO';
+                $subTitlePdf = 'DE EDUCACIÓN PRIMARIA';
             } else {
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {
                     $nextGradeName = $nextGrade->name;
                     $nextEducationType = $nextGrade->educationType->name ?? 'Educación Primaria';
                     $nextGradeNameWithType = "$nextGradeName de $nextEducationType";
-                } else {
-                    $nextGradeNameWithType = 'NO POSSE'; // Fallback por si falla
                 }
             }
 
@@ -547,15 +575,16 @@ class DocumentController extends Controller
             // Formatear la fecha actual en español
             $currentDate = Carbon::now();
             if ($currentDate) {
-                $day = $currentDate->day;
+                $currentDate->setLocale('es');
+                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                 $month = $spanishMonths[$currentDate->month];
                 $year = $currentDate->year;
-                $formattedDate = "los $day días del mes de $month de dos mil $year";
+                $formattedDate = "los <strong>$day</strong> días del mes de <strong>$month</strong> de <strong>$year</strong>";
             } else {
                 $formattedDate = '';
             }
 
-            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id);
+            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id, $request);
 
             // Procesar el nombre de cada estudiante
             $students = $students->map(function ($student) use ($spanishMonths, $nextGradeNameWithType) {
@@ -593,6 +622,8 @@ class DocumentController extends Controller
                 // Agregar el grado siguiente con el tipo de educación
                 $student['nextGrade'] = $nextGradeNameWithType;
 
+                // $student['literal'] = empty($student['literal']) ?  $student['literal'] :  "NO POSSE";
+
                 return $student;
             });
 
@@ -602,6 +633,8 @@ class DocumentController extends Controller
                 'grade' => $grade,
                 'students' => $students,
                 'term' => $term,
+                'titlePdf' => $titlePdf,
+                'subTitlePdf' => $subTitlePdf,
             ];
 
             // Generar el PDF
@@ -622,6 +655,21 @@ class DocumentController extends Controller
             return [
                 'code' => 200,
                 'pdf' => base64_encode($pdfContent),
+            ];
+        });
+    }
+
+    public function searchStudentFor(Request $request)
+    {
+        return $this->execute(function () use ($request) {
+
+            $grade_id = $request->get('grade_id');
+            $company_id = $request->get('company_id');
+            $students = $this->studentRepository->getStudentsByGradeAndCompany($grade_id, $company_id, $request, ["id", "full_name", "identity_document", "literal"]);
+
+            return [
+                "code" => 200,
+                "students" => $students,
             ];
         });
     }

@@ -39,8 +39,12 @@ Route::middleware(['check.permission:documents.menu'])->group(function () {
 });
 
 
+Route::get('/documents/masiveCertificatesData', [DocumentController::class, 'masiveCertificatesData']);
+
 Route::get('/documents/prosecutionInitialEducation', [DocumentController::class, 'prosecutionInitialEducation']);
 
 Route::get('/documents/certificateInitialEducation', [DocumentController::class, 'certificateInitialEducation']);
 
 Route::get('/documents/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation']);
+
+Route::get('/documents/searchStudentFor', [DocumentController::class, 'searchStudentFor']);

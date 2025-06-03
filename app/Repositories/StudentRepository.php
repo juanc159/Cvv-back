@@ -705,13 +705,24 @@ class StudentRepository extends BaseRepository
     }
 
 
-    public function getStudentsByGradeAndCompany($grade_id, $company_id)
+    public function getStudentsByGradeAndCompany($grade_id, $company_id, $request = [], $select = ['*'])
     {
-        $identityDocument = $this->model->where('grade_id', $grade_id)
+        $data = $this->model->select($select)->where('grade_id', $grade_id)
             ->where('company_id', $company_id)
             ->where('is_active', true)
-            ->get();
+            ->where(function ($query) use ($request) {
+                if (!empty($request["section_id"])) {
+                    $query->where('section_id', $request["section_id"]);
+                }
+            });
 
-        return $identityDocument;
+        if (!empty($request["ordering"])) {
+            $data->orderBy($request["ordering"], "asc");
+        }
+
+        // $data = $data->limit(1);
+        $data = $data->get();
+
+        return $data;
     }
 }

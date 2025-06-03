@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Constancia de Prosecución - Educación Primaria</title>
 </head>
 <style>
     @page {
@@ -16,19 +15,16 @@
     }
 
     body {
-        margin-top: 2.5cm;
+        margin-top: 4cm;
+        /* Increased to accommodate taller header */
         margin-left: 0cm;
         margin-right: 0cm;
         margin-bottom: 3cm;
-        min-height: calc(100% - 5.5cm);
+        min-height: calc(100% - 7cm);
+        /* Adjusted for new body margin */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        background-image: url({{ public_path('img/background.jpg') }});
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-size: 70% auto;
-        background-attachment: fixed;
     }
 
     header {
@@ -36,7 +32,37 @@
         top: 0cm;
         left: 0cm;
         right: 0cm;
-        height: 3cm;
+        height: 4cm;
+        /* Increased to fit both images */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* Center content horizontally */
+    }
+
+    header .main-logo {
+        margin-top: 2cm;
+        margin-bottom: 2.5cm;
+        width: 40%;
+        /* Match the width of the indented-text for alignment */
+        max-width: 600px;
+        /* Prevent oversized images */
+        display: block;
+        margin-left: 2cm;
+        /* Retain original alignment */
+        margin-right: auto;
+    }
+
+    header .escudo-logo {
+        /* Space between images */
+        width: 10%;
+        /* Smaller size for the escudo */
+        max-width: 100px;
+        /* Smaller max-width */
+        display: block;
+        margin-left: -1.3cm;
+        margin-right: 0px;
+        /* Center horizontally */
     }
 
     footer {
@@ -77,14 +103,25 @@
         margin-top: 0.5cm;
     }
 
-    .title {
-        color: #000 !important;
-        font-size: 24px;
+    .title-container {
+        margin-top: 0.5cm;
+        margin-bottom: 0.3cm;
+        width: 100%;
     }
 
-    .title-container {
-        margin-top: 1cm;
-        margin-bottom: 0.5cm;
+    .title {
+        color: #000 !important;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .title-container hr {
+        border: none;
+        border-top: 1px solid #000;
+        width: 50%;
+        margin: 0 auto 0.2cm auto;
     }
 
     .signature-table {
@@ -99,23 +136,17 @@
     .signature-table td {
         border: 1px solid #000;
         padding: 10px;
-        text-align: center;
-        vertical-align: middle;
+        text-align: left;
+        vertical-align: top;
     }
 
     .signature-table p {
-        margin: 5px 0;
-    }
-
-    .signature-table hr {
-        border: none;
-        border-top: 1px solid #000;
-        width: 220px;
-        margin: 5px auto;
+        margin: 0;
+        text-align: left;
     }
 
     .signature-table .signature-row {
-        height: 40px;
+        height: 150px;
     }
 
     .content-container {
@@ -127,6 +158,7 @@
         min-height: 0;
     }
 
+    /* Salto de página para cada estudiante, asegurando que cada uno sea independiente */
     .student-page {
         page-break-before: always;
     }
@@ -137,13 +169,13 @@
 </style>
 
 <body>
+    <!-- IMAGEN DE ENCABEZADO -->
     <header>
-        <img src="{{ public_path('img/header.png') }}" style="width: 100%;">
+        <img src="{{ public_path('img/Header-Mpppd.png') }}" class="main-logo">
+        <img src="{{ public_path('img/escudo_de_venezuela.png') }}" class="escudo-logo">
     </header>
 
     <footer>
-        <p>Arjona, calle principal con carrera 2, N° 2-02. municipio Cárdenas estado Táchira</p>
-        <p>Teléfonos: 0276-3946955-3940162 / 04147375276</p>
     </footer>
 
     <main>
@@ -153,9 +185,9 @@
                     <tr>
                         <td colspan="2" style="text-align: center">
                             <b>
-                                <label class="title">CERTIFICADO</label>
+                                <label class="title">{{ $data['titlePdf'] }}</label>
                                 <br>
-                                <label class="title">DE EDUCACIÓN PRIMARIA</label>
+                                <label class="title">{{ $data['subTitlePdf'] }}</label>
                             </b>
                         </td>
                     </tr>
@@ -177,13 +209,14 @@
                         <strong>{{ $student['birth_place'] ?? 'NO SALE NADA' }}</strong>,
                         en fecha
                         <strong>{{ $student['birthday'] }}</strong>,
-                        <strong>cursó el {{ $student['currentGrade'] }} de Educación Primaria</strong> durante el
+                        <strong>cursó el {{ $student['currentGrade'] }} de Educación
+                            Primaria</strong>, correspondiéndole el literal “{{ $student['literal'] }}” durante el
                         <strong>{{ strtolower($data['term']['name']) }}</strong>,
                         y continuará estudios en el <strong>{{ $student['nextGrade'] }}</strong>,
                         previo cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
                     <p>
-                        Certificado que se expide en <strong>Arjona</strong>, a <strong>{{ $data['date'] }}</strong>.
+                        Certificado que se expide en <strong>Arjona</strong>, a {!! $data['date'] !!}.
                     </p>
                 </div>
 
@@ -222,11 +255,9 @@
                     </tr>
                     <tr>
                         <td class="signature-row">
-                            <hr>
                             <p>Firma y Sello:</p>
                         </td>
                         <td class="signature-row">
-                            <hr>
                             <p>Firma y Sello:</p>
                         </td>
                     </tr>
