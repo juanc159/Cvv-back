@@ -586,6 +586,13 @@ class DocumentController extends Controller
 
             $students = $this->studentRepository->getStudentsByGradeAndCompany($grade->id, $company_id, $request);
 
+            if (count($students) === 0) {
+                return [
+                    'code' => 400,
+                    'message' => "No se encontraron estudiantes.",
+                ];
+            }
+
             // Procesar el nombre de cada estudiante
             $students = $students->map(function ($student) use ($spanishMonths, $nextGradeNameWithType) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
@@ -622,7 +629,7 @@ class DocumentController extends Controller
                 // Agregar el grado siguiente con el tipo de educación
                 $student['nextGrade'] = $nextGradeNameWithType;
 
-                // $student['literal'] = empty($student['literal']) ?  $student['literal'] :  "NO POSSE";
+                $student['literal'] = !empty($student['literal']) ?  $student['literal'] :  "NO POSSE";
 
                 return $student;
             });
@@ -667,6 +674,12 @@ class DocumentController extends Controller
             $company_id = $request->get('company_id');
             $students = $this->studentRepository->getStudentsByGradeAndCompany($grade_id, $company_id, $request, ["id", "full_name", "identity_document", "literal"]);
 
+            if (count($students) === 0) {
+                return [
+                    'code' => 400,
+                    'message' => "No se encontraron estudiantes.",
+                ];
+            }
             return [
                 "code" => 200,
                 "students" => $students,
