@@ -14,5 +14,6 @@ Route::post('/selectInifiniteTypeEducation', [QueryController::class, 'selectIni
 Route::post('/selectInfiniteGrade', [QueryController::class, 'selectInfiniteGrade']);
 Route::post('/selectInfiniteSection', [QueryController::class, 'selectInfiniteSection']);
 Route::post('/selectInfiniteStudent', [QueryController::class, 'selectInfiniteStudent']);
+Route::post('/selectInfiniteTypedocument', [QueryController::class, 'selectInfiniteTypedocument']);
 
 Route::get('/autoCompleteDataStudents', [QueryController::class, 'autoCompleteDataStudents']);

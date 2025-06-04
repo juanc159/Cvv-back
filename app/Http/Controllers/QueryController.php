@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\Country\CountrySelectResource;
 use App\Http\Resources\Grade\GradeSelectInifiniteResource;
 use App\Http\Resources\Student\StudentSelectInifiniteResource;
+use App\Http\Resources\TypeDocument\TypeDocumentSelectResource;
 use App\Http\Resources\TypeEducation\TypeEducationSelectResource;
 use App\Repositories\CityRepository;
 use App\Repositories\CountryRepository;
@@ -12,6 +13,7 @@ use App\Repositories\GradeRepository;
 use App\Repositories\SectionRepository;
 use App\Repositories\StateRepository;
 use App\Repositories\StudentRepository;
+use App\Repositories\TypeDocumentRepository;
 use App\Repositories\TypeEducationRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -27,6 +29,7 @@ class QueryController extends Controller
         protected GradeRepository $gradeRepository,
         protected SectionRepository $sectionRepository,
         protected StudentRepository $studentRepository,
+        protected TypeDocumentRepository $typeDocumentRepository,
     ) {}
 
     public function selectInfiniteCountries(Request $request)
@@ -93,7 +96,7 @@ class QueryController extends Controller
 
     public function selectInfiniteGrade(Request $request)
     {
-        $grade = $this->gradeRepository->list($request->all());
+        return $grade = $this->gradeRepository->list($request->all());
         $dataGrade = GradeSelectInifiniteResource::collection($grade);
 
         return [
@@ -133,6 +136,18 @@ class QueryController extends Controller
         return [
             'code' => 200,
             'data' => $data,
+        ];
+    }
+
+    public function selectInfiniteTypedocument(Request $request)
+    {
+        $typeDocument = $this->typeDocumentRepository->list($request->all());
+        $dataTypeDocument = TypeDocumentSelectResource::collection($typeDocument);
+
+        return [
+            'code' => 200,
+            'typeDocument_arrayInfo' => $dataTypeDocument,
+            'typeDocument_countLinks' => $typeDocument->lastPage(),
         ];
     }
 }

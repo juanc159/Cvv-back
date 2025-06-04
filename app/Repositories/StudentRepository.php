@@ -24,83 +24,99 @@ class StudentRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        // return $this->cacheService->remember($cacheKey, function () use ($request) {
 
-            $query = QueryBuilder::for($this->model->query())
-                ->with(['type_education:id,name', 'grade:id,name', 'section:id,name', 'type_document:id,name'])
-                ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id'])
-                ->allowedFilters([
-                    'full_name',
-                    'identity_document',
+        $query = QueryBuilder::for($this->model->query())
+            ->with(['type_education:id,name', 'grade:id,name', 'section:id,name', 'type_document:id,name', 'country:id,name', 'state:id,name', 'city:id,name'])
+            ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id', "country_id", "state_id", "city_id", "nationalized", "gender", "birthday"])
+            ->allowedFilters([
+                'full_name',
+                'identity_document',
 
-                    AllowedFilter::callback('photo', function ($query, $value) {
-                        if ($value === 0 || $value === '0') {
-                            $query->where(function ($query) {
-                                $query->whereNull('photo')
-                                    ->orWhere('photo', ''); // Campo vacío
-                            });
-                        } elseif ($value === 1 || $value === '1') {
-                            $query->whereNotNull('photo')
-                                ->where('photo', '<>', ''); // No está vacío
-                        }
-                    }),
 
-                    AllowedFilter::callback('type_education_id', new DataSelectFilter),
-                    AllowedFilter::callback('section_id', new DataSelectFilter),
-                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
-                        $query->where(function ($subQuery) use ($value) {
-                            $subQuery->orWhere('full_name', 'like', "%$value%");
-                            $subQuery->orWhere('identity_document', 'like', "%$value%");
-                            $subQuery->orWhereHas('grade', function ($q) use ($value) {
-                                $q->where('name', 'like', "%$value%");
-                            });
-                            $subQuery->orWhereHas('section', function ($q) use ($value) {
-                                $q->where('name', 'like', "%$value%");
-                            });
-                            $subQuery->orWhereHas('type_education', function ($q) use ($value) {
-                                $q->where('name', 'like', "%$value%");
-                            });
-                            $subQuery->orWhereHas('type_document', function ($q) use ($value) {
-                                $q->where('name', 'like', "%$value%");
-                            });
+
+
+
+
+                AllowedFilter::callback('photo', function ($query, $value) {
+                    if ($value === 0 || $value === '0') {
+                        $query->where(function ($query) {
+                            $query->whereNull('photo')
+                                ->orWhere('photo', ''); // Campo vacío
                         });
-                    }),
-                ])
-                ->allowedSorts([
-                    'full_name',
-                    'identity_document',
-                    AllowedSort::custom('type_education_name', new RelatedTableSort(
-                        'students',
-                        'type_education',
-                        'name',
-                        'type_education_id',
-                    )),
-                    AllowedSort::custom('grade_name', new RelatedTableSort(
-                        'students',
-                        'grades',
-                        'name',
-                        'grade_id',
-                    )),
-                    AllowedSort::custom('section_name', new RelatedTableSort(
-                        'students',
-                        'sections',
-                        'name',
-                        'section_id',
-                    )),
-                    AllowedSort::custom('type_document_name', new RelatedTableSort(
-                        'students',
-                        'type_documents',
-                        'name',
-                        'type_document_id',
-                    )),
+                    } elseif ($value === 1 || $value === '1') {
+                        $query->whereNotNull('photo')
+                            ->where('photo', '<>', ''); // No está vacío
+                    }
+                }),
 
-                ])
-                // **Excluir estudiantes retirados**
-                ->whereDoesntHave('withdrawal')
-                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+                AllowedFilter::callback('type_education_id', new DataSelectFilter),
+                AllowedFilter::callback('grade_id', new DataSelectFilter),
+                AllowedFilter::callback('section_id', new DataSelectFilter),
+                AllowedFilter::callback('type_document_id', new DataSelectFilter),
 
-            return $query;
-        }, Constants::REDIS_TTL);
+
+
+                AllowedFilter::callback('section_id', new DataSelectFilter),
+                AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                    $query->where(function ($subQuery) use ($value) {
+                        $subQuery->orWhere('full_name', 'like', "%$value%");
+                        $subQuery->orWhere('identity_document', 'like', "%$value%");
+                        $subQuery->orWhereHas('grade', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+                        $subQuery->orWhereHas('section', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+                        $subQuery->orWhereHas('type_education', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+                        $subQuery->orWhereHas('type_document', function ($q) use ($value) {
+                            $q->where('name', 'like', "%$value%");
+                        });
+                    });
+                }),
+            ])
+            ->allowedSorts([
+                'full_name',
+                'identity_document',
+                AllowedSort::custom('type_education_name', new RelatedTableSort(
+                    'students',
+                    'type_education',
+                    'name',
+                    'type_education_id',
+                )),
+                AllowedSort::custom('grade_name', new RelatedTableSort(
+                    'students',
+                    'grades',
+                    'name',
+                    'grade_id',
+                )),
+                AllowedSort::custom('section_name', new RelatedTableSort(
+                    'students',
+                    'sections',
+                    'name',
+                    'section_id',
+                )),
+                AllowedSort::custom('type_document_name', new RelatedTableSort(
+                    'students',
+                    'type_documents',
+                    'name',
+                    'type_document_id',
+                )),
+
+            ])
+            // **Excluir estudiantes retirados**
+            ->whereDoesntHave('withdrawal');
+
+        if (empty($request['typeData'])) {
+            $data = $query->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+        } else {
+            $data = $query->get();
+        }
+
+        return $data;
+        // }, Constants::REDIS_TTL);
     }
 
     public function list($request = [], $with = [], $select = ['*'])

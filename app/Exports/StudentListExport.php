@@ -25,11 +25,20 @@ class StudentListExport implements FromView, ShouldAutoSize, WithEvents
         $data = collect($this->data)->map(function ($value) {
             return [
                 'id' => $value->id,
-                'grade_name' => $value->grade?->name,
-                'section_name' => $value->section?->name,
-                'identity_document' => $value->identity_document,
-                'full_name' => $value->full_name,
-                'type_education_name' => $value->typeEducation?->name,
+
+                "type_education_name" => $value->type_education?->name,
+                "grade_name" => $value->grade?->name,
+                "section_name" => $value->section?->name,
+                "country_name" => $value->country?->name,
+                "state_name" => $value->state?->name,
+                "city_name" => $value->city?->name,
+                "nationalized" => $value->nationalized ? "Si" : "No",
+                "type_document_name" => $value->type_document?->name,
+                "identity_document" => $value->identity_document,
+                "full_name" => $value->full_name,
+                "gender" => $value->gender,
+                "birthday" => $value->birthday,
+                "photo" => !empty($value->photo) ? "Si" : "No",
             ];
         });
 
@@ -46,7 +55,7 @@ class StudentListExport implements FromView, ShouldAutoSize, WithEvents
                 // Obtener el rango de celdas con datos
                 $highestColumn = $sheet->getHighestColumn();
                 $highestRow = $sheet->getHighestRow();
-                $range = 'A1:'.$highestColumn.$highestRow;
+                $range = 'A1:' . $highestColumn . $highestRow;
 
                 // Establecer el filtro automático en el rango de celdas
                 $sheet->setAutoFilter($range);

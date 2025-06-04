@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StudentListExport;
 use App\Exports\StudentStatisticsExport;
 use App\Http\Requests\Student\StudentStoreRequest;
 use App\Http\Requests\Student\StudentWithdrawalRequest;
@@ -13,6 +14,7 @@ use App\Repositories\StudentWithdrawalRepository;
 use App\Repositories\TypeDocumentRepository;
 use App\Repositories\TypeEducationRepository;
 use App\Services\CacheService;
+use App\Traits\HttpResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,8 @@ use Throwable;
 
 class StudentController extends Controller
 {
+    use HttpResponseTrait;
+
     public function __construct(
         protected StudentRepository $studentRepository,
         protected TypeEducationRepository $typeEducationRepository,
@@ -400,5 +404,25 @@ class StudentController extends Controller
             'code' => 200,
             'message' => 'Registros actualizados correctamente',
         ]);
+    }
+
+
+    public function excelExport(Request $request)
+    {
+        return $this->execute(function () use ($request) {
+
+            $request['typeData'] = 'all';
+
+            $students = $this->studentRepository->paginate($request->all());
+
+            $excel = Excel::raw(new StudentListExport($students), \Maatwebsite\Excel\Excel::XLSX);
+
+            $excelBase64 = base64_encode($excel);
+
+            return [
+                'code' => 200,
+                'excel' => $excelBase64,
+            ];
+        });
     }
 }
