@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -37,7 +38,7 @@ class StudentListExport implements FromView, ShouldAutoSize, WithEvents
                 "identity_document" => $value->identity_document,
                 "full_name" => $value->full_name,
                 "gender" => $value->gender,
-                "birthday" => $value->birthday,
+                "birthday" => Carbon::parse($value->birthday)->format('d/m/Y'),
                 "photo" => !empty($value->photo) ? "Si" : "No",
             ];
         });
