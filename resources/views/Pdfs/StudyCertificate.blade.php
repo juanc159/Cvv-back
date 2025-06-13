@@ -86,15 +86,17 @@
         margin-bottom: 1cm;
     }
 
+
     .signature-section {
         position: absolute;
         bottom: 5cm;
         right: 1cm;
-        text-align: right;
+        text-align: center;
+        /* Changed to center to align text and hr within the div */
         font-size: 14px;
-        /* Aumentado de 12px a 14px para que las letras sean más grandes */
         line-height: 1.5;
         width: 40%;
+        /* Kept original width */
     }
 
     .signature-section p {
@@ -106,9 +108,8 @@
         border: none;
         border-top: 1px solid #000;
         width: 220px;
-        /* Aumentado de 100px a 120px para que la línea sea más visible */
-        margin: 5px 0;
-        margin-left: auto;
+        margin: 5px auto;
+        /* Changed to auto to center the hr within the div */
     }
 
     .content-container {
@@ -146,13 +147,13 @@
                 <p>
                     Quien suscribe, LCDA. LUCENI MORENO DE ARCINIEGAS, cédula de Identidad N° V-11507972, directora
                     de
-                    la UNIDAD EDUCATIVA COLEGIO VIRGEN DEL VALLE, ubicada en la localidad Arjona municipio Cárdenas
+                    la UNIDAD EDUCATIVA COLEGIO VIRGEN DEL VALLE, ubicada en la localidad de Arjona municipio Cárdenas
                     estado Táchira, por
                     medio de la presente hace
-                    constar que el Alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a)
+                    constar que el alumno(a): <strong>{{ $data['student']['full_name'] }}</strong>, portador(a)
                     {{ $data['student']['type_document_name'] }} N°
                     <strong>{{ $data['student']['country_id'] == $data['student']['company']['country_id'] ? 'V-' : 'E-' }}
-                        {{ $data['student']['identity_document'] }}</strong>, cursa estudios en esta Institución en el
+                        {{ $data['student']['identity_document'] }}</strong>, cursa estudios en esta institución en el
                     {{ mb_strtoupper($data['student']['grade']['name'], 'UTF-8') }} DE
                     {{ mb_strtoupper($data['student']['type_education']['name'], 'UTF-8') }}, para este
                     {{ strtolower($data['term']['name']) }}.

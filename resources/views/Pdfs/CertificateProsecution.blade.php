@@ -93,7 +93,7 @@
     }
 
     .indented-text {
-        text-indent: 2cm;
+        /* text-indent: 2cm; */
         text-align: justify;
         width: 80%;
         margin-left: auto;
@@ -131,6 +131,8 @@
         font-size: 14px;
         border-collapse: collapse;
         page-break-inside: avoid;
+        /* Added for equal column widths */
+        table-layout: fixed;
     }
 
     .signature-table td {
@@ -138,11 +140,18 @@
         padding: 10px;
         text-align: left;
         vertical-align: top;
+        /* Added for equal column widths */
+        width: 50%;
     }
 
     .signature-table p {
         margin: 0;
         text-align: left;
+    }
+
+    .signature-table .header-row p {
+        /* Added to center only the first row's <p> elements */
+        text-align: center;
     }
 
     .signature-table .signature-row {
@@ -197,10 +206,10 @@
                     <p>
                         Quien suscribe, <strong>Lcda. Luceni Moreno de Arciniegas</strong>, titular de la Cédula de
                         Identidad N° <strong>V-11507972</strong>,
-                        Directora de la Institución Educativa: <strong>Unidad Educativa Colegio Virgen del
+                        Directora de la institución Educativa: <strong>Unidad Educativa Colegio Virgen del
                             Valle</strong>,
                         ubicada en el
-                        Municipio <strong>Cárdenas</strong>, de la parroquia <strong>Táriba</strong>, adscrita al Centro
+                        Municipio Cárdenas, de la parroquia Táriba, adscrita al Centro
                         de
                         Desarrollo de la Calidad Educativa
                         Estadal Táchira. Por la presente certifica que el niño(a):
@@ -220,11 +229,11 @@
                 </div>
 
                 <table class="signature-table">
-                    <tr>
-                        <td style="text-align:  center;">
+                    <tr class="header-row"> <!-- Added class to target first row -->
+                        <td>
                             <p>INSTITUCIÓN EDUCATIVA (PARA VALIDEZ NACIONAL)</p>
                         </td>
-                        <td style="text-align:  center;">
+                        <td>
                             <p>CENTRO DE DESARROLLO DE LA CALIDAD EDUCATIVA ESTADAL (PARA VALIDEZ INTERNACIONAL)</p>
                         </td>
                     </tr>
