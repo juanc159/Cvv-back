@@ -220,9 +220,9 @@
                         en fecha
                         <strong>{{ $student['birthday'] }}</strong>,
                         cursó el <strong>{{ $student['currentGrade'] }}</strong>, correspondiéndole el literal
-                        “{{ $student['literal'] }}” durante el
-                        <strong>{{ strtolower($data['term']['name']) }}</strong>,
-                        <strong> {{ $data['continuara'] }} {{ $student['nextGrade'] }}</strong>,
+                        <strong>“{{ $student['literal'] }}”</strong> durante el
+                        <strong>{{ strtolower($data['term']['name']) }}</strong>, <strong>{{ $data['continuara'] }}
+                            {{ $student['nextGrade'] }}</strong>,
                         previo cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
                     <p>
@@ -233,11 +233,11 @@
                 <table class="signature-table">
                     <tr class="header-row"> <!-- Added class to target first row -->
                         <td>
-                            <p>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</p>
+                            <p><strong>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</strong></p>
                         </td>
                         <td>
-                            <p>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
-                                INTERNACIONAL)</p>
+                            <p><strong>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
+                                    INTERNACIONAL)</strong></p>
                         </td>
                     </tr>
                     <tr>

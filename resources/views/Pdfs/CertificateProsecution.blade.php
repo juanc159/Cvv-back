@@ -232,11 +232,11 @@
                 <table class="signature-table">
                     <tr class="header-row"> <!-- Added class to target first row -->
                         <td>
-                            <p>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</p>
+                            <p><strong>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</strong></p>
                         </td>
                         <td>
-                            <p>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
-                                INTERNACIONAL)</p>
+                            <p><strong>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
+                                    INTERNACIONAL)</strong></p>
                         </td>
                     </tr>
                     <tr>

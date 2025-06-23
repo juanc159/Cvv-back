@@ -655,7 +655,7 @@ class DocumentController extends Controller
                 // Procesar birthday: formatear como "12 de Marzo del 2020" usando el array de meses
                 if (!empty($student['birthday'])) {
                     $birthDate = Carbon::parse($student['birthday']);
-                    $day = $birthDate->day;
+                    $day = str_pad($birthDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
                     $month = $spanishMonths[$birthDate->month];
                     $year = $birthDate->year;
                     $student['birthday'] = "$day de $month del $year";
