@@ -331,7 +331,7 @@ class DocumentController extends Controller
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
             $students = $students->map(function ($student) use ($spanishMonths, $levelToRoman) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
-                $fullName = str_replace(',', '', $student['full_name']);
+                $fullName = $student['full_name'];
                 $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
                 $fullName = ucwords(strtolower($fullName));
                 $student['full_name'] = $fullName;
@@ -450,7 +450,7 @@ class DocumentController extends Controller
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
             $students = $students->map(function ($student) use ($spanishMonths) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
-                $fullName = str_replace(',', '', $student['full_name']);
+                $fullName = $student['full_name'];
                 $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
                 $fullName = ucwords(strtolower($fullName));
                 $student['full_name'] = $fullName;
@@ -459,6 +459,25 @@ class DocumentController extends Controller
                 $identityDocument = $student['identity_document'];
                 $prefix = $student['country_id'] == $student->company->country_id ? 'V-' : 'E-';
                 $student['identity_document'] = $prefix . $identityDocument;
+
+                $type_document = $student->type_document?->name;
+                $type_document_name = "";
+                switch ($type_document) {
+                    case 'Cédula de identidad':
+                        $type_document_name = " de la cédula de identidad";
+                        break;
+                    case 'Cédula escolar':
+                        $type_document_name = " de la cédula escolar";
+                        break;
+                    case 'Número de pasaporte':
+                        $type_document_name = " del Número de pasaporte";
+                        break;
+                    default:
+                        $type_document_name = " del documento ";
+                        break;
+                }
+                $student["type_document_name"] = $type_document_name;
+
 
 
                 // Procesar birth_place: construir dinámicamente con city y state
@@ -556,12 +575,15 @@ class DocumentController extends Controller
             $nextGradeNameWithType = 'NO POSSE';
             $titlePdf = 'CONSTANCIA DE PROSECUCIÓN';
             $subTitlePdf = 'EN EL NIVEL DE EDUCACIÓN PRIMARIA';
+            $continuara = "y continuará estudios en el ";
+
 
             // Si el grado actual es 6to Grado, forzamos "1er Año" como siguiente
             if ($currentOrder === 9) {
                 $nextGradeNameWithType = '1er Año del Nivel de Educación Media';
                 $titlePdf = 'CERTIFICADO';
                 $subTitlePdf = 'DE EDUCACIÓN PRIMARIA';
+                $continuara = "siendo promovido al ";
             } else {
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {
@@ -596,7 +618,7 @@ class DocumentController extends Controller
             // Procesar el nombre de cada estudiante
             $students = $students->map(function ($student) use ($spanishMonths, $nextGradeNameWithType) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
-                $fullName = str_replace(',', '', $student['full_name']);
+                $fullName = $student['full_name'];
                 $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
                 $fullName = ucwords(strtolower($fullName));
                 $student['full_name'] = $fullName;
@@ -606,10 +628,28 @@ class DocumentController extends Controller
                 $prefix = $student['country_id'] == $student->company->country_id ? 'V-' : 'E-';
                 $student['identity_document'] = $prefix . $identityDocument;
 
+                $type_document = $student->type_document?->name;
+                $type_document_name = "";
+                switch ($type_document) {
+                    case 'Cédula de identidad':
+                        $type_document_name = " de la cédula de identidad";
+                        break;
+                    case 'Cédula escolar':
+                        $type_document_name = " de la cédula escolar";
+                        break;
+                    case 'Número de pasaporte':
+                        $type_document_name = " del Número de pasaporte";
+                        break;
+                    default:
+                        $type_document_name = " del documento ";
+                        break;
+                }
+                $student["type_document_name"] = $type_document_name;
+
                 // Procesar birth_place: construir dinámicamente con city y state
                 $cityName = $student->city->name ?? 'NO POSSEE';
                 $stateName = $student->state->name ?? 'NO POSSEE';
-                $birthPlace = "Municipio $cityName, del Estado $stateName";
+                $birthPlace = "Municipio <strong>$cityName</strong>, del Estado <strong>$stateName</strong>";
                 $student['birth_place'] = $birthPlace;
 
                 // Procesar birthday: formatear como "12 de Marzo del 2020" usando el array de meses
@@ -624,6 +664,12 @@ class DocumentController extends Controller
                 }
 
                 // Agregar el grado actual
+                if ($student['grade']['name'] == 'Sexto Grado') {
+                    $student['grade']['name'] = "6to Grado";
+                } else {
+                    $student['grade']['name'] = $student['grade']['name'] . " de Educación Primaria";
+                }
+
                 $student['currentGrade'] = $student['grade']['name'] ?? 'NO POSEE';
 
                 // Agregar el grado siguiente con el tipo de educación
@@ -642,6 +688,7 @@ class DocumentController extends Controller
                 'term' => $term,
                 'titlePdf' => $titlePdf,
                 'subTitlePdf' => $subTitlePdf,
+                'continuara' => $continuara,
             ];
 
             // Generar el PDF
