@@ -125,10 +125,10 @@
     }
 
     .signature-table {
-        width: 80%;
+        width: 70%;
         margin: 0 auto;
         margin-top: 1cm;
-        font-size: 14px;
+        font-size: 12px;
         border-collapse: collapse;
         page-break-inside: avoid;
         /* Added for equal column widths */
@@ -233,10 +233,11 @@
                 <table class="signature-table">
                     <tr class="header-row"> <!-- Added class to target first row -->
                         <td>
-                            <p>INSTITUCIÓN EDUCATIVA (PARA VALIDEZ NACIONAL)</p>
+                            <p>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</p>
                         </td>
                         <td>
-                            <p>CENTRO DE DESARROLLO DE LA CALIDAD EDUCATIVA ESTADAL (PARA VALIDEZ INTERNACIONAL)</p>
+                            <p>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
+                                INTERNACIONAL)</p>
                         </td>
                     </tr>
                     <tr>
