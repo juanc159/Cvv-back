@@ -344,7 +344,7 @@ class DocumentController extends Controller
                 // Procesar birth_place: construir dinámicamente con city y state
                 $cityName = $student->city->name ?? 'NO POSSEE'; // Valor por defecto si no existe
                 $stateName = $student->state->name ?? 'NO POSSEE'; // Valor por defecto si no existe
-                $birthPlace = "Municipio $cityName, del Estado $stateName";
+                $birthPlace = "Municipio <strong>$cityName</strong>, del Estado <strong>$stateName</strong>";
                 $student['birth_place'] = $birthPlace;
 
                 // Procesar birthday: formatear como "01 de Marzo del 2020" usando el array de meses
@@ -483,14 +483,15 @@ class DocumentController extends Controller
                 // Procesar birth_place: construir dinámicamente con city y state
                 $cityName = $student->city->name ?? 'NO POSSEE'; // Valor por defecto si no existe
                 $stateName = $student->state->name ?? 'NO POSSEE'; // Valor por defecto si no existe
-                $birthPlace = "Municipio $cityName, del Estado $stateName";
+                $birthPlace = "Municipio <strong>$cityName</strong>, del Estado <strong>$stateName</strong>";
                 $student['birth_place'] = $birthPlace;
 
 
                 // Procesar birthday: formatear como "12 de Marzo del 2020" usando el array de meses
                 if (!empty($student['birthday'])) {
                     $birthDate = Carbon::parse($student['birthday']);
-                    $day = $birthDate->day;
+                    $day = str_pad($birthDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
+
                     $month = $spanishMonths[$birthDate->month];
                     $year = $birthDate->year;
                     $student['birthday'] = "$day de $month del $year";
@@ -583,7 +584,7 @@ class DocumentController extends Controller
                 $nextGradeNameWithType = '1er Año del Nivel de Educación Media';
                 $titlePdf = 'CERTIFICADO';
                 $subTitlePdf = 'DE EDUCACIÓN PRIMARIA';
-                $continuara = "siendo promovido al ";
+                $continuara = "siendo promovido(a) al ";
             } else {
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {

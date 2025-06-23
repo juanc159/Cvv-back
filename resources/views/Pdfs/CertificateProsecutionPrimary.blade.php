@@ -95,7 +95,7 @@
     .indented-text {
         /* text-indent: 2cm; */
         text-align: justify;
-        width: 80%;
+        width: 79%;
         margin-left: auto;
         margin-right: auto;
         font-size: 16px;
