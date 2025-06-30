@@ -125,13 +125,12 @@
     }
 
     .signature-table {
-        width: 80%;
-        margin: 0 auto;
-        margin-top: 1cm;
-        font-size: 14px;
+        width: 70%;
+        margin: 1.5cm auto 0 auto;
+        /* Más espacio arriba */
+        font-size: 12px;
         border-collapse: collapse;
         page-break-inside: avoid;
-        /* Added for equal column widths */
         table-layout: fixed;
     }
 
@@ -140,7 +139,6 @@
         padding: 10px;
         text-align: left;
         vertical-align: top;
-        /* Added for equal column widths */
         width: 50%;
     }
 
@@ -150,12 +148,39 @@
     }
 
     .signature-table .header-row p {
-        /* Added to center only the first row's <p> elements */
         text-align: center;
     }
 
-    .signature-table .signature-row {
+    .signature-row {
         height: 150px;
+        /* Aumentado de 200px a 280px */
+        position: relative;
+    }
+
+    .signature-container {
+        text-align: center;
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        height: 150px;
+        /* Altura específica */
+    }
+
+    .signature-container .signature-img {
+        max-width: 140px;
+        max-height: 100px;
+        position: absolute;
+        left: 30px;
+        top: 30px;
+    }
+
+    .signature-container .seal-img {
+        max-width: 120px;
+        max-height: 120px;
+        position: absolute;
+        top: 5px;
+        right: 20px;
+        z-index: 1;
     }
 
     .content-container {
@@ -264,11 +289,15 @@
                             <p>Número de C.I.:</p>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="signature-row">
+                    <tr class="signature-row">
+                        <td>
                             <p>Firma y Sello:</p>
+                            <div class="signature-container">
+                                {{-- <img class="signature-img" src="{{ public_path('img/soloFirma.png') }}" alt="Firma">
+                                <img class="seal-img" src="{{ public_path('img/soloSello.png') }}" alt="Sello"> --}}
+                            </div>
                         </td>
-                        <td class="signature-row">
+                        <td>
                             <p>Firma y Sello:</p>
                         </td>
                     </tr>

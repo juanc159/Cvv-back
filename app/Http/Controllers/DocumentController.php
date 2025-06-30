@@ -577,6 +577,7 @@ class DocumentController extends Controller
             $titlePdf = 'CONSTANCIA DE PROSECUCIÓN';
             $subTitlePdf = 'EN EL NIVEL DE EDUCACIÓN PRIMARIA';
             $continuara = "y continuará estudios en el ";
+            $signatureImg = true;
 
 
             // Si el grado actual es 6to Grado, forzamos "1er Año" como siguiente
@@ -585,6 +586,7 @@ class DocumentController extends Controller
                 $titlePdf = 'CERTIFICADO';
                 $subTitlePdf = 'DE EDUCACIÓN PRIMARIA';
                 $continuara = "siendo promovido(a) al ";
+                $signatureImg = false;
             } else {
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {
@@ -690,6 +692,7 @@ class DocumentController extends Controller
                 'titlePdf' => $titlePdf,
                 'subTitlePdf' => $subTitlePdf,
                 'continuara' => $continuara,
+                'signatureImg' => $signatureImg,
             ];
 
             // Generar el PDF
