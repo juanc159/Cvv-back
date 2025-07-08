@@ -137,8 +137,8 @@
     <!-- Información del estudiante con sangría -->
     <div class="content indent">
         Portador(a) {{ $data['student']['type_document_name'] }} Nro
-        {{ $data['student']['identity_document'] }}
-        , estudiante del Grado - Año - Sección: <strong>{{ $data['student']['grade_name'] }}</strong>, se encuentra
+        {{ $data['student']['identity_document'] }}, estudiante del Grado - Año - Sección:
+        <strong>{{ $data['student']['grade_name'] }}</strong>, se encuentra
         <strong>SOLVENTE</strong> en el año escolar {{ $data['student']['school_year'] }}.
     </div>
 
