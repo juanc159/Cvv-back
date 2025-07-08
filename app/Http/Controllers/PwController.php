@@ -572,7 +572,7 @@ class PwController extends Controller
                     $type_document_name = " del documento ";
                     break;
             }
-            $student->type_document_name = $type_document_name;
+            return $student->type_document_name = $type_document_name;
 
             // Generar el código de solvencia dinámicamente
             // 1. Primera letra del tipo de educación 
