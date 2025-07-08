@@ -629,7 +629,7 @@ class PwController extends Controller
                 'full_name' => $student["full_name"],
                 'type_document_name' => $type_document_name,
                 'identity_document' => $student["identity_document"],
-                'grade_name' => $student->type_education?->name . ": " . $student->grade?->name . " " . $student->section?->name,
+                'grade_name' => $student->type_education?->name . " - " . $student->grade?->name . " " . $student->section?->name,
                 'school_year' => "2024-2025",
             ];
 
