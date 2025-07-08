@@ -726,6 +726,7 @@ class StudentRepository extends BaseRepository
         $data = $this->model->select($select)->where('grade_id', $grade_id)
             ->where('company_id', $company_id)
             ->where('is_active', true)
+            ->whereDoesntHave('withdrawal')
             ->where(function ($query) use ($request) {
                 if (!empty($request["section_id"])) {
                     $query->where('section_id', $request["section_id"]);

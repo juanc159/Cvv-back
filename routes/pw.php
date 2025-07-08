@@ -50,3 +50,7 @@ Route::post('/user/changePassword', [UserController::class, 'changePassword']);
 
 //materia pendiente nueva version
 Route::get('/pw-materiaPendiente/{company_id}', [PwController::class, 'materiaPendiente']);
+
+
+//descarga de solnencia
+Route::get('/pw-pdfSolvencyCertificate/{id}', [PwController::class, 'pdfSolvencyCertificate']);

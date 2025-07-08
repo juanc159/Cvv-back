@@ -275,13 +275,15 @@ class BaseRepository
      * @param  bool  $landscape  Si es true, usa orientación horizontal
      * @return \Illuminate\Http\Response
      */
-    public function pdf($vista, $data = [], $nombre = 'archivo', $is_stream = true, $landspace = false)
+    public function pdf($vista, $data = [], $nombre = 'archivo', $is_stream = true, $landspace = false, $setPaper = null)
     {
         $pdf = \PDF::loadview($vista, compact('data'));
         if ($landspace == true) {
             $pdf->setPaper('legal', 'landscape');
         }
-        // dd('pasí');
+        if ($setPaper) {
+            $pdf->setPaper($setPaper);
+        }
 
         $nombre = $nombre . '.pdf';
         if ($is_stream) {

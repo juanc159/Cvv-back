@@ -4,7 +4,30 @@ use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\StudentController;
 use App\Models\Note;
 use App\Models\Student;
+use Barryvdh\DomPDF\PDF;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/pdf', function () {
+    $pdf = app('dompdf.wrapper');
+
+    // Datos del estudiante
+    $student = (object)[
+        'first_name' => 'Valeria Sofia',
+        'last_name' => 'Ojeda Zambrano',
+        'id_number' => '12.632.113',
+        'grade' => 'CUARTO AÑO SECCIÓN A',
+        'school_year' => '2020-2021'
+    ];
+
+    $next_school_year = '2025-2026';
+    $solvencyCode = 'B4A-22';
+
+    // Configurar el PDF
+    $pdf = $pdf->loadView('SolvencyCertificate', compact('student', 'next_school_year', 'solvencyCode'))
+        ->setPaper([0, 0, 595, 420], 'portrait'); // Mitad de una hoja A4 (595x420 en puntos)
+
+    return $pdf->stream();
+});
 
 Route::get('/', function () {
     // return Note::with(["student" => function ($query) {

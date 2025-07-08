@@ -536,4 +536,138 @@ class PwController extends Controller
             ];
         });
     }
+
+    public function pdfSolvencyCertificate($id)
+    {
+        try {
+            // Datos del estudiante
+            $student = $this->studentRepository->find($id, [
+                'type_education:id,name',
+                'grade:id,name',
+                'section:id,name',
+                'type_document:id,name',
+            ], select: ["id", "full_name", "identity_document", "photo", "type_education_id", "grade_id", "section_id", "type_document_id"]);
+
+            if (!$student) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'Estudiante no encontrado',
+                ], 404);
+            }
+
+            // Procesar el tipo de documento
+            $type_document = $student->type_document?->name;
+            $type_document_name = "";
+            switch ($type_document) {
+                case 'Cédula de identidad':
+                    $type_document_name = " de la cédula de identidad";
+                    break;
+                case 'Cédula escolar':
+                    $type_document_name = " de la cédula escolar";
+                    break;
+                case 'Número de pasaporte':
+                    $type_document_name = " del Número de pasaporte";
+                    break;
+                default:
+                    $type_document_name = " del documento ";
+                    break;
+            }
+            $student->type_document_name = $type_document_name;
+
+            // Generar el código de solvencia dinámicamente
+            // 1. Primera letra del tipo de educación 
+            $educationPrefix = '';
+            $words = explode(' ', $student->type_education?->name ?? '');
+            foreach ($words as $word) {
+                if (!empty($word)) {
+                    $educationPrefix .= strtoupper(substr($word, 0, 1));
+                }
+            }
+
+            // 2. Código del grado y sección (ejemplo: "4F")
+            $gradeName = $student->grade?->name;
+            $sectionName = $student->section?->name;
+            $gradeSectionCode = '1A'; // Valor por defecto
+
+            if ($gradeName && $sectionName) {
+                // Mapear nombres de grados a números
+                $gradeMap = [
+                    'Primero' => '1',
+                    'Segundo' => '2',
+                    'Tercero' => '3',
+                    'Cuarto' => '4',
+                    'Quinto' => '5',
+                    'Sexto' => '6',
+                    // Agrega más grados si es necesario (por ejemplo, para Bachillerato)
+                ];
+
+                // Extraer la parte relevante del nombre del grado (ignorar "Año" u otros sufijos)
+                $gradeKey = explode(' ', $gradeName)[0]; // Toma la primera palabra (ej. "Cuarto" de "Cuarto Año")
+                $gradeNumber = $gradeMap[$gradeKey] ?? '1'; // Usa el número mapeado o 1 por defecto
+                $gradeSectionCode = $gradeNumber . $sectionName; // Ejemplo: "4F"
+            }
+
+            // 3. Calcular el número de lista del estudiante
+            $listNumber = \App\Models\Student::where([
+                'type_education_id' => $student->type_education_id,
+                'grade_id' => $student->grade_id,
+                'section_id' => $student->section_id,
+            ])
+                ->whereDoesntHave('withdrawal')
+                ->whereRaw('LOWER(full_name) <= LOWER(?)', [$student->full_name])
+                ->orderByRaw('LOWER(full_name)')
+                ->count();
+
+
+            // Formatear el número de lista con dos dígitos (ej. "01", "22")
+            $formattedListNumber = str_pad($listNumber, 2, '0', STR_PAD_LEFT);
+
+            // Construir el solvencyCode (ej. "B4A-22")
+            $solvencyCode = "{$educationPrefix}-{$gradeSectionCode}-{$formattedListNumber}";
+
+            // Preparar datos del estudiante para el PDF
+            $studentData = [
+                'full_name' => $student["full_name"],
+                'identity_document' => $student["identity_document"],
+                'grade_name' => $student->type_education?->name . ": " . $student->grade?->name . " " . $student->section?->name,
+                'school_year' => "2024-2025",
+            ];
+
+            $next_school_year = '2025-2026';
+
+            // Generar el PDF
+            $pdfContent = $this->studentRepository->pdf(
+                'Pdfs.SolvencyCertificate',
+                [
+                    'student' => $studentData,
+                    'next_school_year' => $next_school_year,
+                    'solvencyCode' => $solvencyCode,
+                ],
+                'Solvencia',
+                false,
+                setPaper: [0, 0, 595, 420] // Mitad de una hoja A4
+            );
+
+            if (!$pdfContent) {
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Error al generar el PDF',
+                ], 500);
+            }
+
+            $pdfBase64 = base64_encode($pdfContent);
+
+            return response()->json([
+                'code' => 200,
+                'pdf' => $pdfBase64,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error al procesar la solicitud',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 500);
+        }
+    }
 }
