@@ -592,9 +592,9 @@ class PwController extends Controller
             if ($gradeName && $sectionName) {
                 // Mapear nombres de grados a números
                 $gradeMap = [
-                    'Primero' => '1',
+                    'Primer' => '1',
                     'Segundo' => '2',
-                    'Tercero' => '3',
+                    'Tercer' => '3',
                     'Cuarto' => '4',
                     'Quinto' => '5',
                     'Sexto' => '6',
