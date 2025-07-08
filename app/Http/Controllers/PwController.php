@@ -572,7 +572,6 @@ class PwController extends Controller
                     $type_document_name = " del documento ";
                     break;
             }
-            return $student->type_document_name = $type_document_name;
 
             // Generar el código de solvencia dinámicamente
             // 1. Primera letra del tipo de educación 
@@ -628,6 +627,7 @@ class PwController extends Controller
             // Preparar datos del estudiante para el PDF
             $studentData = [
                 'full_name' => $student["full_name"],
+                'type_document_name' => $type_document_name,
                 'identity_document' => $student["identity_document"],
                 'grade_name' => $student->type_education?->name . ": " . $student->grade?->name . " " . $student->section?->name,
                 'school_year' => "2024-2025",
