@@ -5,6 +5,7 @@
                 <th style="border: 1px solid black">NRO</th>
                 @if ($type_education_id)
                     <th style="border: 1px solid black">PDF</th>
+                    <th style="border: 1px solid black">SOLVENTE</th>
                 @endif
                 <th style="border: 1px solid black">AÑO</th>
                 <th style="border: 1px solid black">SECCIÓN</th>
@@ -42,6 +43,7 @@
 
                     @if ($type_education_id)
                         <td style="border: 1px solid black">{{ $row['pdf'] }}</td>
+                        <td style="border: 1px solid black">{{ $row['solvencyCertificate'] }}</td>
                     @endif
 
 

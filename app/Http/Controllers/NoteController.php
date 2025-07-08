@@ -72,8 +72,7 @@ class NoteController extends Controller
 
                 $teacher = Teacher::with([
                     'complementaries',
-                ])
-                    ->find($teacher_id);
+                ])->find($teacher_id);
 
                 $subjectsData = [];
                 if ($teacher) {
@@ -177,6 +176,9 @@ class NoteController extends Controller
 
                                 if (isset($row['PDF'])) {
                                     $model['pdf'] = $row['PDF'] == 1 ? 1 : 0;
+                                }
+                                if (isset($row['SOLVENTE'])) {
+                                    $model['solvencyCertificate'] = $row['SOLVENTE'] == 1 ? 1 : 0;
                                 }
 
                                 if ($student) {
@@ -350,6 +352,7 @@ class NoteController extends Controller
                                 'identity_document' => $value2->identity_document,
                                 'full_name' => $value2->full_name,
                                 'pdf' => $value2->pdf == 1 ? 1 : '',
+                                'solvencyCertificate' => $value2->solvencyCertificate == 1 ? 1 : '',
                             ];
 
                             // Agregar códigos como keys basadas en la cantidad de notas

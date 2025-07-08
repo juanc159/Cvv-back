@@ -14,9 +14,11 @@ class CacheService
      */
     public function generateKey(string $prefix, array $params = [], string $type = 'string'): string
     {
-        $suffix = ! empty($params) ? '_'.md5(serialize($params)) : '';
+        $suffix = ! empty($params) ? '_' . md5(serialize($params)) : '';
 
-        return "{$type}:{$prefix}{$suffix}";
+        $project = env('KEY_REDIS_PROJECT');
+
+        return "{$project}{$type}:{$prefix}{$suffix}";
     }
 
     /**
@@ -24,36 +26,46 @@ class CacheService
      */
     public function remember(string $key, callable $callback, ?int $ttl = null)
     {
-        $ttl = $ttl ?? $this->defaultTtl;
-        $start = microtime(true);
+        $redis_active = env('REDIS_ACTIVE', true);
+        $data = null;
+        if ($redis_active !== false) {
 
-        // Determinar el tipo de dato según el prefijo
-        $type = $this->getTypeFromKey($key);
-        $data = $this->getDataFromRedis($key, $type);
+            $ttl = $ttl ?? $this->defaultTtl;
+            $start = microtime(true);
 
-        if ($data !== null && $data !== false) {
-            if ($type === 'string') {
-                $data = unserialize($data); // Deserializar solo para strings
+            // Determinar el tipo de dato según el prefijo
+            $type = $this->getTypeFromKey($key);
+
+            $data = $this->getDataFromRedis($key, $type);
+
+            if ($data !== null && $data !== false) {
+                if ($type === 'string') {
+                    $data = unserialize($data); // Deserializar solo para strings
+                }
+                $source = 'redis';
+            } else {
+                $data = $callback();
+                $this->storeDataInRedis($key, $data, $type, $ttl);
+                $source = 'database';
             }
-            $source = 'redis';
+
+            $end = microtime(true);
+            $time = ($end - $start) * 1000;
+
+            // Registrar métrica en Redis
+            $metric = [
+                'source' => $source,
+                'response_time' => $time,
+                'created_at' => now()->toDateTimeString(),
+            ];
+            Redis::rpush('list:cache_metrics', json_encode($metric)); // Cambiado a list:cache_metrics
+
+            // Log::debug("Datos obtenidos de {$source}", ['key' => $key, 'time' => $time.'ms']);
         } else {
+            // Si Redis no está activo, ejecutamos el callback directamente
             $data = $callback();
-            $this->storeDataInRedis($key, $data, $type, $ttl);
-            $source = 'database';
+            Log::debug('Redis no está activo, ejecutando callback directamente', ['key' => $key]);
         }
-
-        $end = microtime(true);
-        $time = ($end - $start) * 1000;
-
-        // Registrar métrica en Redis
-        $metric = [
-            'source' => $source,
-            'response_time' => $time,
-            'created_at' => now()->toDateTimeString(),
-        ];
-        Redis::rpush('list:cache_metrics', json_encode($metric)); // Cambiado a list:cache_metrics
-
-        Log::debug("Datos obtenidos de {$source}", ['key' => $key, 'time' => $time.'ms']);
 
         return $data;
     }
@@ -64,7 +76,7 @@ class CacheService
     public function forget(string $key): void
     {
         Redis::del($key);
-        Log::debug('Caché eliminado', ['key' => $key]);
+        // Log::debug('Caché eliminado', ['key' => $key]);
     }
 
     /**
@@ -87,12 +99,12 @@ class CacheService
                     $array[] = $newK;
                 }
                 $keysToDelete = array_merge($keysToDelete, $array);
-                Log::debug('Claves encontradas en esta iteración', ['keys' => $keys]);
+                // Log::debug('Claves encontradas en esta iteración', ['keys' => $keys]);
             }
 
             if (count($keysToDelete) > 0) {
                 Redis::del($keysToDelete);
-                Log::debug('Lote de cachés eliminado', ['count' => count($keysToDelete)]);
+                // Log::debug('Lote de cachés eliminado', ['count' => count($keysToDelete)]);
             }
             $keysToDelete = [];
         } while ($cursor !== '0');
