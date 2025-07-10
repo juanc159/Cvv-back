@@ -579,7 +579,6 @@ class DocumentController extends Controller
             $signatureImg = true;
             $pdfView = "Pdfs.CertificateProsecutionPrimary";
 
-
             // Si el grado actual es 6to Grado, forzamos "1er Año" como siguiente
             if ($currentOrder === 9) {
                 $nextGradeNameWithType = '1er Año del Nivel de Educación Media';

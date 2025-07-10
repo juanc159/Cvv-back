@@ -228,7 +228,7 @@
                         <strong>{{ $student['birthday'] }}</strong>,
                         cursó el <strong>{{ $student['currentGrade'] }}</strong>, correspondiéndole el literal
                         <strong>“{{ $student['literal'] }}”</strong> durante el
-                        <strong>{{ strtolower($data['term']['name']) }}</strong>, <strong>siendo promovido(a) al
+                        <strong>{{ strtolower($data['term']['name']) }}</strong>, <strong>y continuará estudios en el
                             {{ $student['nextGrade'] }}</strong>,
                         previo cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
