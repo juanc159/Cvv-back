@@ -237,7 +237,7 @@
                         Municipio <strong>Cárdenas</strong>, de la parroquia <strong>Táriba</strong>, adscrita al Centro
                         de
                         Desarrollo de la Calidad Educativa
-                        Estadal Táchira. Por la presente certifica que el(la) niño(a):
+                        Estadal Táchira. Por la presente certifica que el (la) niño(a):
                         <strong>{{ $student['full_name'] }}</strong>, portador
                         {{ $student['type_document_name'] }} N°
                         <strong>{{ $student['identity_document'] }}</strong>, nacido(a) en el

@@ -576,8 +576,8 @@ class DocumentController extends Controller
             $nextGradeNameWithType = 'NO POSSE';
             $titlePdf = 'CONSTANCIA DE PROSECUCIÓN';
             $subTitlePdf = 'EN EL NIVEL DE EDUCACIÓN PRIMARIA';
-            $continuara = "y continuará estudios en el ";
             $signatureImg = true;
+            $pdfView = "Pdfs.CertificateProsecutionPrimary";
 
 
             // Si el grado actual es 6to Grado, forzamos "1er Año" como siguiente
@@ -585,8 +585,8 @@ class DocumentController extends Controller
                 $nextGradeNameWithType = '1er Año del Nivel de Educación Media';
                 $titlePdf = 'CERTIFICADO';
                 $subTitlePdf = 'DE EDUCACIÓN PRIMARIA';
-                $continuara = "siendo promovido(a) al ";
                 $signatureImg = false;
+                $pdfView = "Pdfs.CertificateProsecutionPrimary6to";
             } else {
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {
@@ -691,13 +691,12 @@ class DocumentController extends Controller
                 'term' => $term,
                 'titlePdf' => $titlePdf,
                 'subTitlePdf' => $subTitlePdf,
-                'continuara' => $continuara,
                 'signatureImg' => $signatureImg,
             ];
 
             // Generar el PDF
             $pdfContent = $this->studentRepository->pdf(
-                "Pdfs.CertificateProsecutionPrimary",
+                $pdfView,
                 $pdfData,
                 'Constancia_de_Prosecución_' . $grade->name,
                 true // Forzar descarga

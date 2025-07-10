@@ -219,7 +219,7 @@
                         Municipio <strong>Cárdenas</strong>, de la parroquia <strong>Táriba</strong>, adscrita al Centro
                         de
                         Desarrollo de la Calidad Educativa
-                        Estadal Táchira. Por la presente hace constar que el (la) estudiante:
+                        Estadal Táchira. Por la presente se certifica que el (la) estudiante:
                         <strong>{{ $student['full_name'] }}</strong>, portador(a)
                         {{ $student['type_document_name'] }} N°
                         <strong>{{ $student['identity_document'] }}</strong>, nacido(a) en el
@@ -228,12 +228,13 @@
                         <strong>{{ $student['birthday'] }}</strong>,
                         cursó el <strong>{{ $student['currentGrade'] }}</strong>, correspondiéndole el literal
                         <strong>“{{ $student['literal'] }}”</strong> durante el
-                        <strong>{{ strtolower($data['term']['name']) }}</strong>, <strong>y continuará estudios en el
+                        <strong>{{ strtolower($data['term']['name']) }}</strong>, <strong>siendo promovido(a) al
                             {{ $student['nextGrade'] }}</strong>,
                         previo cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
                     <p>
-                        Constancia que se expide en <strong>Arjona</strong>, a {!! $data['date'] !!}.
+                        Certificado que se expide en <strong>Arjona</strong>, a
+                        {!! $data['date'] !!}.
                     </p>
                 </div>
 

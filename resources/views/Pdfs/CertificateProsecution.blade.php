@@ -237,7 +237,7 @@
                         Municipio <strong>Cárdenas</strong>, de la parroquia <strong>Táriba</strong>, adscrita al Centro
                         de
                         Desarrollo de la Calidad Educativa
-                        Estadal Táchira. Por la presente hace constar que el(la) niño(a):
+                        Estadal Táchira. Por la presente hace constar que el (la) niño(a):
                         <strong>{{ $student['full_name'] }}</strong>, portador
                         {{ $student['type_document_name'] }} N°
                         <strong>{{ $student['identity_document'] }}</strong>, nacido(a) en el {!! $student['birth_place'] ?? 'NO SALE NADA' !!},
@@ -249,7 +249,7 @@
                         cumplimiento de los requisitos establecidos en la normativa legal vigente.
                     </p>
                     <p>
-                        Certificado que se expide en <strong>Arjona</strong>, a {!! $data['date'] !!}.
+                        Constancia que se expide en <strong>Arjona</strong>, a {!! $data['date'] !!}.
                     </p>
                 </div>
 
