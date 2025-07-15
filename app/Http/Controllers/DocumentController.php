@@ -448,7 +448,7 @@ class DocumentController extends Controller
             }
 
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
-            $students = $students->map(function ($student) use ($spanishMonths) {
+            return  $students = $students->map(function ($student) use ($spanishMonths) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
                 $fullName = $student['full_name'];
                 $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
@@ -669,7 +669,7 @@ class DocumentController extends Controller
                 if ($student['grade']['name'] == 'Sexto Grado') {
                     $student['grade']['name'] = "6to Grado";
                 } else {
-                    $student['grade']['name'] = $student['grade']['name'] . " de Educación Primaria";
+                    $student['grade']['name'] = $student['grade']['name'];
                 }
 
                 $student['currentGrade'] = $student['grade']['name'] ?? 'NO POSEE';
