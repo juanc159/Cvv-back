@@ -341,6 +341,25 @@ class DocumentController extends Controller
                 $prefix = $student['country_id'] == $student->company->country_id ? 'V-' : 'E-';
                 $student['identity_document'] = $prefix . $identityDocument;
 
+                $type_document = $student->type_document?->name;
+                $type_document_name = "";
+                switch ($type_document) {
+                    case 'Cédula de identidad':
+                        $type_document_name = " de la cédula de identidad";
+                        break;
+                    case 'Cédula escolar':
+                        $type_document_name = " de la cédula escolar";
+                        break;
+                    case 'Número de pasaporte':
+                        $type_document_name = " del Número de pasaporte";
+                        break;
+                    default:
+                        $type_document_name = " del documento ";
+                        break;
+                }
+                $student["type_document_name"] = $type_document_name;
+
+
                 // Procesar birth_place: construir dinámicamente con city y state
                 $cityName = $student->city->name ?? 'NO POSSEE'; // Valor por defecto si no existe
                 $stateName = $student->state->name ?? 'NO POSSEE'; // Valor por defecto si no existe
@@ -448,7 +467,7 @@ class DocumentController extends Controller
             }
 
             // Procesar el nombre de cada estudiante: eliminar comas y convertir a camelCase por palabra
-            return  $students = $students->map(function ($student) use ($spanishMonths) {
+            $students = $students->map(function ($student) use ($spanishMonths) {
                 // Procesar full_name: eliminar comas y convertir a camelCase por palabra
                 $fullName = $student['full_name'];
                 $fullName = trim(preg_replace('/\s+/', ' ', $fullName));
