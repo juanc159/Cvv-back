@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\TeacherController;
@@ -29,7 +30,7 @@ Route::post('/savefiles', [NoteController::class, 'savefiles']);
 Route::get('/file/download', function (Request $request) {
     try {
 
-        $ruta = public_path('/storage/'.$request->input('file'));
+        $ruta = public_path('/storage/' . $request->input('file'));
         // Verificar si el archivo existe
         if (! file_exists($ruta)) {
             return response()->json(['code' => 404, 'message' => 'Archivo no encontrado']);
@@ -41,3 +42,14 @@ Route::get('/file/download', function (Request $request) {
         return response()->json(['code' => 500, 'message' => 'Error al buscar los datos', 'error' => $th->getMessage()]);
     }
 });
+
+
+
+
+
+
+Route::get('/documentStudent/prosecutionInitialEducation', [DocumentController::class, 'prosecutionInitialEducation']);
+
+Route::get('/documentStudent/certificateInitialEducation', [DocumentController::class, 'certificateInitialEducation']);
+
+Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation']);

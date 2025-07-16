@@ -286,6 +286,24 @@ class PassportAuthController extends Controller
             $obj['solvencyCertificate'] = $user->solvencyCertificate;
             $obj['boletin'] = $user->boletin;
             $obj['type_user'] = 'student';
+            $obj['url_to_download_prosecucion_pdf'] = null;
+
+            // si es de Educación Inicial
+            if ($user->type_education_id == 1) {
+                // solo Primer Nivel y Segundo Nivel
+                if ($user->grade_id == 1 || $user->grade_id == 2) {
+                    $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionInitialEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                }
+                // solo si es Tercer Nivel
+                if ($user->grade_id == 3) {
+                    $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/certificateInitialEducation?section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                }
+            }
+
+            // si es de Educación Primaria
+            if ($user->type_education_id == 2) {
+                $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionPrimaryEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+            }
 
             $company = $user->company;
 

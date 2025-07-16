@@ -731,6 +731,9 @@ class StudentRepository extends BaseRepository
                 if (!empty($request["section_id"])) {
                     $query->where('section_id', $request["section_id"]);
                 }
+                if (!empty($request["student_id"])) {
+                    $query->where('id', $request["student_id"]);
+                }
             });
 
         if (!empty($request["ordering"])) {

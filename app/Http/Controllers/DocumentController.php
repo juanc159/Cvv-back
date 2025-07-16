@@ -306,6 +306,7 @@ class DocumentController extends Controller
 
             $grade = $this->gradeRepository->find($request['grade_id']);
             $company_id = $request['company_id'];
+            $student_id = $request['student_id'];
 
             // Formatear la fecha actual en español
             $currentDate = Carbon::now();
@@ -443,6 +444,9 @@ class DocumentController extends Controller
 
             $grade = $this->gradeRepository->find(3);
             $company_id = $request['company_id'];
+
+
+            // "/documentStudent/prosecutionInitialEducation?grade_id=3&section_id=3&ordering=full_name&company_id=1&student_id=101"
 
             // Formatear la fecha actual en español
             $currentDate = Carbon::now();
