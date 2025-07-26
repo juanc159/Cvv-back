@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\LoadNoteMasiveController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\TeacherController;
@@ -23,7 +24,6 @@ Route::get('/teacher-downloadConsolidated/{id}', [TeacherController::class, 'dow
 Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning'])->name('teacher.planning');
 
 Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
-Route::post('/note-store', [NoteController::class, 'store']);
 
 Route::post('/savefiles', [NoteController::class, 'savefiles']);
 
@@ -53,3 +53,8 @@ Route::get('/documentStudent/prosecutionInitialEducation', [DocumentController::
 Route::get('/documentStudent/certificateInitialEducation', [DocumentController::class, 'certificateInitialEducation']);
 
 Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation']);
+
+
+// Route::post('/note-store', [NoteController::class, 'store']);
+
+Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);

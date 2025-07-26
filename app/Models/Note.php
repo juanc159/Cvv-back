@@ -11,6 +11,7 @@ class Note extends Model
 {
     use HasFactory, HasUuids, Searchable;
 
+    protected $guarded = [];
     public function subject()
     {
         return $this->hasOne(Subject::class, 'id', 'subject_id');

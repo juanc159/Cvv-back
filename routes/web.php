@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LoadNoteMasiveController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\StudentController;
 use App\Models\Note;
@@ -30,6 +31,7 @@ Route::get('/pdf', function () {
 });
 
 Route::get('/', function () {
+    return 1;
     // return Note::with(["student" => function ($query) {
     //     $query->where("type_education_id", 2);
     //     $query->where("grade_id", 8);
@@ -66,3 +68,6 @@ Route::get('/bd_table', [MigrationController::class, 'trasnferBD']);
 Route::get('/updates', [MigrationController::class, 'updates']);
 
 Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);
+
+
+// Route::get('/loadNoteMasive', [LoadNoteMasiveController::class, 'process']);
