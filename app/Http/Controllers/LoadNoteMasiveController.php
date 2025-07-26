@@ -34,9 +34,9 @@ class LoadNoteMasiveController extends Controller
         try {
             $request->validate([
                 'archive' => 'required|file|mimes:xlsx,xls|max:10240', // máximo 10MB
-                'teacher_id' => 'nullable|string', // CORREGIDO: UUID
-                'type_education_id' => 'nullable|string', // CORREGIDO: UUID
-                'company_id' => 'nullable|string' // CORREGIDO: UUID
+                'teacher_id' => 'nullable|string',
+                'type_education_id' => 'nullable|string',
+                'company_id' => 'nullable|string'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -91,9 +91,9 @@ class LoadNoteMasiveController extends Controller
             // Validación de estructura
             $validation = $this->structureValidator->validate(
                 $fullPath,
-                $request->input('teacher_id'), // CORREGIDO: mantener como string
-                $request->input('type_education_id', '2'), // CORREGIDO: string con default
-                $request->input('company_id', '1') // CORREGIDO: string con default
+                $request->input('teacher_id'),
+                $request->input('type_education_id', '2'),
+                $request->input('company_id', '1')
             );
 
             if ($validation['operation_failed']) {
@@ -110,9 +110,9 @@ class LoadNoteMasiveController extends Controller
             // Procesamiento del archivo
             $result = $this->noteProcessor->processFile(
                 $fullPath,
-                $request->input('company_id', '1'), // CORREGIDO: mantener como string
-                $request->input('type_education_id', '1'), // CORREGIDO: mantener como string
-                $request->input('teacher_id') // CORREGIDO: mantener como string o null
+                $request->input('company_id', '1'),
+                $request->input('type_education_id', '1'),
+                $request->input('teacher_id')
             );
 
             // Inicializar contador de registros procesados
@@ -178,7 +178,7 @@ class LoadNoteMasiveController extends Controller
             return response()->json(['status' => 'not_found'], 404);
         }
 
-        // NUEVO: Obtener datos de progreso desde cache
+        // Obtener datos de progreso desde cache
         $progressData = Cache::get("batch_progress_{$batchId}");
 
         return response()->json([
@@ -187,78 +187,7 @@ class LoadNoteMasiveController extends Controller
             'total_jobs' => $batch->totalJobs,
             'pending_jobs' => $batch->pendingJobs,
             'failed_jobs' => $batch->failedJobs,
-            'progress_data' => $progressData // NUEVO
+            'progress_data' => $progressData
         ]);
-    }
-
-    // NUEVA FUNCIÓN: Cancelar batch
-    public function cancelBatch($batchId)
-    {
-        try {
-            $batch = Bus::findBatch($batchId);
-            
-            if (!$batch) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Batch no encontrado'
-                ], 404);
-            }
-
-            // Verificar si el batch ya está completado
-            if ($batch->finishedAt) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El batch ya está completado y no se puede cancelar'
-                ], 400);
-            }
-
-            // Cancelar el batch
-            $batch->cancel();
-
-            // Limpiar cache relacionado
-            $cacheKeys = [
-                "batch_processed_{$batchId}",
-                "batch_progress_{$batchId}"
-            ];
-
-            foreach ($cacheKeys as $key) {
-                Cache::forget($key);
-            }
-
-            // Emitir evento de cancelación
-            event(new ImportProgressEvent(
-                $batchId,
-                0,
-                'Proceso cancelado por el usuario',
-                'Cancelando importación',
-                [
-                    'sheet' => 0,
-                    'chunk' => 0,
-                    'current_row' => 0,
-                    'total_rows' => 0,
-                    'total_records' => 0,
-                    'processed_records' => 0,
-                    'general_progress' => 0,
-                    'cancelled' => true
-                ]
-            ));
-
-            Log::info("Batch {$batchId} cancelled by user");
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Batch cancelado exitosamente',
-                'batch_id' => $batchId,
-                'cancelled_at' => now()->toDateTimeString()
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("Error cancelling batch {$batchId}: " . $e->getMessage());
-            
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al cancelar el batch: ' . $e->getMessage()
-            ], 500);
-        }
     }
 }
