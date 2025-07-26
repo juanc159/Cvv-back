@@ -4,6 +4,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LoadNoteMasiveController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PassportAuthController;
+use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -57,4 +58,13 @@ Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::
 
 // Route::post('/note-store', [NoteController::class, 'store']);
 
+ 
+// Tus rutas existentes...
 Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
+Route::get('/batch-status/{batchId}', [LoadNoteMasiveController::class, 'checkStatus']); // Para Polling
+
+// NUEVA RUTA para cancelar batch
+Route::post('/batch-cancel/{batchId}', [LoadNoteMasiveController::class, 'cancelBatch']);
+
+// RUTA para Server-Sent Events (CORREGIDA)
+Route::get('/progress/{batchId}', [ProgressController::class, 'streamProgress']);

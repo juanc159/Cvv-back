@@ -44,7 +44,7 @@ class ProcessNoteChunkJob implements ShouldQueue
             return;
         }
 
-        Log::info("[Batch: {$this->batch()->id}] Iniciando chunk {$this->chunkIndex} de la hoja {$this->sheetIndex} - Total records: {$this->totalRecords}");
+        // Log::info("[Batch: {$this->batch()->id}] Iniciando chunk {$this->chunkIndex} de la hoja {$this->sheetIndex} - Total records: {$this->totalRecords}");
 
         try {
             DB::transaction(function () {
@@ -71,15 +71,15 @@ class ProcessNoteChunkJob implements ShouldQueue
                     $generalProgress = min($generalProgress, 100);
 
                     // Log para debug del progreso general
-                    Log::debug("Progreso general calculado", [
-                        'batch_id' => $this->batch()->id,
-                        'sheet' => $this->sheetIndex,
-                        'chunk' => $this->chunkIndex,
-                        'processed_records' => $processedRecords,
-                        'total_records' => $this->totalRecords,
-                        'general_progress' => $generalProgress,
-                        'student' => $formattedRow['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Registro vacío'
-                    ]);
+                    // Log::debug("Progreso general calculado", [
+                    //     'batch_id' => $this->batch()->id,
+                    //     'sheet' => $this->sheetIndex,
+                    //     'chunk' => $this->chunkIndex,
+                    //     'processed_records' => $processedRecords,
+                    //     'total_records' => $this->totalRecords,
+                    //     'general_progress' => $generalProgress,
+                    //     'student' => $formattedRow['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Registro vacío'
+                    // ]);
 
                     if (empty($formattedRow['CÉDULA'])) {
                         event(new ImportProgressEvent(
@@ -122,11 +122,11 @@ class ProcessNoteChunkJob implements ShouldQueue
             });
 
             $this->checkIfCompleted();
-            Log::info("[Batch: {$this->batch()->id}] Chunk {$this->chunkIndex} completado");
+            // Log::info("[Batch: {$this->batch()->id}] Chunk {$this->chunkIndex} completado");
 
         } catch (\Exception $e) {
-            Log::error("[Batch: {$this->batch()->id}] Error en chunk {$this->chunkIndex}: " . $e->getMessage());
-            Log::error("Stack trace: " . $e->getTraceAsString());
+            // Log::error("[Batch: {$this->batch()->id}] Error en chunk {$this->chunkIndex}: " . $e->getMessage());
+            // Log::error("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }
@@ -157,7 +157,7 @@ class ProcessNoteChunkJob implements ShouldQueue
             ));
 
             Cache::forget($cacheKey);
-            Log::info("Proceso COMPLETADO - Batch: {$batch->id} | Total records: {$this->totalRecords} | Processed: {$finalProcessedRecords}");
+            // Log::info("Proceso COMPLETADO - Batch: {$batch->id} | Total records: {$this->totalRecords} | Processed: {$finalProcessedRecords}");
         }
     }
 

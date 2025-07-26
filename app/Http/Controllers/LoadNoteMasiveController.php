@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class LoadNoteMasiveController extends Controller
 {
@@ -91,7 +92,7 @@ class LoadNoteMasiveController extends Controller
             $validation = $this->structureValidator->validate(
                 $fullPath,
                 $request->input('teacher_id'), // CORREGIDO: mantener como string
-                $request->input('type_education_id', '1'), // CORREGIDO: string con default
+                $request->input('type_education_id', '2'), // CORREGIDO: string con default
                 $request->input('company_id', '1') // CORREGIDO: string con default
             );
 
@@ -105,7 +106,7 @@ class LoadNoteMasiveController extends Controller
                     'errors' => $validation['data']
                 ], 422);
             }
- 
+
             // Procesamiento del archivo
             $result = $this->noteProcessor->processFile(
                 $fullPath,
@@ -177,12 +178,87 @@ class LoadNoteMasiveController extends Controller
             return response()->json(['status' => 'not_found'], 404);
         }
 
+        // NUEVO: Obtener datos de progreso desde cache
+        $progressData = Cache::get("batch_progress_{$batchId}");
+
         return response()->json([
             'status' => $batch->finishedAt ? 'completed' : 'processing',
             'progress' => $batch->progress(),
             'total_jobs' => $batch->totalJobs,
             'pending_jobs' => $batch->pendingJobs,
-            'failed_jobs' => $batch->failedJobs
+            'failed_jobs' => $batch->failedJobs,
+            'progress_data' => $progressData // NUEVO
         ]);
+    }
+
+    // NUEVA FUNCIÓN: Cancelar batch
+    public function cancelBatch($batchId)
+    {
+        try {
+            $batch = Bus::findBatch($batchId);
+            
+            if (!$batch) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Batch no encontrado'
+                ], 404);
+            }
+
+            // Verificar si el batch ya está completado
+            if ($batch->finishedAt) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El batch ya está completado y no se puede cancelar'
+                ], 400);
+            }
+
+            // Cancelar el batch
+            $batch->cancel();
+
+            // Limpiar cache relacionado
+            $cacheKeys = [
+                "batch_processed_{$batchId}",
+                "batch_progress_{$batchId}"
+            ];
+
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
+
+            // Emitir evento de cancelación
+            event(new ImportProgressEvent(
+                $batchId,
+                0,
+                'Proceso cancelado por el usuario',
+                'Cancelando importación',
+                [
+                    'sheet' => 0,
+                    'chunk' => 0,
+                    'current_row' => 0,
+                    'total_rows' => 0,
+                    'total_records' => 0,
+                    'processed_records' => 0,
+                    'general_progress' => 0,
+                    'cancelled' => true
+                ]
+            ));
+
+            Log::info("Batch {$batchId} cancelled by user");
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Batch cancelado exitosamente',
+                'batch_id' => $batchId,
+                'cancelled_at' => now()->toDateTimeString()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error cancelling batch {$batchId}: " . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al cancelar el batch: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

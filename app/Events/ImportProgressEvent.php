@@ -9,6 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ImportProgressEvent implements ShouldBroadcastNow
 {
@@ -28,10 +29,29 @@ class ImportProgressEvent implements ShouldBroadcastNow
             'current_row' => 0,
             'total_rows' => 0,
             'subjects' => [],
-            'total_records' => 0, // NUEVO
-            'processed_records' => 0, // NUEVO
-            'general_progress' => 0 // NUEVO
+            'total_records' => 0,
+            'processed_records' => 0,
+            'general_progress' => 0,
+            'cancelled' => false // NUEVO: indicador de cancelación
         ], $metadata);
+
+        // Guardar en cache para Server-Sent Events
+        $this->storeProgressInCache();
+    }
+
+    protected function storeProgressInCache()
+    {
+        $progressData = [
+            'batch_id' => $this->batchId,
+            'progress' => $this->progress,
+            'current_student' => $this->currentStudent,
+            'current_action' => $this->currentAction,
+            'metadata' => $this->metadata,
+            'timestamp' => now()->toDateTimeString()
+        ];
+
+        // Guardar en cache por 2 horas
+        Cache::put("batch_progress_{$this->batchId}", $progressData, now()->addHours(2));
     }
 
     public function broadcastOn(): Channel
@@ -47,9 +67,10 @@ class ImportProgressEvent implements ShouldBroadcastNow
     public function broadcastWith()
     {
         Log::debug("Enviando evento WS para batch {$this->batchId}", [
-            'general_progress' => $this->metadata['general_progress'], // NUEVO
             'progress' => $this->progress,
             'student' => $this->currentStudent,
+            'general_progress' => $this->metadata['general_progress'],
+            'cancelled' => $this->metadata['cancelled'] ?? false
         ]);
 
         return [
@@ -63,9 +84,10 @@ class ImportProgressEvent implements ShouldBroadcastNow
                 'processed_rows' => $this->metadata['current_row'],
                 'total_rows' => $this->metadata['total_rows'],
                 'subjects_processed' => count($this->metadata['subjects']),
-                'total_records' => $this->metadata['total_records'], // NUEVO
-                'processed_records' => $this->metadata['processed_records'], // NUEVO
-                'general_progress' => $this->metadata['general_progress'] // NUEVO
+                'total_records' => $this->metadata['total_records'],
+                'processed_records' => $this->metadata['processed_records'],
+                'general_progress' => $this->metadata['general_progress'],
+                'cancelled' => $this->metadata['cancelled'] ?? false
             ],
             'timestamp' => now()->toDateTimeString()
         ];
