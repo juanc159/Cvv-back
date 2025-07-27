@@ -29,7 +29,14 @@ Route::get('/pdf', function () {
     return $pdf->stream();
 });
 
+Route::get('/phpinfo', function () {
+    // return phpversion();
+    phpinfo();
+    exit;
+});
+
 Route::get('/', function () {
+    return view("welcome");
     // return Note::with(["student" => function ($query) {
     //     $query->where("type_education_id", 2);
     //     $query->where("grade_id", 8);
@@ -41,22 +48,22 @@ Route::get('/', function () {
 
 
     // Obtener los IDs de los estudiantes en el grado 8
-    $studentIds = Student::where('grade_id', 8)->pluck('id');
+    // $studentIds = Student::where('grade_id', 8)->pluck('id');
 
-    // Actualizar las notas de los estudiantes en el grado 8
-    Note::whereIn('student_id', $studentIds)
-        ->each(function ($note) {
-            $jsonData = $note->json; // Asumiendo que json es un atributo de Note
-            $jsonArray = json_decode($jsonData, true);
+    // // Actualizar las notas de los estudiantes en el grado 8
+    // Note::whereIn('student_id', $studentIds)
+    //     ->each(function ($note) {
+    //         $jsonData = $note->json; // Asumiendo que json es un atributo de Note
+    //         $jsonArray = json_decode($jsonData, true);
 
-            // Modificar los campos 3 y 4
-            $jsonArray['3'] = '';
-            $jsonArray['4'] = '';
+    //         // Modificar los campos 3 y 4
+    //         $jsonArray['3'] = '';
+    //         $jsonArray['4'] = '';
 
-            // Guardar los cambios
-            $note->json = json_encode($jsonArray);
-            $note->save();
-        });
+    //         // Guardar los cambios
+    //         $note->json = json_encode($jsonArray);
+    //         $note->save();
+    //     });
 
     return response()->json(['message' => 'Notes updated successfully']);
 });
