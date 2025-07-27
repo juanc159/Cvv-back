@@ -62,9 +62,7 @@ Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::
 // Tus rutas existentes...
 Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
 Route::get('/batch-status/{batchId}', [LoadNoteMasiveController::class, 'checkStatus']); // Para Polling
-
-// NUEVA RUTA para cancelar batch
-Route::post('/batch-cancel/{batchId}', [LoadNoteMasiveController::class, 'cancelBatch']);
+ 
 
 // RUTA para Server-Sent Events (CORREGIDA)
 Route::get('/progress/{batchId}', [ProgressController::class, 'streamProgress']);
