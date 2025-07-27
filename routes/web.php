@@ -1,8 +1,10 @@
 <?php
 
+use App\Events\TestEvent;
 use App\Http\Controllers\LoadNoteMasiveController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\WebSocketController;
 use App\Models\Note;
 use App\Models\Student;
 use Barryvdh\DomPDF\PDF;
@@ -71,3 +73,11 @@ Route::get('/students/statistics', [StudentController::class, 'studentStatistics
 
 
 // Route::get('/loadNoteMasive', [LoadNoteMasiveController::class, 'process']);
+
+
+   Route::get('/trigger-event', function () {
+       broadcast(new TestEvent());
+       return response()->json(['status' => 'Event dispatched']);
+   });
+
+    Route::get('/connection-status', [WebSocketController::class, 'checkConnection']);

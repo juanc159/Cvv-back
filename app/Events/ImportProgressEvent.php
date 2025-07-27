@@ -4,12 +4,12 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 class ImportProgressEvent implements ShouldBroadcastNow
 {
@@ -32,14 +32,18 @@ class ImportProgressEvent implements ShouldBroadcastNow
             'total_records' => 0,
             'processed_records' => 0,
             'general_progress' => 0,
-            'cancelled' => false // NUEVO: indicador de cancelación
+            'cancelled' => false,
+            'connection_type' => 'websocket',
+            'server_time' => now()->toDateTimeString(),
         ], $metadata);
 
-        // Guardar en cache para Server-Sent Events
-        $this->storeProgressInCache();
+        // Guardar en cache y Redis
+        $this->storeProgressData();
+        
+        Log::debug("🔌 [WEBSOCKET] Event created for batch {$this->batchId} with progress {$this->metadata['general_progress']}%");
     }
 
-    protected function storeProgressInCache()
+    protected function storeProgressData()
     {
         $progressData = [
             'batch_id' => $this->batchId,
@@ -50,8 +54,20 @@ class ImportProgressEvent implements ShouldBroadcastNow
             'timestamp' => now()->toDateTimeString()
         ];
 
-        // Guardar en cache por 2 horas
+        // Guardar en cache (fallback)
         Cache::put("batch_progress_{$this->batchId}", $progressData, now()->addHours(2));
+
+        // Guardar en Redis (principal)
+        try {
+            Redis::setex(
+                "websocket_progress_{$this->batchId}",
+                7200, // 2 horas
+                json_encode($progressData)
+            );
+            Log::debug("📦 [REDIS] Progress stored for batch {$this->batchId}");
+        } catch (\Exception $e) {
+            Log::warning("⚠️ [REDIS] Failed to store progress: " . $e->getMessage());
+        }
     }
 
     public function broadcastOn(): Channel
@@ -66,14 +82,13 @@ class ImportProgressEvent implements ShouldBroadcastNow
 
     public function broadcastWith()
     {
-        Log::debug("Enviando evento WS para batch {$this->batchId}", [
-            'progress' => $this->progress,
-            'student' => $this->currentStudent,
-            'general_progress' => $this->metadata['general_progress'],
-            'cancelled' => $this->metadata['cancelled'] ?? false
-        ]);
+        // 🔥 LOG SÚPER VISIBLE EN PHP
+        Log::info("🔥🔥🔥 [PHP-WEBSOCKET] EMITIENDO EVENTO PARA BATCH: {$this->batchId}");
+        Log::info("📊 [PHP-WEBSOCKET] PORCENTAJE: {$this->metadata['general_progress']}%");
+        Log::info("👤 [PHP-WEBSOCKET] ESTUDIANTE: {$this->currentStudent}");
+        Log::info("⚡ [PHP-WEBSOCKET] ACCIÓN: {$this->currentAction}");
 
-        return [
+        $broadcastData = [
             'batch_id' => $this->batchId,
             'progress' => $this->progress,
             'current_student' => $this->currentStudent,
@@ -87,9 +102,29 @@ class ImportProgressEvent implements ShouldBroadcastNow
                 'total_records' => $this->metadata['total_records'],
                 'processed_records' => $this->metadata['processed_records'],
                 'general_progress' => $this->metadata['general_progress'],
-                'cancelled' => $this->metadata['cancelled'] ?? false
+                'cancelled' => $this->metadata['cancelled'] ?? false,
+                'connection_type' => 'websocket',
+                'server_time' => $this->metadata['server_time']
             ],
             'timestamp' => now()->toDateTimeString()
         ];
+
+        Log::info("📡 [PHP-WEBSOCKET] DATOS COMPLETOS A ENVIAR:", $broadcastData);
+
+        return $broadcastData;
+    }
+
+    /**
+     * Obtener datos desde Redis
+     */
+    public static function getProgressFromRedis(string $batchId): ?array
+    {
+        try {
+            $data = Redis::get("websocket_progress_{$batchId}");
+            return $data ? json_decode($data, true) : null;
+        } catch (\Exception $e) {
+            Log::warning("⚠️ [REDIS] Failed to get progress: " . $e->getMessage());
+            return null;
+        }
     }
 }

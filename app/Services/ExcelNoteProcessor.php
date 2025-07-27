@@ -69,7 +69,7 @@ class ExcelNoteProcessor
             // USAR COLA ESPECÍFICA PARA IMPORTACIONES
             $batch = Bus::batch($batchJobs)
                 ->name('ProcessEducationNotes_' . now()->format('Y-m-d_H-i-s'))
-                ->onQueue('imports') // Cola específica
+                // ->onQueue('imports') // Cola específica
                 ->allowFailures()
                 ->dispatch();
 
