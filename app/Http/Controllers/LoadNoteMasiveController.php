@@ -19,7 +19,7 @@ class LoadNoteMasiveController extends Controller
 
     public function process(Request $request)
     {
-        Log::info('🚀 [CONTROLLER] Starting file processing with WebSocket strategy');
+        // Log::info('🚀 [CONTROLLER] Starting file processing with WebSocket strategy');
 
         try {
             $request->validate([
@@ -58,7 +58,7 @@ class LoadNoteMasiveController extends Controller
         $fullPath = storage_path('app/public/' . $filePath);
 
         try {
-            Log::info("🔍 [CONTROLLER] Starting validation for: {$fileName}");
+            // Log::info("🔍 [CONTROLLER] Starting validation for: {$fileName}");
             
             // Validación rápida
             $validation = $this->structureValidator->validate(
@@ -79,7 +79,7 @@ class LoadNoteMasiveController extends Controller
                 ], 422);
             }
 
-            Log::info("✅ [CONTROLLER] Validation successful, starting processing for: {$fileName}");
+            // Log::info("✅ [CONTROLLER] Validation successful, starting processing for: {$fileName}");
 
             // Procesamiento asíncrono
             $result = $this->noteProcessor->processFile(
@@ -102,9 +102,9 @@ class LoadNoteMasiveController extends Controller
             // Inicializar progreso en cache
             Cache::put("batch_processed_{$result['batch_id']}", 0, now()->addHours(2));
             
-            Log::info("🎯 [CONTROLLER] Batch created successfully: {$result['batch_id']} for file: {$fileName}");
+            // Log::info("🎯 [CONTROLLER] Batch created successfully: {$result['batch_id']} for file: {$fileName}");
 
-            // Emitir evento inicial via WebSocket
+            // ✅ EMITIR EVENTO INICIAL CON METADATA COMPLETA
             event(new ImportProgressEvent(
                 $result['batch_id'],
                 0,
@@ -120,11 +120,21 @@ class LoadNoteMasiveController extends Controller
                     'total_records' => $result['total_records'],
                     'processed_records' => 0,
                     'general_progress' => 0,
-                    'connection_type' => 'websocket'
+                    'connection_type' => 'websocket',
+                    // ✅ NUEVOS DATOS INICIALES
+                    'current_sheet' => 1,
+                    'errors_count' => 0,
+                    'warnings_count' => 0,
+                    'file_size' => $result['file_size'] ?? 0,
+                    'processing_start_time' => $result['processing_start_time'] ?? now()->toDateTimeString(),
+                    'last_activity' => now()->toDateTimeString(),
+                    'memory_usage' => memory_get_usage(true),
+                    'cpu_usage' => 0,
+                    'connection_status' => 'connected',
                 ]
             ));
 
-            Log::info("📤 [CONTROLLER] Sending immediate response for batch: {$result['batch_id']}");
+            // Log::info("📤 [CONTROLLER] Sending immediate response for batch: {$result['batch_id']}");
             
             return response()->json([
                 'status' => 'success',
@@ -133,6 +143,8 @@ class LoadNoteMasiveController extends Controller
                 'chunks' => $result['total_chunks'],
                 'total_records' => $result['total_records'],
                 'file_name' => $uploadedFile->getClientOriginalName(),
+                'file_size' => $result['file_size'] ?? 0,
+                'processing_start_time' => $result['processing_start_time'] ?? now()->toDateTimeString(),
                 'message' => 'Archivo enviado a procesamiento. El progreso se actualizará via WebSocket.'
             ], 200);
 

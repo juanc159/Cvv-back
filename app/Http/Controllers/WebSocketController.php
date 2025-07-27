@@ -17,7 +17,7 @@ class WebSocketController extends Controller
     public function getProgress($batchId)
     {
         try {
-            Log::info("📊 [WEBSOCKET] Getting progress for batch: {$batchId}");
+            // Log::info("📊 [WEBSOCKET] Getting progress for batch: {$batchId}");
             
             // Intentar obtener desde Redis primero
             $progressData = ImportProgressEvent::getProgressFromRedis($batchId);
@@ -51,7 +51,7 @@ class WebSocketController extends Controller
                 ]);
             }
             
-            Log::info("✅ [WEBSOCKET] Progress data found for batch: {$batchId}");
+            // Log::info("✅ [WEBSOCKET] Progress data found for batch: {$batchId}");
             return response()->json($progressData);
             
         } catch (\Exception $e) {
@@ -70,7 +70,7 @@ class WebSocketController extends Controller
     public function checkConnection()
     {
         try {
-            Log::info("🔍 [WEBSOCKET] Checking connection status");
+            // Log::info("🔍 [WEBSOCKET] Checking connection status");
             
             // Verificar Redis
             Redis::ping();
@@ -86,7 +86,7 @@ class WebSocketController extends Controller
                 fclose($connection);
             }
             
-            Log::info("✅ [WEBSOCKET] Connection check completed - Reverb: {$reverbStatus}");
+            // Log::info("✅ [WEBSOCKET] Connection check completed - Reverb: {$reverbStatus}");
             
             return response()->json([
                 'redis' => 'connected',
@@ -114,7 +114,7 @@ class WebSocketController extends Controller
     public function cleanupProgress($batchId)
     {
         try {
-            Log::info("🧹 [WEBSOCKET] Cleaning up progress for batch: {$batchId}");
+            // Log::info("🧹 [WEBSOCKET] Cleaning up progress for batch: {$batchId}");
             
             // Limpiar Redis
             Redis::del("websocket_progress_{$batchId}");
@@ -123,7 +123,7 @@ class WebSocketController extends Controller
             Cache::forget("batch_progress_{$batchId}");
             Cache::forget("batch_processed_{$batchId}");
             
-            Log::info("✅ [WEBSOCKET] Progress data cleaned up for batch: {$batchId}");
+            // Log::info("✅ [WEBSOCKET] Progress data cleaned up for batch: {$batchId}");
             
             return response()->json([
                 'message' => 'Progress data cleaned up successfully',
@@ -147,14 +147,14 @@ class WebSocketController extends Controller
     public function diagnostics()
     {
         try {
-            Log::info("🔥🔥🔥 [DIAGNOSTICS] Iniciando diagnóstico completo");
+            // Log::info("🔥🔥🔥 [DIAGNOSTICS] Iniciando diagnóstico completo");
             
             // Verificar Redis
             $redisStatus = 'disconnected';
             try {
                 Redis::ping();
                 $redisStatus = 'connected';
-                Log::info("✅ [DIAGNOSTICS] Redis: OK");
+                // Log::info("✅ [DIAGNOSTICS] Redis: OK");
             } catch (\Exception $e) {
                 Log::error("❌ [DIAGNOSTICS] Redis error: " . $e->getMessage());
             }
@@ -168,7 +168,7 @@ class WebSocketController extends Controller
             
             if ($connection) {
                 fclose($connection);
-                Log::info("✅ [DIAGNOSTICS] Reverb: OK en {$reverbHost}:{$reverbPort}");
+                // Log::info("✅ [DIAGNOSTICS] Reverb: OK en {$reverbHost}:{$reverbPort}");
             } else {
                 Log::error("❌ [DIAGNOSTICS] Reverb: FAIL en {$reverbHost}:{$reverbPort} - {$errstr}");
             }
@@ -177,8 +177,8 @@ class WebSocketController extends Controller
             $broadcastDriver = config('broadcasting.default');
             $broadcastConfig = config("broadcasting.connections.{$broadcastDriver}");
             
-            Log::info("🔍 [DIAGNOSTICS] Broadcast driver: {$broadcastDriver}");
-            Log::info("🔍 [DIAGNOSTICS] Broadcast config:", $broadcastConfig);
+            // Log::info("🔍 [DIAGNOSTICS] Broadcast driver: {$broadcastDriver}");
+            // Log::info("🔍 [DIAGNOSTICS] Broadcast config:", $broadcastConfig);
             
             // Verificar procesos activos
             $activeProcesses = [];
@@ -195,7 +195,7 @@ class WebSocketController extends Controller
                         ];
                     }
                 }
-                Log::info("📊 [DIAGNOSTICS] Procesos activos encontrados: " . count($activeProcesses));
+                // Log::info("📊 [DIAGNOSTICS] Procesos activos encontrados: " . count($activeProcesses));
             } catch (\Exception $e) {
                 Log::error("❌ [DIAGNOSTICS] Error obteniendo procesos: " . $e->getMessage());
             }
@@ -212,7 +212,7 @@ class WebSocketController extends Controller
                 'timestamp' => now()->toDateTimeString()
             ];
             
-            Log::info("🔥 [DIAGNOSTICS] Diagnóstico completo:", $diagnostics);
+            // Log::info("🔥 [DIAGNOSTICS] Diagnóstico completo:", $diagnostics);
             
             return response()->json($diagnostics);
             

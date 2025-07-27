@@ -12,7 +12,7 @@ class ProgressController extends Controller
 {
     public function streamProgress($batchId)
     {
-        Log::info("[SSE] Starting stream for batch: {$batchId}");
+        // Log::info("[SSE] Starting stream for batch: {$batchId}");
         
         return new StreamedResponse(function() use ($batchId) {
             // IMPORTANTE: Cerrar la sesión para liberar el lock de sesión
@@ -73,12 +73,12 @@ class ProgressController extends Controller
             $heartbeatInterval = 15; // REDUCIDO: Heartbeat cada 15 segundos (era 30)
             $noProgressCount = 0; // Contador para detectar procesos estancados
             
-            Log::info("[SSE] Stream started for batch: {$batchId}");
+            // Log::info("[SSE] Stream started for batch: {$batchId}");
             
             while (time() - $startTime < $maxTime) {
                 // IMPORTANTE: Verificar si el cliente se desconectó
                 if (connection_aborted()) {
-                    Log::info("[SSE] Client disconnected for batch: {$batchId}");
+                    // Log::info("[SSE] Client disconnected for batch: {$batchId}");
                     break;
                 }
                 
@@ -104,7 +104,7 @@ class ProgressController extends Controller
                         'timestamp' => now()->toDateTimeString()
                     ], 'cancelled');
                     
-                    Log::info("[SSE] Batch cancelled, closing stream: {$batchId}");
+                    // Log::info("[SSE] Batch cancelled, closing stream: {$batchId}");
                     break;
                 }
                 
@@ -140,7 +140,7 @@ class ProgressController extends Controller
                         $sendData($progressData, 'progress');
                         $lastProgress = $currentProgress;
                         
-                        Log::debug("[SSE] Sent progress update: {$currentProgress}% for batch: {$batchId}");
+                        // Log::debug("[SSE] Sent progress update: {$currentProgress}% for batch: {$batchId}");
                         
                         // Si llegamos al 100%, enviar mensaje final y terminar
                         if ($currentProgress >= 100) {
@@ -151,7 +151,7 @@ class ProgressController extends Controller
                                 'timestamp' => now()->toDateTimeString()
                             ], 'completed');
                             
-                            Log::info("[SSE] Process completed for batch: {$batchId}");
+                            // Log::info("[SSE] Process completed for batch: {$batchId}");
                             break;
                         }
                     }
@@ -177,7 +177,7 @@ class ProgressController extends Controller
                 'timestamp' => now()->toDateTimeString()
             ], 'close');
             
-            Log::info("[SSE] Stream ended for batch: {$batchId}");
+            // Log::info("[SSE] Stream ended for batch: {$batchId}");
             
         }, 200, [
             'Content-Type' => 'text/event-stream',

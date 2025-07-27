@@ -30,8 +30,8 @@ class ExcelStructureValidator
 
             foreach ($sheets as $index => $sheet) {
                 $sheetName = 'Hoja ' . ($index + 1);
-                Log::info('Processing sheet: ' . $sheetName);
-                Log::info('First row of sheet: ' . json_encode($sheet[0]));
+                // Log::info('Processing sheet: ' . $sheetName);
+                // Log::info('First row of sheet: ' . json_encode($sheet[0]));
 
                 $headers = array_map('strtoupper', $sheet[0]);
                 $headers = array_slice($headers, 0, count($expectedHeaders));
