@@ -116,11 +116,11 @@ class ProcessNoteChunkJob implements ShouldQueue
                     } catch (\Exception $e) {
                         $errorsCount++;
                         $hasError = true;
-                        Log::warning("Error procesando estudiante: " . $e->getMessage(), [
-                            'batch_id' => $this->batch()->id,
-                            'student' => $formattedRow['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Desconocido',
-                            'cedula' => $formattedRow['CÉDULA'] ?? 'Sin cédula'
-                        ]);
+                        // Log::warning("Error procesando estudiante: " . $e->getMessage(), [
+                        //     'batch_id' => $this->batch()->id,
+                        //     'student' => $formattedRow['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Desconocido',
+                        //     'cedula' => $formattedRow['CÉDULA'] ?? 'Sin cédula'
+                        // ]);
                     }
                 }
 
@@ -132,7 +132,7 @@ class ProcessNoteChunkJob implements ShouldQueue
             $this->checkIfCompleted($batchMetadata);
 
         } catch (\Exception $e) {
-            Log::error("[Batch: {$this->batch()->id}] Error en chunk {$this->chunkIndex}: " . $e->getMessage());
+            // Log::error("[Batch: {$this->batch()->id}] Error en chunk {$this->chunkIndex}: " . $e->getMessage());
             
             // ✅ INCREMENTAR CONTADOR DE ERRORES
             $errorsKey = "batch_errors_{$this->batch()->id}";
@@ -142,7 +142,7 @@ class ProcessNoteChunkJob implements ShouldQueue
         }
     }
 
-    // ✅ FUNCIÓN PARA CONSTRUIR METADATA COMPLETA
+    // ✅ FUNCIÓN PARA CONSTRUIR METADATA COMPLETA CON TIEMPO ESTIMADO
     protected function buildMetadata(
         array $batchMetadata, 
         int $currentIndex, 
@@ -153,7 +153,21 @@ class ProcessNoteChunkJob implements ShouldQueue
         int $warningsCount,
         int $memoryUsage
     ): array {
-        return [
+        // ✅ CALCULAR TIEMPO ESTIMADO RESTANTE
+        $estimatedTimeRemaining = $this->calculateEstimatedTime(
+            $batchMetadata['processing_start_time'] ?? null,
+            $processedRecords,
+            $this->totalRecords,
+            $generalProgress
+        );
+
+        // ✅ CALCULAR VELOCIDAD DE PROCESAMIENTO
+        $processingSpeed = $this->calculateProcessingSpeed(
+            $batchMetadata['processing_start_time'] ?? null,
+            $processedRecords
+        );
+
+        $metadata = [
             'sheet' => $this->sheetIndex + 1,
             'chunk' => $this->chunkIndex + 1,
             'current_row' => $currentIndex + 1,
@@ -172,7 +186,106 @@ class ProcessNoteChunkJob implements ShouldQueue
             'memory_usage' => $memoryUsage,
             'cpu_usage' => 0, // Placeholder - difícil de calcular en PHP
             'connection_status' => 'connected',
+            // ✅ NUEVOS CAMPOS CALCULADOS
+            'processing_speed' => $processingSpeed,
+            'estimated_time_remaining' => $estimatedTimeRemaining,
         ];
+
+        // ✅ LOG PARA DEBUG DEL TIEMPO ESTIMADO
+        // Log::info("⏱️ [ETA-PHP] Cálculo de tiempo estimado para batch {$this->batch()->id}:", [
+        //     'processed_records' => $processedRecords,
+        //     'total_records' => $this->totalRecords,
+        //     'progress' => $generalProgress,
+        //     'processing_speed' => $processingSpeed,
+        //     'estimated_time_remaining' => $estimatedTimeRemaining,
+        //     'start_time' => $batchMetadata['processing_start_time'] ?? 'N/A'
+        // ]);
+
+        return $metadata;
+    }
+
+    // ✅ NUEVA FUNCIÓN PARA CALCULAR VELOCIDAD DE PROCESAMIENTO
+    protected function calculateProcessingSpeed(?string $startTime, int $processedRecords): int
+    {
+        if (!$startTime || $processedRecords === 0) {
+            return 0;
+        }
+
+        try {
+            $startTimestamp = strtotime($startTime);
+            $currentTimestamp = time();
+            $elapsedSeconds = $currentTimestamp - $startTimestamp;
+
+            if ($elapsedSeconds <= 0) {
+                return 0;
+            }
+
+            $speed = intval($processedRecords / $elapsedSeconds);
+            
+            // Log::debug("📈 [SPEED-PHP] Velocidad calculada: {$processedRecords} registros / {$elapsedSeconds}s = {$speed} reg/s");
+            
+            return $speed;
+
+        } catch (\Exception $e) {
+            // Log::warning("⚠️ [SPEED-PHP] Error calculando velocidad: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // ✅ NUEVA FUNCIÓN PARA CALCULAR TIEMPO ESTIMADO RESTANTE
+    protected function calculateEstimatedTime(?string $startTime, int $processedRecords, int $totalRecords, int $progress): int
+    {
+        if (!$startTime || $progress === 0 || $totalRecords === 0) {
+            // Log::debug("⏱️ [ETA-PHP] No se puede calcular ETA: startTime={$startTime}, progress={$progress}, totalRecords={$totalRecords}");
+            return 0;
+        }
+
+        try {
+            $startTimestamp = strtotime($startTime);
+            $currentTimestamp = time();
+            $elapsedSeconds = $currentTimestamp - $startTimestamp;
+
+            if ($elapsedSeconds <= 0) {
+                return 0;
+            }
+
+            // Método 1: Basado en progreso porcentual
+            $remainingProgress = 100 - $progress;
+            $estimatedTotalTime = ($elapsedSeconds * 100) / $progress;
+            $estimatedRemainingByProgress = $estimatedTotalTime - $elapsedSeconds;
+
+            // Método 2: Basado en registros procesados
+            $estimatedRemainingByRecords = 0;
+            if ($processedRecords > 0) {
+                $recordsPerSecond = $processedRecords / $elapsedSeconds;
+                $remainingRecords = $totalRecords - $processedRecords;
+                $estimatedRemainingByRecords = $remainingRecords / $recordsPerSecond;
+            }
+
+            // Usar el promedio de ambos métodos si ambos están disponibles
+            $finalEstimate = $estimatedRemainingByProgress;
+            if ($estimatedRemainingByRecords > 0) {
+                $finalEstimate = ($estimatedRemainingByProgress + $estimatedRemainingByRecords) / 2;
+            }
+
+            $result = max(0, intval($finalEstimate));
+
+            // Log::debug("⏱️ [ETA-PHP] Cálculo detallado:", [
+            //     'elapsed_seconds' => $elapsedSeconds,
+            //     'progress' => $progress,
+            //     'processed_records' => $processedRecords,
+            //     'total_records' => $totalRecords,
+            //     'eta_by_progress' => round($estimatedRemainingByProgress, 1),
+            //     'eta_by_records' => round($estimatedRemainingByRecords, 1),
+            //     'final_eta' => $result
+            // ]);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            // Log::warning("⚠️ [ETA-PHP] Error calculando tiempo estimado: " . $e->getMessage());
+            return 0;
+        }
     }
 
     protected function checkIfCompleted(array $batchMetadata): void
@@ -210,6 +323,12 @@ class ProcessNoteChunkJob implements ShouldQueue
                     'memory_usage' => memory_get_usage(true),
                     'cpu_usage' => 0,
                     'connection_status' => 'connected',
+                    // ✅ VALORES FINALES PARA TIEMPO ESTIMADO
+                    'processing_speed' => $this->calculateProcessingSpeed(
+                        $batchMetadata['processing_start_time'] ?? null,
+                        $finalProcessedRecords
+                    ),
+                    'estimated_time_remaining' => 0, // Ya completado
                 ]
             ));
 
@@ -219,7 +338,7 @@ class ProcessNoteChunkJob implements ShouldQueue
             Cache::forget("batch_warnings_{$batch->id}");
             Cache::forget("batch_metadata_{$batch->id}");
             
-            Log::info("Proceso COMPLETADO - Batch: {$batch->id} | Total: {$this->totalRecords} | Procesados: {$finalProcessedRecords} | Errores: {$finalErrors} | Warnings: {$finalWarnings}");
+            // Log::info("🎉 [COMPLETED] Proceso COMPLETADO - Batch: {$batch->id} | Total: {$this->totalRecords} | Procesados: {$finalProcessedRecords} | Errores: {$finalErrors} | Warnings: {$finalWarnings}");
         }
     }
 

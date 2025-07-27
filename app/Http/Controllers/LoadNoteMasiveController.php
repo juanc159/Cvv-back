@@ -145,7 +145,7 @@ class LoadNoteMasiveController extends Controller
                 'file_name' => $uploadedFile->getClientOriginalName(),
                 'file_size' => $result['file_size'] ?? 0,
                 'processing_start_time' => $result['processing_start_time'] ?? now()->toDateTimeString(),
-                'message' => 'Archivo enviado a procesamiento. El progreso se actualizará via WebSocket.'
+                // 'message' => 'Archivo enviado a procesamiento. El progreso se actualizará via WebSocket.'
             ], 200);
 
         } catch (\Exception $e) {
