@@ -15,7 +15,7 @@ use App\Models\{
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelNoteProcessor
@@ -25,54 +25,53 @@ class ExcelNoteProcessor
     public function processFile(
         string $filePath,
         string $companyId,
+        string $user_id,
         string $typeEducationId,
         ?string $teacherId = null
     ): array {
         try {
-            // Log::info("📊 [PROCESSOR] Iniciando procesamiento de archivo: {$filePath}");
-            
-            // ✅ OBTENER INFORMACIÓN DEL ARCHIVO
             $fileSize = filesize($filePath);
             $fileName = basename($filePath);
             $processingStartTime = now()->toDateTimeString();
-            
+
             $sheets = Excel::toArray([], $filePath);
             $batchJobs = [];
-            
-            // PASO 1: Calcular el total de registros ANTES de crear los jobs
+
             $totalRecords = 0;
             $totalSheets = count($sheets);
-            
-            foreach ($sheets as $sheet) {
-                $dataRows = array_slice($sheet, 1); // Excluir headers
-                $totalRecords += count($dataRows);
+            $sheetRecordCounts = [];
+
+            foreach ($sheets as $sheetIndex => $sheet) {
+                $dataRows = array_slice($sheet, 1);
+                $recordCount = count($dataRows);
+                $sheetRecordCounts[$sheetIndex] = $recordCount;
+                $totalRecords += $recordCount;
             }
-            
-            // Log::info("📈 [PROCESSOR] Total de registros calculados: {$totalRecords}");
-            // Log::info("📄 [PROCESSOR] Total de hojas: {$totalSheets}");
-            // Log::info("💾 [PROCESSOR] Tamaño del archivo: " . number_format($fileSize / 1024, 2) . " KB");
-            
-            // ✅ GUARDAR METADATA INICIAL EN CACHE
+
+            Log::info("📈 [PROCESSOR] Total de registros calculados: {$totalRecords}");
+            Log::info("📄 [PROCESSOR] Total de hojas: {$totalSheets}");
+
             $initialMetadata = [
                 'file_name' => $fileName,
                 'file_size' => $fileSize,
+                'status' => 'active',
                 'total_sheets' => $totalSheets,
-                'total_records' => $totalRecords,
-                'processing_start_time' => $processingStartTime,
-                'errors_count' => 0,
-                'warnings_count' => 0,
-                'connection_status' => 'connected',
-                'last_activity' => now()->toDateTimeString(),
+                'total_rows' => $totalRecords,
+                'started_at' => $processingStartTime, // Add started_at for progress calculation
+                'current_sheet' => 1,
             ];
+
             
-            // PASO 2: Crear los jobs con el total correcto
+
+            $recordsBeforeSheet = 0;
+
             foreach ($sheets as $sheetIndex => $sheet) {
                 $headers = $this->normalizeHeaders($sheet[0]);
                 $dataRows = array_slice($sheet, 1);
                 $chunks = array_chunk($dataRows, $this->chunkSize);
-                
-                // Log::info("📋 [PROCESSOR] Hoja {$sheetIndex}: " . count($dataRows) . " registros, " . count($chunks) . " chunks");
-                
+
+                Log::info("📋 [PROCESSOR] Hoja " . ($sheetIndex + 1) . "/{$totalSheets}: " . count($dataRows) . " registros, " . count($chunks) . " chunks");
+
                 foreach ($chunks as $chunkIndex => $chunk) {
                     $batchJobs[] = new ProcessNoteChunkJob(
                         $companyId,
@@ -82,25 +81,38 @@ class ExcelNoteProcessor
                         $chunk,
                         $sheetIndex,
                         $chunkIndex,
-                        $totalRecords, // AHORA este valor es consistente para todos los jobs
-                        $initialMetadata // ✅ PASAR METADATA INICIAL
+                        $totalRecords,
+                        $totalSheets,
+                        $recordsBeforeSheet,
+                        $initialMetadata
                     );
                 }
+
+                $recordsBeforeSheet += count($dataRows);
             }
 
-            // Log::info("🚀 [PROCESSOR] Creando batch con " . count($batchJobs) . " jobs");
+            Log::info("🚀 [PROCESSOR] Creando batch con " . count($batchJobs) . " jobs");
 
-            // USAR COLA ESPECÍFICA PARA IMPORTACIONES
             $batch = Bus::batch($batchJobs)
                 ->name('ProcessEducationNotes_' . now()->format('Y-m-d_H-i-s'))
-                // ->onQueue('imports') // Cola específica
                 ->allowFailures()
                 ->dispatch();
 
-            // ✅ GUARDAR METADATA DEL BATCH
-            Cache::put("batch_metadata_{$batch->id}", $initialMetadata, now()->addHours(2));
+            Redis::hmset("batch:{$batch->id}:metadata", $initialMetadata);
+            Redis::set("batch_current_sheet_{$batch->id}", 1);
 
-            // Log::info("✅ [PROCESSOR] Batch creado exitosamente: {$batch->id}");
+            Redis::set("batch_processed_{$batch->id}", 0);
+            Redis::set("batch_errors_{$batch->id}", 0);
+            Redis::set("batch_warnings_{$batch->id}", 0);
+
+            // Iniciar registro en BD usando ProcessBatchService
+            $processBatch = ProcessBatchService::initProcess(
+               $batch->id,
+                 $companyId,
+                $user_id,
+                $totalRecords,
+                $initialMetadata
+            );
 
             return [
                 'success' => true,
@@ -110,14 +122,22 @@ class ExcelNoteProcessor
                 'total_records' => $totalRecords,
                 'file_size' => $fileSize,
                 'processing_start_time' => $processingStartTime,
+                'sheet_record_counts' => $sheetRecordCounts,
             ];
-
         } catch (\Exception $e) {
             Log::error("💥 [PROCESSOR] Error procesando archivo: " . $e->getMessage(), [
                 'file' => $filePath,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
+            if (isset($batch)) {
+                Redis::del("batch_processed_{$batch->id}");
+                Redis::del("batch_errors_{$batch->id}");
+                Redis::del("batch_warnings_{$batch->id}");
+                Redis::del("batch_current_sheet_{$batch->id}");
+                Redis::del("batch:{$batch->id}:metadata");
+            }
+
             return [
                 'success' => false,
                 'error' => $e->getMessage()
