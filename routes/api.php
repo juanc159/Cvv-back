@@ -73,7 +73,6 @@ Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::
 
 // Ruta principal para procesar archivos
 Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
-<<<<<<< HEAD
 
 // Rutas WebSocket únicamente
 Route::prefix('websocket')->group(function () {
@@ -96,6 +95,4 @@ Route::get('/simple-test', function () {
     ]);
     return 'Simple broadcast sent!';
 });
-=======
  
->>>>>>> origin/main
