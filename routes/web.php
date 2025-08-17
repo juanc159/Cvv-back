@@ -1,7 +1,10 @@
 <?php
 
+use App\Events\TestEvent;
+use App\Http\Controllers\LoadNoteMasiveController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\WebSocketController;
 use App\Models\Note;
 use App\Models\Student;
 use Barryvdh\DomPDF\PDF;
@@ -36,7 +39,7 @@ Route::get('/phpinfo', function () {
 });
 
 Route::get('/', function () {
-    return view("welcome");
+    return view("welcome"); 
     // return Note::with(["student" => function ($query) {
     //     $query->where("type_education_id", 2);
     //     $query->where("grade_id", 8);
@@ -73,3 +76,16 @@ Route::get('/bd_table', [MigrationController::class, 'trasnferBD']);
 Route::get('/updates', [MigrationController::class, 'updates']);
 
 Route::get('/students/statistics', [StudentController::class, 'studentStatistics']);
+
+
+// Route::get('/loadNoteMasive', [LoadNoteMasiveController::class, 'process']);
+
+
+Route::get('/trigger-event', function () {
+    event(new TestEvent('Hello from Laravel Reverb!'));
+    \Log::info('Event broadcasted');
+    return response()->json(['status' => 'Event dispatched']);
+});
+
+    Route::get('/connection-status', [WebSocketController::class, 'checkConnection']);
+

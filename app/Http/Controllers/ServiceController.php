@@ -50,34 +50,34 @@ class ServiceController extends Controller
         }
     }
 
-    public function store(ServiceStoreRequest $request)
-    {
-        try {
-            DB::beginTransaction();
+public function store(ServiceStoreRequest $request)
+{
+    try {
+        DB::beginTransaction();
 
-            $data = $this->serviceRepository->store($request->except('image'));
+        $data = $this->serviceRepository->store($request->except('image'));
 
-            if ($request->file('image')) {
-                $file = $request->file('image');
-                $image = $file->store('/services/service_'.$data->id.$request->input('image'), 'public');
-                $data->image = $image;
-                $data->save();
-            }
-
-            DB::commit();
-
-            return response()->json(['code' => 200, 'message' => 'Grado agregada correctamente']);
-        } catch (Throwable $th) {
-            DB::rollBack();
-
-            return response()->json([
-                'code' => 500,
-                'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
-                'error' => $th->getMessage(),
-                'line' => $th->getLine(),
-            ], 500);
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $imagePath = $file->store('services/service_' . $data->id, 'public');
+            $data->image = $imagePath;
+            $data->save();
         }
+
+        DB::commit();
+
+        return response()->json(['code' => 200, 'message' => 'Grado agregada correctamente']);
+    } catch (Throwable $th) {
+        DB::rollBack();
+
+        return response()->json([
+            'code' => 500,
+            'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',
+            'error' => $th->getMessage(),
+            'line' => $th->getLine(),
+        ], 500);
     }
+}
 
     public function edit($id)
     {

@@ -71,6 +71,14 @@ return [
             'block_for' => null,
             'after_commit' => false,
         ],
+         // NUEVA CONFIGURACIÓN: Cola específica para importaciones
+        'import_queue' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'imports', // Cola específica para importaciones
+            'retry_after' => 300, // 5 minutos
+            'after_commit' => false,
+        ],
 
     ],
 
