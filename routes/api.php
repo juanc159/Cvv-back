@@ -71,12 +71,4 @@ Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::
 
 // Ruta principal para procesar archivos
 Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
-
-// Rutas WebSocket únicamente
-Route::prefix('websocket')->group(function () {
-    Route::get('/progress/{batchId}', [WebSocketController::class, 'getProgress']);
-    Route::get('/connection-status', [WebSocketController::class, 'checkConnection']);
-    Route::delete('/progress/{batchId}', [WebSocketController::class, 'cleanupProgress']);
-});
-
  

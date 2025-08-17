@@ -9,6 +9,8 @@ class RoutesApi
         'routes/api.php',
         'routes/pw.php',
         'routes/todo.php',
+        'routes/processBatch.php',
+
     ];
 
     // esto es para las apis que si requieran auth
