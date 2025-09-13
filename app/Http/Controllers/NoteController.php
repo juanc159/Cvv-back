@@ -60,6 +60,9 @@ class NoteController extends Controller
 
     public function store(Request $request)
     {
+        // set_time_limit(30000);
+        // ini_set('memory_limit', '2048M');
+
         try {
             DB::beginTransaction();
 
@@ -88,7 +91,7 @@ class NoteController extends Controller
                     // return $subjectsData;
                 }
 
-                $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
+               $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
                 $sheets = count($import);
                 for ($j = 0; $j < $sheets; $j++) {
@@ -153,13 +156,14 @@ class NoteController extends Controller
                         }, $formattedData);
 
 
+
                         foreach ($formattedData as $kkk => $row) {
                             if (! empty($row['CÉDULA'])) {
 
                                 $grade = $this->grade($row['AÑO'], 'name');
                                 // $section = $this->section($row['SECCIÓN'], 'name');
 
-                                $student = $this->studentRepository->searchOne([
+                                 $student = $this->studentRepository->searchOne([
                                     'identity_document' => $row['CÉDULA'],
                                 ]);
 
@@ -184,7 +188,7 @@ class NoteController extends Controller
                                     unset($model['password']);
                                 }
 
-                                $student = $this->studentRepository->store($model);
+                                 $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
 
@@ -198,20 +202,16 @@ class NoteController extends Controller
 
                                     $subjectsData = $grade->subjects;
                                 }
-
-
-                                // return $subjectsData;
-
-
+                                
                                 foreach ($subjectsData as $key => $sub) {
                                     $model2 = [
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
                                     ];
-
+                                    
                                     $note = $this->noteRepository->searchOne($model2);
                                     $json = null;
-
+                                     
                                     if ($note) {
                                         $json = json_decode($note->json, 1);
                                     }
@@ -228,7 +228,7 @@ class NoteController extends Controller
 
                                     $model2['json'] = json_encode($json);
 
-                                    $this->noteRepository->store($model2);
+                                     $this->noteRepository->store($model2);
                                 }
                                 // return 4444;
                             }
