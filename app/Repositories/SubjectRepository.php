@@ -21,11 +21,11 @@ class SubjectRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function () use ($request) {
 
             $query = QueryBuilder::for($this->model->query())
                 ->with(['typeEducation:id,name'])
-                ->select(['subjects.id', 'subjects.name', 'code', 'type_education_id'])
+                ->select(['subjects.id', 'subjects.name', 'code', 'type_education_id', 'subjects.company_id'])
                 ->allowedFilters([
                     'name',
                     'code',
@@ -52,6 +52,11 @@ class SubjectRepository extends BaseRepository
                     )),
 
                 ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('subjects.company_id', $request['company_id']);
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;

@@ -23,61 +23,66 @@ class TeacherRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function () use ($request) {
 
-        $query = QueryBuilder::for($this->model->query())
-            ->with(['typeEducation:id,name', "jobPosition:id,name"])
-            ->select(['teachers.id', 'teachers.name', 'last_name', 'email', "phone", "photo", "teachers.is_active","teachers.type_education_id","job_position_id"])
-            ->allowedFilters([
-                'name',
-                'last_name',
-                'email',
-                'phone',
-                'is_active',
-                AllowedFilter::callback('type_education_id', new DataSelectFilter),
-                AllowedFilter::callback('inputGeneral', function ($query, $value) {
-                    $query->where(function ($subQuery) use ($value) {
-                        $subQuery->orWhere('name', 'like', "%$value%");
-                        $subQuery->orWhere('last_name', 'like', "%$value%");
-                        $subQuery->orWhere('email', 'like', "%$value%");
-                        $subQuery->orWhere('phone', 'like', "%$value%");
-
-                        $subQuery->orWhereHas('typeEducation', function ($q) use ($value) {
-                            $q->where('name', 'like', "%$value%");
-                        });
-                        $subQuery->orWhereHas('jobPosition', function ($q) use ($value) {
-                            $q->where('name', 'like', "%$value%");
-                        });
-
-                        QueryFilters::filterByText($subQuery, $value, 'is_active', [
-                            'activo' => 1,
-                            'inactivo' => 0,
-                        ]);
-                    });
-                }),
-            ])
-            ->allowedSorts([
-                'name',
-                'last_name',
-                'email',
-                'phone',
-                AllowedSort::custom('is_active', new IsActiveSort),
-                AllowedSort::custom('type_education_name', new RelatedTableSort(
-                    'teachers',
-                    'type_education',
+            $query = QueryBuilder::for($this->model->query())
+                ->with(['typeEducation:id,name', "jobPosition:id,name"])
+                ->select(['teachers.id', 'teachers.name', 'last_name', 'email', "phone", "photo", "teachers.is_active", "teachers.type_education_id", "teachers.company_id", "job_position_id"])
+                ->allowedFilters([
                     'name',
-                    'type_education_id',
-                )),
-                AllowedSort::custom('job_position_name', new RelatedTableSort(
-                    'teachers',
-                    'job_positions',
-                    'name',
-                    'job_position_id',
-                )),
-            ])
-            ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+                    'last_name',
+                    'email',
+                    'phone',
+                    'is_active',
+                    AllowedFilter::callback('type_education_id', new DataSelectFilter),
+                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                        $query->where(function ($subQuery) use ($value) {
+                            $subQuery->orWhere('name', 'like', "%$value%");
+                            $subQuery->orWhere('last_name', 'like', "%$value%");
+                            $subQuery->orWhere('email', 'like', "%$value%");
+                            $subQuery->orWhere('phone', 'like', "%$value%");
 
-        return $query;
+                            $subQuery->orWhereHas('typeEducation', function ($q) use ($value) {
+                                $q->where('name', 'like', "%$value%");
+                            });
+                            $subQuery->orWhereHas('jobPosition', function ($q) use ($value) {
+                                $q->where('name', 'like', "%$value%");
+                            });
+
+                            QueryFilters::filterByText($subQuery, $value, 'is_active', [
+                                'activo' => 1,
+                                'inactivo' => 0,
+                            ]);
+                        });
+                    }),
+                ])
+                ->allowedSorts([
+                    'name',
+                    'last_name',
+                    'email',
+                    'phone',
+                    AllowedSort::custom('is_active', new IsActiveSort),
+                    AllowedSort::custom('type_education_name', new RelatedTableSort(
+                        'teachers',
+                        'type_education',
+                        'name',
+                        'type_education_id',
+                    )),
+                    AllowedSort::custom('job_position_name', new RelatedTableSort(
+                        'teachers',
+                        'job_positions',
+                        'name',
+                        'job_position_id',
+                    )),
+                ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('teachers.company_id', $request['company_id']);
+                    }
+                })
+                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+            return $query;
         }, Constants::REDIS_TTL);
     }
 
@@ -171,7 +176,7 @@ class TeacherRepository extends BaseRepository
             }
             if (! empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
-            } 
+            }
             $query->where('is_active', true);
         })->get()->map(function ($value) use ($with, $select, $fieldValue, $fieldTitle) {
             $data = [

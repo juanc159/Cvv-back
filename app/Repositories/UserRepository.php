@@ -24,10 +24,10 @@ class UserRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function () use ($request){
 
             $query = QueryBuilder::for($this->model->query())
-                ->select('users.id', 'users.name', 'users.surname', 'users.email', 'users.role_id', 'users.is_active')
+                ->select('users.id', 'users.name', 'users.surname', 'users.email', 'users.role_id', 'users.is_active', 'users.company_id')
                 ->allowedFilters([
                     'is_active',
                     AllowedFilter::callback('inputGeneral', function ($query, $value) {
@@ -59,6 +59,11 @@ class UserRepository extends BaseRepository
                     AllowedSort::custom('full_name', new UserFullNameSort),
 
                 ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('users.company_id', $request['company_id']);
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;

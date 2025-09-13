@@ -22,10 +22,10 @@ class ServiceRepository extends BaseRepository
 
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function ()  use ($request){
 
             $query = QueryBuilder::for($this->model->query())
-                ->select(['id', 'title', 'is_active', 'image'])
+                ->select(['id', 'title', 'is_active', 'image', 'company_id'])
                 ->allowedFilters([
                     'title',
                     'is_active',
@@ -44,6 +44,11 @@ class ServiceRepository extends BaseRepository
                     AllowedSort::custom('is_active', new IsActiveSort),
 
                 ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('company_id', $request['company_id']);
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;

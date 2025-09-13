@@ -4,10 +4,10 @@ namespace App\Repositories;
 
 use App\Helpers\Constants;
 use App\Models\PendingRegistration;
-use App\QueryBuilder\Sort\RelatedTableSort; 
+use App\QueryBuilder\Sort\RelatedTableSort;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
-use Spatie\QueryBuilder\QueryBuilder; 
+use Spatie\QueryBuilder\QueryBuilder;
 
 class PendingRegistrationRepository extends BaseRepository
 {
@@ -25,12 +25,12 @@ class PendingRegistrationRepository extends BaseRepository
 
         $query = QueryBuilder::for($this->model->query())
             ->with(["term:id,name"])
-            ->select(['pending_registrations.id', 'term_id', "section_name"])
+            ->select(['pending_registrations.id', 'term_id', "section_name","pending_registrations.company_id'"])
             ->withCount(['students'])
             ->allowedFilters([
                 AllowedFilter::callback('inputGeneral', function ($query, $value) {
                     $query->orWhere('section_name', 'like', "%$value%");
-                    $query->orWhereHas("term", function ($subQuery) use ( $value) {
+                    $query->orWhereHas("term", function ($subQuery) use ($value) {
                         $subQuery->where('name', 'like', "%$value%");
                     });
                 }),
@@ -45,7 +45,11 @@ class PendingRegistrationRepository extends BaseRepository
                     'term_id',
                 )),
 
-            ]);
+            ])->where(function ($query) use ($request) {
+                if (! empty($request['company_id'])) {
+                    $query->where('pending_registrations.company_id', $request['company_id']);
+                }
+            });
 
         if (empty($request['typeData'])) {
             $query = $query->paginate($request['perPage'] ?? Constants::ITEMS_PER_PAGE);
@@ -127,6 +131,4 @@ class PendingRegistrationRepository extends BaseRepository
             ->where('company_id', $company_id)
             ->get();
     }
-
-   
 }

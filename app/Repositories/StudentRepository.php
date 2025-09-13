@@ -28,16 +28,10 @@ class StudentRepository extends BaseRepository
 
         $query = QueryBuilder::for($this->model->query())
             ->with(['type_education:id,name', 'grade:id,name', 'section:id,name', 'type_document:id,name', 'country:id,name', 'state:id,name', 'city:id,name'])
-            ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id', "country_id", "state_id", "city_id", "nationalized", "gender", "birthday"])
+            ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id', "country_id", "state_id", "city_id", "nationalized", "gender", "birthday",'students.company_id'])
             ->allowedFilters([
                 'full_name',
-                'identity_document',
-
-
-
-
-
-
+                'identity_document', 
                 AllowedFilter::callback('photo', function ($query, $value) {
                     if ($value === 0 || $value === '0') {
                         $query->where(function ($query) {
@@ -106,6 +100,11 @@ class StudentRepository extends BaseRepository
                 )),
 
             ])
+            ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('students.company_id', $request['company_id']);
+                    }
+                })
             // **Excluir estudiantes retirados**
             ->whereDoesntHave('withdrawal');
 
@@ -396,10 +395,10 @@ class StudentRepository extends BaseRepository
 
 
         $typeEducations = TypeEducation::with([
-            'grades.sections' => function ($query) {
-                // $query->whereHas('teacher', function ($query) {
-                //     $query->where('is_active', true);
-                // });
+            'grades' => function ($query) use ($companyId){ 
+                $query->where("company_id", $companyId);
+            },
+            'grades.sections' => function ($query) { 
             }
         ])->get();
 

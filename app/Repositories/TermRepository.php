@@ -21,10 +21,10 @@ class TermRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function ()  use ($request){
 
             $query = QueryBuilder::for($this->model->query())
-                ->select(['id', 'name', "start_date", "end_date", "is_active"])
+                ->select(['id', 'name', "start_date", "end_date", "is_active", 'company_id'])
                 ->allowedFilters([
                     'name',
                     'is_active',
@@ -48,6 +48,11 @@ class TermRepository extends BaseRepository
                     AllowedSort::custom('is_active', new IsActiveSort),
 
                 ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('company_id', $request['company_id']);
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;

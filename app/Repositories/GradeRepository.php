@@ -21,11 +21,11 @@ class GradeRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () {
+        return $this->cacheService->remember($cacheKey, function () use ($request) {
 
             $query = QueryBuilder::for($this->model->query())
                 ->with(['typeEducation:id,name'])
-                ->select(['grades.id', 'grades.name', 'type_education_id'])
+                ->select(['grades.id', 'grades.name', 'type_education_id', 'grades.company_id'])
                 ->allowedFilters([
                     'name',
                     AllowedFilter::callback('type_education_id', new DataSelectFilter),
@@ -44,6 +44,11 @@ class GradeRepository extends BaseRepository
                         'type_education_id',
                     )),
                 ])
+                ->where(function ($query) use ($request) {
+                    if (! empty($request['company_id'])) {
+                        $query->where('grades.company_id', $request['company_id']);
+                    }
+                })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
             return $query;
