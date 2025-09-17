@@ -25,7 +25,7 @@ class PendingRegistrationRepository extends BaseRepository
 
         $query = QueryBuilder::for($this->model->query())
             ->with(["term:id,name"])
-            ->select(['pending_registrations.id', 'term_id', "section_name","pending_registrations.company_id'"])
+            ->select(['pending_registrations.id', 'term_id', "section_name","pending_registrations.company_id"])
             ->withCount(['students'])
             ->allowedFilters([
                 AllowedFilter::callback('inputGeneral', function ($query, $value) {
