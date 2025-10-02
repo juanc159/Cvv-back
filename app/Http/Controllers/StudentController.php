@@ -55,17 +55,23 @@ class StudentController extends Controller
         }
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        try {
+        try { 
 
             $selectInfiniteCountries = $this->queryController->selectInfiniteCountries(request());
 
-            $typeEducations = $this->typeEducationRepository->list(
+             $typeEducations = $this->typeEducationRepository->list(
                 request: [
                     'typeData' => 'all',
+                    
                 ],
-                with: ['grades']
+                with: ['grades' => function ($query) use ($request) {
+                    if (! empty($request->company_id)) {
+                        $query->where('company_id', $request->company_id);
+                    }
+                    $query->where('is_active', 1);
+                }],
             )->map(function ($value) {
                 return [
                     'value' => $value->id,
@@ -128,7 +134,7 @@ class StudentController extends Controller
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request,$id)
     {
         try {
 
@@ -140,8 +146,14 @@ class StudentController extends Controller
             $typeEducations = $this->typeEducationRepository->list(
                 request: [
                     'typeData' => 'all',
+                    
                 ],
-                with: ['grades']
+                with: ['grades' => function ($query) use ($request) {
+                    if (! empty($request->company_id)) {
+                        $query->where('company_id', $request->company_id);
+                    }
+                    $query->where('is_active', 1);
+                }],
             )->map(function ($value) {
                 return [
                     'value' => $value->id,

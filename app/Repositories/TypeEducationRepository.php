@@ -23,7 +23,7 @@ class TypeEducationRepository extends BaseRepository
             }
             if (! empty($request['id'])) {
                 $query->where('id', $request['id']);
-            }
+            } 
         })
             ->where(function ($query) use ($request) {
                 if (! empty($request['searchQueryInfinite'])) {
