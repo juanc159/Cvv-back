@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\Constants;
 use App\Models\ProcessBatch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -52,7 +53,7 @@ class ProcessBatchService
                 return $processBatch->processed_records;
             }
         } catch (\Exception $e) {
-            Log::error("Error incrementando registros procesados para batch {$batchId}: ".$e->getMessage());
+            Log::error("Error incrementando registros procesados para batch {$batchId}: " . $e->getMessage());
         }
 
         return 0;
@@ -71,7 +72,7 @@ class ProcessBatchService
                 'status' => $finalStatus,
             ]);
         } catch (\Exception $e) {
-            Log::error("Error finalizando proceso para batch {$batchId}: ".$e->getMessage());
+            Log::error("Error finalizando proceso para batch {$batchId}: " . $e->getMessage());
             ProcessBatch::where('batch_id', $batchId)->update(['status' => 'failed']);
             throw $e;
         }
@@ -98,7 +99,7 @@ class ProcessBatchService
         foreach ($availableQueues as $queue) {
             // SADD retorna 1 si el elemento fue añadido (significa que no estaba antes)
             // SADD retorna 0 si el elemento ya existía en el set (significa que está en uso)
-            if (Redis::connection('redis_6380')->sadd(self::REDIS_USED_QUEUES_KEY, $queue) === 1) {
+            if (Redis::connection(Constants::REDIS_PORT_TO_IMPORTS)->sadd(self::REDIS_USED_QUEUES_KEY, $queue) === 1) {
                 return $queue;
             }
         }
@@ -116,9 +117,35 @@ class ProcessBatchService
     {
         // SREM retorna 1 si el elemento fue removido (significa que existía)
         // SREM retorna 0 si el elemento no fue encontrado en el set
-        if (Redis::connection('redis_6380')->srem(self::REDIS_USED_QUEUES_KEY, $queueName) === 1) {
+        if (Redis::connection(Constants::REDIS_PORT_TO_IMPORTS)->srem(self::REDIS_USED_QUEUES_KEY, $queueName) === 1) {
         } else {
             Log::warning("Attempted to release queue '{$queueName}' but it was not found in the used queues set. It might have already been released or never acquired.");
         }
+    }
+
+
+
+    const REDIS_ROUND_ROBIN_KEY = 'import_system:round_robin_index';
+
+    /**
+     * Selects the next queue in a round-robin fashion.
+     *
+     * @param array $availableQueues
+     * @return string
+     */
+    public static function selectAvailableQueueRoundRobin(array $availableQueues): string
+    {
+        $redis = Redis::connection(Constants::REDIS_PORT_TO_IMPORTS);
+        $index = $redis->incr(self::REDIS_ROUND_ROBIN_KEY) % count($availableQueues);
+
+        return $availableQueues[$index];
+    }
+
+    /**
+     * Resets the round-robin index (optional, if you want to restart the cycle).
+     */
+    public static function resetRoundRobinIndex(): void
+    {
+        Redis::connection(Constants::REDIS_PORT_TO_IMPORTS)->del(self::REDIS_ROUND_ROBIN_KEY);
     }
 }

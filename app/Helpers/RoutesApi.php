@@ -30,5 +30,7 @@ class RoutesApi
         'routes/term.php',
         'routes/pendingRegistration.php',
         'routes/documents.php',
+        'routes/notification.php',
+
     ];
 }
