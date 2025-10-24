@@ -58,7 +58,7 @@ class ProcessNoteChunkJob implements ShouldQueue
 
                 $subjects = $this->getSubjects($typeEducation);
 
-                Log::info("subjects=> ", [$subjects]);
+                // Log::info("subjects=> ", [$subjects]);
 
                 $errorsCount = 0;
                 $warningsCount = 0;
