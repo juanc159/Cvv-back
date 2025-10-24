@@ -31,7 +31,7 @@ class ExcelValidator
 
         // Empieza la validación de columnas
         // Normaliza y verifica columnas requeridas
-        $normalize = fn($s) => Str::of($s)->lower()->replace(' ', '')->toString();
+        $normalize = fn($s) => Str::of($s)->upper()->replace(' ', '')->toString();
         // Obtener las claves del primer elemento y normalizarlas
         $headers = collect(array_keys($xlsCollection->first()))->map($normalize);
         // Comparar con las columnas requeridas

@@ -47,8 +47,8 @@ class NoteController extends Controller
 
 
         $teachers = $this->teacherRepository->selectList([
-            "company_id" => $request->input("company_id"), 
-        ],fieldTitle:"full_name");
+            "company_id" => $request->input("company_id"),
+        ], fieldTitle: "full_name");
         $blockData = BlockData::where('name', Constants::BLOCK_PAYROLL_UPLOAD)->first()->is_active;
 
         return response()->json([
@@ -91,7 +91,7 @@ class NoteController extends Controller
                     // return $subjectsData;
                 }
 
-               $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
+                $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
 
                 $sheets = count($import);
                 for ($j = 0; $j < $sheets; $j++) {
@@ -163,7 +163,7 @@ class NoteController extends Controller
                                 $grade = $this->grade($row['AÑO'], 'name');
                                 // $section = $this->section($row['SECCIÓN'], 'name');
 
-                                 $student = $this->studentRepository->searchOne([
+                                $student = $this->studentRepository->searchOne([
                                     'identity_document' => $row['CÉDULA'],
                                 ]);
 
@@ -188,7 +188,7 @@ class NoteController extends Controller
                                     unset($model['password']);
                                 }
 
-                                 $student = $this->studentRepository->store($model);
+                                $student = $this->studentRepository->store($model);
 
                                 //  $teacher->complementaries->where("grade_id",$grade->id);
 
@@ -202,16 +202,16 @@ class NoteController extends Controller
 
                                     $subjectsData = $grade->subjects;
                                 }
-                                
+
                                 foreach ($subjectsData as $key => $sub) {
                                     $model2 = [
                                         'student_id' => $student->id,
                                         'subject_id' => $sub->id,
                                     ];
-                                    
+
                                     $note = $this->noteRepository->searchOne($model2);
                                     $json = null;
-                                     
+
                                     if ($note) {
                                         $json = json_decode($note->json, 1);
                                     }
@@ -228,7 +228,7 @@ class NoteController extends Controller
 
                                     $model2['json'] = json_encode($json);
 
-                                     $this->noteRepository->store($model2);
+                                    $this->noteRepository->store($model2);
                                 }
                                 // return 4444;
                             }
@@ -338,6 +338,8 @@ class NoteController extends Controller
                     $list = $list->sortBy('full_name');
 
                     $subjectIds = explode(',', $value->subject_ids);
+                    $subjectIds = array_map('trim', $subjectIds);
+
 
                     $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
 

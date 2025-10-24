@@ -4,12 +4,13 @@ namespace App\Jobs\Student;
 
 use App\Events\ImportProgressEvent;
 use App\Helpers\Constants;
-use App\Helpers\ErrorCollector; 
+use App\Helpers\ErrorCollector;
 use App\Helpers\ExcelRequired;
 use App\Helpers\ExcelValidator;
 use App\Models\ProcessBatch;
 use App\Models\User;
-use App\Notifications\BellNotification; 
+use App\Notifications\BellNotification;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,10 +42,8 @@ class ValidateExcelJob implements ShouldQueue
         $redis = Redis::connection(Constants::REDIS_PORT_TO_IMPORTS);
         $this->metadata = $redis->hgetall("batch:{$this->customBatchId}:metadata");
         $this->userId = $this->metadata['user_id'] ?? null;
-        Log::info("metadata", $this->metadata);
 
         $xlsCollection = ExcelRequired::openXls($this->metadata['filePath']);
-        Log::info("xlsCollection", ['count' => $xlsCollection->count()]);
 
         $metadata = $this->metadata;
         $metadata['total_rows'] = $xlsCollection->count();
@@ -60,10 +59,13 @@ class ValidateExcelJob implements ShouldQueue
             "Leyendo archivo Excel...",
         ));
 
-        try {
 
+        Log::info("aaaa",[$this->metadata['required']]);
+        Log::info("bbbbb",[json_decode($this->metadata['required'], 1)]);
+        try {
             $errors = ExcelValidator::validateAll($this->customBatchId, $xlsCollection, json_decode($this->metadata['required'], 1));
 
+            Log::info("Validation completed for batch {$this->customBatchId} with " . ($errors ? 'errors' : 'no errors'));
             if ($errors) {
                 ProcessBatch::where('batch_id', $this->customBatchId)->update([
                     'error_count' => ErrorCollector::countErrors($this->customBatchId),
@@ -71,6 +73,8 @@ class ValidateExcelJob implements ShouldQueue
                     'metadata' => json_encode($this->metadata),
                     'updated_at' => now(),
                 ]);
+                // Lanza excepción para detener la chain y activar catch del Bus
+                $this->fail("Errores encontrados durante la validación del Excel.");
             }
         } catch (\Throwable $e) {
             Log::error("Error en ValidateExcelJob: {$e->getMessage()}", [

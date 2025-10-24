@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ImportProgressEvent;
+use App\Exports\StudentFormatExport;
 use App\Exports\StudentListExport;
 use App\Exports\StudentStatisticsExport;
 use App\Helpers\Constants;
@@ -468,7 +469,7 @@ class StudentController extends Controller
       $filePath = $uploadedFile->storeAs($tempSubfolder, $uniqueFileName, Constants::DISK_FILES);
       $fullPath = storage_path('app/public/' . $filePath);
 
-      $required = ['type_education_id', 'grade_id', 'section_id', 'identity_document', 'full_name', 'gender', 'birthday','country_id','state_id','city_id','real_entry_date','nationalized','type_document_id'];
+      $required = ["TIPO_EDUCACION", "GRADO", "SECTION_ID", "IDENTITY_DOCUMENT", "FULL_NAME", "GENDER", "BIRTHDAY", "COUNTRY_ID", "STATE_ID", "CITY_ID", "REAL_ENTRY_DATE", "NATIONALIZED", "TYPE_DOCUMENT_ID"];
 
       $metadata = [
         'file_name' => $uniqueFileName,
@@ -516,8 +517,13 @@ class StudentController extends Controller
         ])
           ->catch(function (\Throwable $e) use ($batchId, $selectedQueue) {
             Log::error("Validation failed for batch {$batchId}: {$e->getMessage()}");
-            // ErrorCollector::saveErrorsToDatabase($batchId, 'failed');
-            // event(new ImportProgressEvent($batchId, 0, 'Error en validación', count(ErrorCollector::getErrors($batchId)), 'failed', 'error'));
+            $total_errors = count(ErrorCollector::getErrors($batchId));
+            ErrorCollector::saveErrorsToDatabase($batchId, 'failed');
+
+            $redis = Redis::connection(Constants::REDIS_PORT_TO_IMPORTS);
+            $metadata = $redis->hgetall("batch:{$batchId}:metadata");
+
+            event(new ImportProgressEvent($batchId, $metadata["total_rows"], 'Error en validación', $total_errors, 'failed', 'error'));
           })
           ->onQueue($selectedQueue)
           ->dispatch();
@@ -532,6 +538,24 @@ class StudentController extends Controller
         'message' => 'Archivo ZIP subido y encolado para validación.',
         'batch_id' => $batchId,
         'status' => 'success',
+      ];
+    });
+  }
+
+  public function downloadFormatLoadStudents(Request $request)
+  {
+    return $this->execute(function () use ($request) {
+
+      // Obtener el company_id del request
+      $companyId = $request->input('company_id');
+
+      $excel = Excel::raw(new StudentFormatExport($companyId), \Maatwebsite\Excel\Excel::XLSX);
+
+      $excelBase64 = base64_encode($excel);
+
+      return [
+        'code' => 200,
+        'excel' => $excelBase64,
       ];
     });
   }

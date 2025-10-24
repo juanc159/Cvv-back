@@ -46,7 +46,7 @@ class CityRepository extends BaseRepository
         return $this->model->where('state_id', $state_id)->get()->map(function ($value) {
             return [
                 'value' => $value->id,
-                'title' => $value->id . ' - '. $value->name,
+                'title' => $value->name,
             ];
         });
     }

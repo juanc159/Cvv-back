@@ -50,8 +50,6 @@ class ImportStudentExcelJob implements ShouldQueue
         $companyId = $this->metadata['company_id'] ?? null; // Obtener company_id para upserts
 
         $xlsCollection = ExcelRequired::openXls($this->metadata['filePath']);
-        Log::info("xlsCollection", ['count' => $xlsCollection->count()]);
-        Log::info("xlsCollection", [$xlsCollection]);
 
         $metadata = $this->metadata;
         $metadata['total_rows'] = $xlsCollection->count();
@@ -79,6 +77,7 @@ class ImportStudentExcelJob implements ShouldQueue
 
         try {
             foreach ($xlsCollection as $rowIndex => $row) {
+
                 // Validar esta fila (igual)
                 $rowHasError = ExcelDataStudentValidator::validateRow($this->customBatchId, $row, $rowIndex);
                 if ($rowHasError) {
@@ -91,7 +90,6 @@ class ImportStudentExcelJob implements ShouldQueue
                     $cleanRow['company_id'] = $companyId; // Agregar company_id
                     $redis->rpush($validRowsKey, json_encode($cleanRow));
                     $validCount++;
-                    Log::info("Cleaned row pushed to Redis", ['row_keys' => array_keys($cleanRow)]); // Debug opcional
                 }
 
                 $processed++;
@@ -117,23 +115,26 @@ class ImportStudentExcelJob implements ShouldQueue
                 $chunkSize = 2; // Configurable
                 $chunkedUpserts = $validCollection->chunk($chunkSize);
 
-                Log::info("Starting upsert of {$validCount} valid students in chunks of {$chunkSize} for batch {$this->customBatchId}");
-                Log::info("validCollection", [$validCollection]);
-                Log::info("chunkedUpserts", [$chunkedUpserts]);
+                Log::info("chunkedUpserts",[$chunkedUpserts]);
 
                 foreach ($chunkedUpserts as $chunk) {
                     // Preparar data para upsert: formatear fechas
-                    $insertData = $chunk->map(function ($row) {
+                    $insertData = $chunk->map(function ($row) use ($companyId) {
                         // Remover keys vacías
                         $row = array_filter($row, function ($key) {
                             return !empty(trim($key));
                         }, ARRAY_FILTER_USE_KEY);
 
-                        // Default para nationalized: 0 si vacío/null
-                        if (!isset($row['nationalized']) || $row['nationalized'] === '' || $row['nationalized'] === null) {
-                            $row['nationalized'] = 0;
+                        // Mapeo genérico Excel → BD
+                        $row = $this->mapExcelColumnsToDb($row, $this->customBatchId, $companyId);
+
+                        // Convertir NATIONALIZED: "SÍ" a 1, "NO" a 0, y vacío/null a 0
+                        if (!isset($row['NATIONALIZED']) || $row['NATIONALIZED'] === '' || $row['NATIONALIZED'] === null) {
+                            $row['NATIONALIZED'] = 0; // Default para vacío/null
+                        } else {
+                            $row['NATIONALIZED'] = $row['NATIONALIZED'] === 'SÍ' ? 1 : 0; // "SÍ" -> 1, "NO" -> 0
                         }
- 
+
                         // Formatear fechas si aplican
                         if (isset($row['birthday']) && $row['birthday']) {
                             $row['birthday'] = Carbon::parse($row['birthday'])->format('Y-m-d');
@@ -144,9 +145,6 @@ class ImportStudentExcelJob implements ShouldQueue
                         return $row;
                     })->values()->toArray();
 
-                    Log::info("insertData", [$insertData]);
-
-
                     // Campos únicos para upsert (identity_document + company_id)
                     $uniqueBy = ['identity_document', 'company_id'];
 
@@ -155,10 +153,10 @@ class ImportStudentExcelJob implements ShouldQueue
                     $updateColumns = array_values(array_diff($firstRowKeys, ['id']));
 
 
-                    Log::info("uniqueBy", [$uniqueBy]);
-                    Log::info("updateColumns", [$updateColumns]);
-
-
+                    Log::info("Upserting chunk of " . count($insertData) . " students for batch {$this->customBatchId}");
+                    Log::info("insertData", $insertData);
+                    Log::info("uniqueBy", $uniqueBy);
+                    Log::info("updateColumns", $updateColumns);
 
                     // Upsert por chunk
                     Student::upsert(
@@ -167,8 +165,6 @@ class ImportStudentExcelJob implements ShouldQueue
                         $updateColumns
                     );
                 }
-
-                Log::info("Upserted {$validCount} students (insert/update) for batch {$this->customBatchId}");
             }
 
             // Limpiar Redis
@@ -260,5 +256,41 @@ class ImportStudentExcelJob implements ShouldQueue
         } else {
             Log::warning("No se proporcionó userId para notificación en batch {$this->customBatchId}");
         }
+    }
+
+    /**
+     * Mapea columnas del Excel a campos de BD usando cache del Validator.
+     */
+    /**
+     * Mapea columnas del Excel a campos de BD usando cache del Validator.
+     */
+    private function mapExcelColumnsToDb(array $row, string $batchId, string $companyId): array
+    {
+        foreach (ExcelDataStudentValidator::$columnMapping as $excelCol => $map) { // Accede al array static del Validator
+            if (isset($row[$excelCol]) && !empty($row[$excelCol]) && isset($map['model_key'])) {
+                $searchField = $map['search_field'];
+                if ($searchField === 'id') {
+                    $row[$map['db_field']] = $row[$excelCol]; // ID directo
+                } else {
+                    // Mapea nombre a ID
+                    $dbId = ExcelDataStudentValidator::getCachedId($map['model_key'], $row[$excelCol], $batchId, $companyId, $searchField);
+                    if ($dbId) {
+                        $row[$map['db_field']] = $dbId;
+                    } else {
+                        Log::warning("No ID found for Excel col {$excelCol}: {$row[$excelCol]} in row", ['batchId' => $batchId]);
+                        unset($row[$excelCol]); // O maneja error
+                    }
+                }
+                unset($row[$excelCol]); // Remover columna Excel original
+            } elseif (isset($row[$excelCol])) {
+                // Para campos sin mapeo DB (solo required), renombra si db_field difiere
+                if (isset($map['db_field']) && $map['db_field'] !== $excelCol) {
+                    $row[$map['db_field']] = $row[$excelCol];
+                    unset($row[$excelCol]);
+                }
+            }
+        }
+
+        return $row;
     }
 }

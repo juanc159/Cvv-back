@@ -46,7 +46,7 @@ class StateRepository extends BaseRepository
         return $this->model->where('country_id', $country_id)->get()->map(function ($value) {
             return [
                 'value' => $value->id,
-                'title' => $value->id . ' - ' .$value->name,
+                'title' => $value->name,
             ];
         });
     }

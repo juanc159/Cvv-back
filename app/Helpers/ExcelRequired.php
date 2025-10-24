@@ -23,11 +23,16 @@ class ExcelRequired
         $keys = $data[0][0]; // Los títulos se encuentran en la primera fila
         $excelData = array_slice($data[0], 1); // Eliminar la primera fila (encabezados)
 
-        // Crear una colección con los datos del XLS
-        $xlsCollection = collect($excelData)->map(function ($row, $index) use ($keys) {
+        // Crear una colección con los datos del XLS, omitiendo filas completamente vacías
+        $xlsCollection = collect($excelData)->filter(function ($row) {
+            // Filtrar filas donde al menos una columna tenga un valor no vacío
+            return collect($row)->some(function ($value) {
+                return !is_null($value) && trim($value) !== '';
+            });
+        })->map(function ($row, $index) use ($keys) {
             $dataWithKeys = array_combine($keys, $row);
             return $dataWithKeys;
-        });
+        })->values(); // Reindexar la colección para evitar huecos en los índices
 
         return $xlsCollection;
     }
