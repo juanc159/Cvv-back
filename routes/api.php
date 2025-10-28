@@ -59,7 +59,7 @@ Route::get('/documentStudent/certificateInitialEducation', [DocumentController::
 Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation']);
 
 
-// Route::post('/note-store', [NoteController::class, 'store']);
+Route::post('/note-store-teachers', [NoteController::class, 'store']);
 
  
 // // Tus rutas existentes...
