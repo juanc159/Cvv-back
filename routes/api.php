@@ -72,7 +72,9 @@ Route::post('/note-store-teachers', [NoteController::class, 'store']);
 
 
 // Ruta principal para procesar archivos
-Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
+// Route::post('/note-store', [LoadNoteMasiveController::class, 'process']);
+Route::post('/note-store', [NoteController::class, 'store']);
+
 
 // Rutas WebSocket únicamente
 Route::prefix('websocket')->group(function () {
