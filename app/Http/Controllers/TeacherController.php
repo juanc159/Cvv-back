@@ -113,7 +113,7 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -211,7 +211,7 @@ class TeacherController extends Controller
 
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_'.$data->company_id.'/teachers/teacher_'.$data->id.$request->input('photo'), 'public');
+                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
                 $data->photo = $photo;
                 $data->save();
             }
@@ -288,7 +288,7 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Teacher '.$msg.' con éxito']);
+            return response()->json(['code' => 200, 'message' => 'Teacher ' . $msg . ' con éxito']);
         } catch (Throwable $th) {
             DB::rollback();
 
@@ -329,8 +329,8 @@ class TeacherController extends Controller
                     ->where('section_id', $value->section_id);
 
                 $list = $list->sortBy('full_name');
-
                 $subjectIds = explode(',', $value->subject_ids);
+                $subjectIds = array_map('trim', $subjectIds);
 
                 $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
 
@@ -497,7 +497,7 @@ class TeacherController extends Controller
             $fileCount = $request->input('files_cant');
 
             for ($i = 0; $i < $fileCount; $i++) {
-                $fileId = $request->input('file_id_'.$i);
+                $fileId = $request->input('file_id_' . $i);
                 if ($fileId) {
                     $arrayIds[] = $fileId;
                 }
@@ -534,7 +534,7 @@ class TeacherController extends Controller
 
                 if ($request->file("file_file_{$key}")) {
                     $file = $request->file("file_file_{$key}");
-                    $path = $file->store('company_'.$teacher->company_id.'/teachers/teacher_'.$request->input('teacher_id').'/plannings'.$request->input('file_file_{$key}'), 'public');
+                    $path = $file->store('company_' . $teacher->company_id . '/teachers/teacher_' . $request->input('teacher_id') . '/plannings' . $request->input('file_file_{$key}'), 'public');
                     $teacherPlanning->path = $path;
                     $teacherPlanning->save();
                 }
