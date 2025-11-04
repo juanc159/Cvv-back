@@ -76,4 +76,8 @@ class PendingRegistration extends Model
     {
         return $this->hasMany(PendingRegistrationFile::class, 'pending_registration_id');
     }
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(PendingRegistrationAttempt::class, 'pending_registration_id');
+    }
 }

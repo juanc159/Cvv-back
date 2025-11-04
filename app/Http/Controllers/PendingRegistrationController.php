@@ -364,6 +364,10 @@ class PendingRegistrationController extends Controller
             // Eliminar todos los estudiantes en una sola consulta
             $pendingRegistration->students()->delete();
 
+            $pendingRegistration->files()->delete();
+            
+            $pendingRegistration->attempts()->delete();
+
             // Eliminar el registro principal
             $pendingRegistration->delete();
 
