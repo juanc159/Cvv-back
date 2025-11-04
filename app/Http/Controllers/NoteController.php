@@ -60,8 +60,8 @@ class NoteController extends Controller
 
     public function store(Request $request)
     {
-        set_time_limit(30000);
-        ini_set('memory_limit', '2048M');
+        // set_time_limit(30000);
+        // ini_set('memory_limit', '2048M');
 
         try {
             DB::beginTransaction();
