@@ -40,11 +40,11 @@ class ConsolidatedExport implements WithMultipleSheets
 
         foreach ($groupedStudentsArray as $key => $value) {
             // logMessage("ConsolidatedExport: Adding sheet for grade: $key");
-            // logMessage($value);
-            // logMessage($this->headers[$key]);
-            // if ($key === 'Quinto Grado') {
-            //     logMessage("ConsolidatedExport: Skipping Quinto Grado grade");
-            //     continue; // O manejarlo de otra manera si es necesario
+            // if ($key === 'Primer Grado') {
+                // logMessage($value);
+                // logMessage($this->headers[$key]);
+                // logMessage("ConsolidatedExport: Skipping Primer Grado grade");
+                // continue; // O manejarlo de otra manera si es necesario
 
             // }
             $sheets[] = new StudentExport($this->headers[$key], $value, $key, $this->type_education_id);
