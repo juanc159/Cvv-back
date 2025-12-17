@@ -210,5 +210,6 @@ Route::get('/limpiar-boletines', function () {
         ->where('boletin', '!=', '')
         ->update(['boletin' => null]);
 
+        
     return "Proceso finalizado.<br>Archivos eliminados: $filesDeleted<br>Registros actualizados en BD: $dbUpdated";
 });
