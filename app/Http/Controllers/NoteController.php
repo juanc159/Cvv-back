@@ -532,15 +532,34 @@ class NoteController extends Controller
     }
 
 
-    public function downloadAllConsolidatedPocentage(Request $request)
+    public function downloadConsolidatedPocentage(Request $request)
     {
         try {
             $companyId = $request->input('company_id');
+            // Inicializamos la variable, pero puede cambiar si buscamos al profesor
             $typeEducationId = $request->input('type_education_id');
+            $teacherId = $request->input('teacher_id');
 
-            // 1. Get all Teacher Assignments (Complementaries) for the specific Type of Education
-            // We filter by company via the related Teacher
-            $assignments = \App\Models\TeacherComplementary::query()
+            // LÓGICA DE AUTODETECCIÓN
+            // Si no mandan el tipo de educación, pero SÍ mandan el profesor, lo buscamos.
+            if (empty($typeEducationId) && !empty($teacherId)) {
+                $teacher = \App\Models\Teacher::find($teacherId);
+                if ($teacher) {
+                    $typeEducationId = $teacher->type_education_id;
+                } else {
+                    return response()->json(['code' => 404, 'message' => 'Profesor no encontrado']);
+                }
+            }
+
+            // Validación de seguridad: A estas alturas DEBE haber un type_education_id
+            if (empty($typeEducationId)) {
+                return response()->json(['code' => 422, 'message' => 'Falta el ID del tipo de educación']);
+            }
+
+            // --- AHORA SÍ, LA CONSULTA QUE YA TENÍAMOS ---
+
+            // 1. Obtener Asignaciones
+            $assignmentsQuery = \App\Models\TeacherComplementary::query()
                 ->with([
                     'grade:id,name',
                     'section:id,name',
@@ -553,8 +572,15 @@ class NoteController extends Controller
                 ->whereHas('teacher', function ($q) use ($companyId, $typeEducationId) {
                     $q->where('company_id', $companyId)
                         ->where('type_education_id', $typeEducationId);
-                })
-                ->get();
+                });
+
+            // Aplicar filtro si tenemos el ID específico
+            if (!empty($teacherId)) {
+                $assignmentsQuery->where('teacher_id', $teacherId);
+            }
+
+            $assignments = $assignmentsQuery->get();
+
 
             // 2. Optimización: Obtener solo las materias de esta empresa Y de este tipo de educación
             $allSubjects = \App\Models\Subject::query()

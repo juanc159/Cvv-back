@@ -53,39 +53,14 @@ class StudentPercentageExport implements FromView, ShouldAutoSize, WithEvents, W
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
 
-                // Obtener el rango de celdas con datos
-                $highestColumn = $sheet->getHighestColumn();
-                $highestRow = $sheet->getHighestRow();
-
-                // Proteger la hoja
+                // 1. Activar la protección general de la hoja
+                // Al hacer esto, todas las celdas (que por defecto vienen bloqueadas)
+                // se vuelven ineditables.
                 $sheet->getProtection()->setSheet(true);
-                // $sheet->getProtection()->setPassword('tu_contraseña'); // Opcional
 
-                // Desbloquear todas las celdas
-                $sheet->getStyle('A1:' . $highestColumn . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-
-                // Establecer el rango de bloqueo para columnas
-                $protectedColumns = 'A:E';
-                $additionalProtectedColumns = 'A:F';
-
-                // Si $prueba tiene valor, bloquear B1 y permitir B2 en adelante
-                if ($this->type_education_id) {
-                    $sheet->getStyle('B1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
-                    $sheet->getStyle('C1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
-                    $sheet->getStyle($additionalProtectedColumns)->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
-
-                    // Desbloquear B2 hasta el último valor de la columna B
-                    if ($highestRow > 1) {
-                        $sheet->getStyle('B2:B' . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-                        $sheet->getStyle('C2:C' . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-                    }
-                } else {
-                    $sheet->getStyle($protectedColumns)->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
-                }
-
-                // Bloquear las columnas F en adelante
-                $init = $this->type_education_id ? 'G1' : 'F1';
-                $sheet->getStyle("$init:" . $highestColumn . '1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
+                // Opcional: Si quieres evitar que el usuario simplemente vaya a 
+                // "Revisar -> Desproteger hoja" y lo edite, ponle una contraseña:
+                // $sheet->getProtection()->setPassword('UnaContraseñaSegura123');
             },
         ];
     }
