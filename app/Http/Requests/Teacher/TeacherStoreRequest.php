@@ -24,13 +24,26 @@ class TeacherStoreRequest extends FormRequest
      */
     public function rules(): array
     {
+
+        // Obtenemos ID si es edición
+        $teacherId = $this->route('id') ?? $this->id;
+
+        // Si editamos, buscamos el user_id para ignorarlo en la validación
+        $userIdToIgnore = null;
+        if ($teacherId) {
+            $teacher = \App\Models\Teacher::find($teacherId);
+            $userIdToIgnore = $teacher ? $teacher->user_id : null;
+        }
         return [
             'company_id' => 'required',
             'type_education_id' => 'required',
             'job_position_id' => 'required',
             'name' => 'required',
             'last_name' => 'required',
-            'email' => 'required|unique:teachers,email,'.$this->id,
+
+            // Validar unique en tabla 'users', columna 'email', ignorando el ID del usuario asociado
+            'email' => 'required|email|unique:users,email,' . $userIdToIgnore,
+
             'phone' => 'required',
             'photo' => 'required',
         ];

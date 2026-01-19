@@ -17,6 +17,7 @@ use App\Jobs\SaveErrorsJob;
 use App\Jobs\Student\ImportStudentExcelJob;
 use App\Jobs\Student\ValidateExcelJob;
 use App\Models\ProcessBatch;
+use App\Models\User;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\StudentWithdrawalRepository;
@@ -123,14 +124,45 @@ class StudentController extends Controller
     try {
       DB::beginTransaction();
 
+      // 1. Preparamos datos para el Usuario Maestro
+      // Separamos el full_name en name y surname
+      $parts = explode(' ', $request->full_name);
+      $name = $parts[0];
+      $surname = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : '';
+
+      // Contraseña: Si no envían una, usamos la cédula por defecto
+      $password = $request->password
+        ? Hash::make($request->password)
+        : Hash::make($request->identity_document);
+
+      // 2. CREAMOS EL USUARIO (Padre)
+      $user = User::create([
+        'name'              => $name,
+        'surname'           => $surname,
+        'identity_document' => $request->identity_document,
+        'email'             => $request->email ?? null, // Nullable en estudiantes
+        'password'          => $password,
+        'type_user'         => 'student', // IMPORTANTE
+        'is_active'         => true,
+        'company_id'        => $request->company_id,
+        // 'role_id'        => ... (si usas roles)
+      ]);
+
+      // 3. Preparamos datos para el Estudiante (Hijo)
       $post = $request->except(['photo']);
 
+      // ¡AQUÍ ESTÁ LA MAGIA! Inyectamos el ID del usuario creado
+      $post['user_id'] = $user->id;
+
+      // 4. Llamamos al repositorio (que crea el registro en tabla 'students')
       $data = $this->studentRepository->store($post);
 
+      // 5. Manejo de Foto (Tu lógica original)
       if ($request->file('photo')) {
         $file = $request->file('photo');
-        $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
-        $data->photo = $photo;
+        // Nota: Corregí un detalle aquí, concatenabas $request->input('photo') que suele ser null si es archivo
+        $photoPath = $file->store('company_' . $data->company_id . '/student/student_' . $data->id, 'public');
+        $data->photo = $photoPath;
         $data->save();
       }
 
@@ -139,7 +171,7 @@ class StudentController extends Controller
       return response()->json(['code' => 200, 'message' => 'Estudiante agregado correctamente']);
     } catch (Throwable $th) {
       DB::rollBack();
-
+      // Si falló, el DB::rollBack() eliminará también al usuario creado gracias a la transacción
       return response()->json([
         'code' => 500,
         'message' => 'Algo Ocurrio, Comunicate Con El Equipo De Desarrollo',

@@ -117,60 +117,76 @@ class PwController extends Controller
 
     public function dataGradeSection($school_id, $grade_id, $section_id)
     {
+        // 1. Carga ansiosa (Eager Loading) de relaciones para evitar consultas extra
+        // Asumo que 'teacher' es una relación en tu repositorio/modelo
         $teacherComplementaries = $this->teacherComplementaryRepository->list([
             'typeData' => 'all',
             'grade_id' => $grade_id,
             'section_id' => $section_id,
             'company_id' => $school_id,
-        ], ['teacher' => function ($query) use ($school_id) {
-            $query->where('company_id', $school_id);
-        }]);
+        ], ['teacher.jobPosition']); // Cargamos jobPosition de una vez si es posible
 
         $teachers = [];
 
-        $color = generarColorPastelAleatorio(70);
-        foreach ($teacherComplementaries as $key => $value) {
-            $subjects = explode(',', $value['subject_ids']);
-            foreach ($subjects as $sub) {
-                $subject = $this->subjectRepository->find($sub);
+        // Obtenemos todos los planificadores de UNA sola vez para esta sección
+        // Esto es mucho más rápido que consultar 30 veces dentro del loop
+        $allPlannings = TeacherPlanning::where('grade_id', $grade_id)
+            ->where('section_id', $section_id)
+            ->get()
+            ->groupBy(function ($item) {
+                // Agrupamos por profesor y materia para acceso rápido
+                return $item->teacher_id . '-' . $item->subject_id;
+            });
+
+        foreach ($teacherComplementaries as $value) {
+            $subjectIds = explode(',', $value['subject_ids']);
+
+            // Optimizacion: Podríamos buscar todos los subjects fuera del loop, 
+            // pero como son pocos por profesor, lo dejaremos así por ahora.
+
+            foreach ($subjectIds as $subId) {
+                $subject = $this->subjectRepository->find($subId);
 
                 if ($subject) {
+                    // Generamos una clave única para buscar en la colección que trajimos arriba
+                    $planningKey = $value->teacher_id . '-' . $subject->id;
 
-                    $files = TeacherPlanning::where(function ($query) use ($value) {
-                        $query->where('teacher_id', $value->teacher_id);
-                        $query->where('grade_id', $value->grade_id);
-                        $query->where('section_id', $value->section_id);
-                        // $query->where('subject_id', $subject->id);
-                    })->get()->map(function ($f) {
-                        return [
-                            'name' => $f->name,
-                            'path' => $f->path,
-                            'id' => $f->id,
-                        ];
-                    });
+                    // Buscamos en memoria (RAM) en lugar de Base de Datos
+                    $planningFiles = isset($allPlannings[$planningKey])
+                        ? $allPlannings[$planningKey]->map(function ($f) {
+                            return [
+                                'id' => $f->id,
+                                'name' => $f->name,
+                                'path' => $f->path,
+                            ];
+                        })->values() // Resetear keys
+                        : [];
+
+                    // Usamos el User unificado si existe, sino los datos legacy del teacher
+                    // (Gracias al Observer, ambos deberían ser iguales)
+                    $teacherData = $value['teacher'];
 
                     $teachers[] = [
-                        'subject_name' => $subject->name,
-                        'fullName' => $value['teacher']['name'] . ' ' . $value['teacher']['last_name'],
-                        'photo' => $value['teacher']['photo'],
-                        'email' => $value['teacher']['email'],
-                        'phone' => $value['teacher']['phone'],
-                        'jobPosition' => $value['teacher']['jobPosition']['name'],
-                        'files' => $files,
-                        'backgroundColor' => $color,
+                        'subject_name'    => $subject->name,
+                        'fullName'        => $teacherData['name'] . ' ' . $teacherData['last_name'],
+                        'photo'           => $teacherData['photo'], // Ojo: Verifica si usas photo o photo_url
+                        'email'           => $teacherData['email'],
+                        'phone'           => $teacherData['phone'],
+                        'jobPosition'     => $teacherData['jobPosition']['name'] ?? 'Docente',
+                        'files'           => $planningFiles,
+                        'backgroundColor' => generarColorPastelAleatorio(70),
                     ];
                 }
             }
         }
 
+        // Estas dos consultas son rápidas, están bien aquí
         $grade = $this->gradeRepository->find($grade_id);
         $section = $this->sectionRepository->find($section_id);
 
-        $title = $grade->name . ' ' . $section->name;
-
         return response()->json([
             'teachers' => $teachers,
-            'title' => $title,
+            'title'    => ($grade->name ?? '') . ' ' . ($section->name ?? ''),
         ]);
     }
 

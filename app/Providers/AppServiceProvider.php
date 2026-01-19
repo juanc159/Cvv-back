@@ -6,6 +6,10 @@ use App\Interfaces\TodoInterface;
 use App\Repositories\TodoRepository;
 use App\Repositories\TodoRepositoryRedis;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Observers\StudentObserver;
+use App\Observers\TeacherObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +27,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Carbon\Carbon::setLocale(config('app.locale'));
+
+        // Registrar Observadores
+        Student::observe(StudentObserver::class);
+        Teacher::observe(TeacherObserver::class);
     }
 }

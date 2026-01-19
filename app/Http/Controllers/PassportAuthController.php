@@ -60,36 +60,17 @@ class PassportAuthController extends Controller
     public function login(PassportAuthLoginRequest $request)
     {
         try {
-            $data = [
-                'user' => $request->input('user'),
-                'password' => $request->input('password'),
-            ];
+            $loginField = $request->input('user'); // Puede ser email o cédula
+            $password = $request->input('password');
 
-            $user = $data['user'];
-            $password = $data['password'];
-            $type = null;
+            // 1. BÚSQUEDA INTELIGENTE EN TABLA UNIFICADA (USERS)
+            // Buscamos a alguien que tenga ese Email O esa Cédula
+            $user = User::where('email', $loginField)
+                ->orWhere('identity_document', $loginField)
+                ->first();
 
-            // Verificamos si el usuario es un correo electrónico
-            if (filter_var($user, FILTER_VALIDATE_EMAIL)) {
-                // Intentamos autenticarnos con el guardia de 'users' (para usuarios y profesores con email)
-                $userRecord = $this->userRepository->searchUser($data);
-                if (! $userRecord) {
-                    // Si no se encuentra en 'users', verificamos en 'teachers' (profesores con email)
-                    $userRecord = $this->teacherRepository->searchUser($data);
-                    $type = 'teacher';
-                } else {
-                    $type = 'admin';
-                }
-            } else {
-                // Si no es correo electrónico, asumimos que es una cédula (para estudiantes)
-                $userRecord = $this->studentRepository->searchUser($data);
-                $type = 'student';
-            }
-
-            if ($userRecord && Hash::check($password, $userRecord->password)) {
-                // Autenticación exitosa para 'students'
-                $token = $userRecord->createToken('authToken');
-            } else {
+            // 2. VERIFICACIÓN DE PASSWORD
+            if (!$user || !Hash::check($password, $user->password)) {
                 return response()->json([
                     'code' => '401',
                     'error' => 'Not authorized',
@@ -97,32 +78,56 @@ class PassportAuthController extends Controller
                 ], 401);
             }
 
-            if ($token && $type) {
-                switch ($type) {
-                    case 'admin':
-                        $response = $this->loginAdmin($userRecord, $token);
-                        break;
-                    case 'teacher':
-                        $response = $this->loginTeacher($userRecord, $token);
-                        break;
-                    case 'student':
-                        $response = $this->loginStudent($userRecord, $token);
-                        break;
-
-                    default:
-                        // code...
-                        break;
-                }
+            // 3. VERIFICACIÓN DE ESTADO (IS_ACTIVE)
+            if (!$user->is_active) {
+                return response()->json([
+                    'code' => '401',
+                    'message' => 'El usuario se encuentra inactivo. Contacte administración.',
+                ], 401);
             }
 
-            return response()->json($response, 200);
+            // 4. GENERACIÓN DEL TOKEN
+            // Aquí ya estamos seguros de quién es. Creamos el token.
+            // Opcional: Podríamos agregar Scopes aquí: $user->createToken('authToken', [$user->type_user]);
+            $token = $user->createToken('authToken');
+
+            // 5. REDIRECCIONAMIENTO DE RESPUESTA (Strategy Pattern)
+            // Dependiendo del tipo de usuario, llamamos a la función que arma la respuesta correcta
+            // Nota: Pasamos $user->student o $user->teacher porque tus funciones viejas esperan el modelo del perfil
+
+            switch ($user->type_user) {
+                case 'admin':
+                    return response()->json($this->loginAdmin($user, $token), 200);
+
+                case 'teacher':
+                    // Cargamos la relación del perfil de profesor
+                    $teacherProfile = $user->teacher; // Asegúrate de tener la relación en el modelo User
+
+                    if (!$teacherProfile) {
+                        return response()->json(['code' => 500, 'message' => 'Perfil de docente no encontrado.'], 500);
+                    }
+                    // Tus funciones viejas esperan el objeto Teacher, no el User global, así que se lo pasamos
+                    return response()->json($this->loginTeacher($teacherProfile, $token), 200);
+
+                case 'student':
+                    // Cargamos la relación del perfil de estudiante
+                    $studentProfile = $user->student; // Asegúrate de tener la relación en el modelo User
+
+                    if (!$studentProfile) {
+                        return response()->json(['code' => 500, 'message' => 'Perfil de estudiante no encontrado.'], 500);
+                    }
+                    return response()->json($this->loginStudent($studentProfile, $token), 200);
+
+                default:
+                    return response()->json(['code' => 403, 'message' => 'Tipo de usuario no válido'], 403);
+            }
         } catch (Throwable $th) {
             return response()->json([
-                'code' => '401',
-                'error' => 'Not authorized',
-                'message' => 'Credenciales incorrectas',
-                $th->getMessage(),
-            ], 401);
+                'code' => '500',
+                'error' => 'Internal Server Error',
+                'message' => 'Ocurrió un error en el servidor',
+                'details' => $th->getMessage() // Solo para desarrollo
+            ], 500);
         }
     }
 
@@ -246,11 +251,58 @@ class PassportAuthController extends Controller
 
         $company = $user->company;
 
+        // --------------------------------------------------
+        // 2. CONSTRUCCIÓN DEL MENÚ (LÓGICA AGREGADA)
+        // --------------------------------------------------
+
+        // A. Definimos los items "crudos" que ve el estudiante
+        $rawMenu = [
+            [
+                'title' => 'Inicio',
+                'to' => 'DashboardTeacher', // Debe coincidir con el 'name' en tu archivo Vue
+                'icon' => 'tabler-home',
+                // 'children' => [] // Si tuviera hijos se ponen aquí
+            ],
+            [
+                'title' => 'Actividades',
+                'to' => 'ActivitiesTeacher', // Nombre de la ruta que crearemos ahora
+                'icon' => 'tabler-notebook', // Un icono acorde
+            ],
+            [
+                'title' => 'Mis Actividades',
+                'to' => 'ActivitiesStudent', // Nombre de la ruta Vue
+                'icon' => 'tabler-backpack', // Un icono de mochila queda bien
+            ],
+            // Aquí puedes agregar más items en el futuro (ej: 'Mis Notas', 'Horario')
+        ];
+
+        $arrayMenu = [];
+
+        // B. Transformamos al formato que exige tu Frontend (con to.name e icon.icon)
+        foreach ($rawMenu as $key => $value) {
+            $arrayMenu[$key]['title'] = $value['title'];
+
+            // Formateo de ruta
+            $arrayMenu[$key]['to']['name'] = $value['to'];
+
+            // Formateo de icono
+            $arrayMenu[$key]['icon']['icon'] = $value['icon'] ?? 'mdi-circle-outline';
+
+            // Lógica para hijos (Children) si existieran
+            if (!empty($value['children'])) {
+                foreach ($value['children'] as $key2 => $value2) {
+                    $arrayMenu[$key]['children'][$key2]['title'] = $value2['title'];
+                    $arrayMenu[$key]['children'][$key2]['to']['name'] = $value2['to'];
+                    // Puedes agregar lógica de iconos para hijos aquí si la necesitas
+                }
+            }
+        }
+
         return [
-            'token' => $token->accessToken,
+            'access_token' => $token->accessToken,
             'user' => $obj,
             'company' => $company,
-            'menu' => [],
+            'menu' => $arrayMenu,
             'permissions' => [],
             'message' => 'Bienvenido',
             'code' => '200',
@@ -307,11 +359,48 @@ class PassportAuthController extends Controller
 
             $company = $user->company;
 
+            // --------------------------------------------------
+            // 2. CONSTRUCCIÓN DEL MENÚ (LÓGICA AGREGADA)
+            // --------------------------------------------------
+
+            // A. Definimos los items "crudos" que ve el estudiante
+            $rawMenu = [
+                [
+                    'title' => 'Inicio',
+                    'to' => 'DashboardStudent', // Debe coincidir con el 'name' en tu archivo Vue
+                    'icon' => 'tabler-home',
+                    // 'children' => [] // Si tuviera hijos se ponen aquí
+                ],
+                // Aquí puedes agregar más items en el futuro (ej: 'Mis Notas', 'Horario')
+            ];
+
+            $arrayMenu = [];
+
+            // B. Transformamos al formato que exige tu Frontend (con to.name e icon.icon)
+            foreach ($rawMenu as $key => $value) {
+                $arrayMenu[$key]['title'] = $value['title'];
+
+                // Formateo de ruta
+                $arrayMenu[$key]['to']['name'] = $value['to'];
+
+                // Formateo de icono
+                $arrayMenu[$key]['icon']['icon'] = $value['icon'] ?? 'mdi-circle-outline';
+
+                // Lógica para hijos (Children) si existieran
+                if (!empty($value['children'])) {
+                    foreach ($value['children'] as $key2 => $value2) {
+                        $arrayMenu[$key]['children'][$key2]['title'] = $value2['title'];
+                        $arrayMenu[$key]['children'][$key2]['to']['name'] = $value2['to'];
+                        // Puedes agregar lógica de iconos para hijos aquí si la necesitas
+                    }
+                }
+            }
+
             return [
-                'token' => $token->accessToken,
+                'access_token' => $token->accessToken,
                 'user' => $obj,
                 'company' => $company,
-                'menu' => [],
+                'menu' => $arrayMenu,
                 'permissions' => [],
                 'message' => 'Bienvenido',
                 'code' => '200',
