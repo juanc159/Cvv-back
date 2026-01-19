@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\ConsolidatedExport;
+use App\Exports\ConsolidatedExportPercentage;
 use App\Helpers\Constants;
 use App\Models\BlockData;
 use App\Models\Grade;
@@ -437,7 +437,7 @@ class NoteController extends Controller
             $type_education_id = $request->input('type_education_id');
 
             if (count($students) > 0) {
-                $excel = Excel::raw(new ConsolidatedExport($students, $headers, $type_education_id), \Maatwebsite\Excel\Excel::XLSX);
+                $excel = Excel::raw(new ConsolidatedExportPercentage($students, $headers, $type_education_id), \Maatwebsite\Excel\Excel::XLSX);
 
                 $excelBase64 = base64_encode($excel);
 
@@ -528,6 +528,156 @@ class NoteController extends Controller
             DB::rollback();
 
             return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
+
+
+    public function downloadAllConsolidatedPocentage(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+            $typeEducationId = $request->input('type_education_id');
+
+            // 1. Get all Teacher Assignments (Complementaries) for the specific Type of Education
+            // We filter by company via the related Teacher
+            $assignments = \App\Models\TeacherComplementary::query()
+                ->with([
+                    'grade:id,name',
+                    'section:id,name',
+                    'teacher' => function ($q) use ($companyId, $typeEducationId) {
+                        $q->select('id', 'company_id', 'type_education_id')
+                            ->where('company_id', $companyId)
+                            ->where('type_education_id', $typeEducationId);
+                    }
+                ])
+                ->whereHas('teacher', function ($q) use ($companyId, $typeEducationId) {
+                    $q->where('company_id', $companyId)
+                        ->where('type_education_id', $typeEducationId);
+                })
+                ->get();
+
+            // 2. Optimización: Obtener solo las materias de esta empresa Y de este tipo de educación
+            $allSubjects = \App\Models\Subject::query()
+                ->where('company_id', $companyId)
+                ->where('type_education_id', $typeEducationId) // <--- Filtro clave que faltaba
+                ->where('is_active', true) // <--- Buena práctica: solo materias activas
+                ->pluck('code', 'id'); // Key: ID, Value: Code
+
+            // 3. Get Type Education for Note Count (Assuming only 1 type is requested)
+            $typeEducation = \App\Models\TypeEducation::find($typeEducationId);
+            $cantNotes = $typeEducation ? $typeEducation->cantNotes : 4;
+
+            $exportData = [];
+            $headers = [];
+            $nro = 1;
+
+            // 4. Optimization: Get IDs needed to fetch students in one go
+            // (Optional: If the dataset is massive, we can chunk. For now, we load per assignment).
+
+            foreach ($assignments as $assignment) {
+                // Parse Subject IDs
+                $subjectIds = array_filter(array_map('trim', explode(',', $assignment->subject_ids)));
+
+                if (empty($subjectIds)) continue;
+
+                // 5. Fetch Students for this specific Grade/Section
+                // Eager Load Notes ONLY for the relevant subjects to save memory
+                $students = \App\Models\Student::query()
+                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate')
+                    ->where('company_id', $companyId)
+                    ->where('grade_id', $assignment->grade_id)
+                    ->where('section_id', $assignment->section_id)
+                    ->where('is_active', true) // Best practice
+                    ->whereDoesntHave('withdrawal') // Exclude withdrawn
+                    ->with(['notes' => function ($q) use ($subjectIds) {
+                        $q->select('student_id', 'subject_id', 'json')
+                            ->whereIn('subject_id', $subjectIds);
+                    }])
+                    ->orderBy('full_name') // Let SQL do the sorting
+                    ->get();
+
+                // 6. Process Students
+                foreach ($students as $student) {
+
+                    // Map notes for quick access: [subject_id => json_array]
+                    $studentNotes = $student->notes->keyBy('subject_id');
+
+                    $row = [
+                        'nro' => $nro++,
+                        'grade' => $assignment->grade->name,
+                        'section' => $assignment->section->name,
+                        'identity_document' => $student->identity_document,
+                        'full_name' => $student->full_name,
+                        'pdf' => $student->pdf == 1 ? 1 : '',
+                        'solvencyCertificate' => $student->solvencyCertificate == 1 ? 1 : '',
+                    ];
+
+                    // Process Grades
+                    for ($i = 1; $i <= $cantNotes; $i++) {
+                        foreach ($subjectIds as $subId) {
+                            if (!isset($allSubjects[$subId])) continue;
+
+                            $subjectCode = $allSubjects[$subId];
+                            $headerKey = "{$subjectCode}{$i}";
+
+                            // Build Headers Dynamically
+                            $gradeName = $assignment->grade->name;
+                            if (!isset($headers[$gradeName])) {
+                                $headers[$gradeName] = [];
+                            }
+                            if (!in_array($headerKey, $headers[$gradeName])) {
+                                $headers[$gradeName][] = $headerKey;
+                            }
+
+                            // Extract Note
+                            $noteValue = null;
+                            if (isset($studentNotes[$subId])) {
+                                $jsonNotes = json_decode($studentNotes[$subId]->json, true);
+                                $noteValue = $jsonNotes[$i] ?? null;
+                            }
+
+                            $row[$headerKey] = $noteValue;
+                        }
+                    }
+
+                    // Add to main collection (Using a composite key to merge duplicates if student appears in multiple assignments)
+                    $key = $student->identity_document;
+                    if (!isset($exportData[$key])) {
+                        $exportData[$key] = $row;
+                    } else {
+                        // Merge new subject grades into existing student row
+                        $exportData[$key] = array_merge($exportData[$key], $row);
+                    }
+                }
+            }
+
+            // 7. Sort Headers
+            foreach ($headers as $grade => $cols) {
+                sort($headers[$grade]);
+            }
+
+            // 8. Prepare Final List (Sorting by Last Name via PHP as requested)
+            $finalList = collect($exportData)->sortBy(function ($student) {
+                $nameParts = explode(',', $student['full_name']);
+                $lastName = trim($nameParts[0] ?? '');
+                // Assuming normalizeSpanishString is a helper you have
+                return function_exists('normalizeSpanishString') ? normalizeSpanishString($lastName) : $lastName;
+            })->values()->toArray();
+
+            if (count($finalList) > 0) {
+                $excel = \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\ConsolidatedExportPercentage($finalList, $headers, $typeEducationId), \Maatwebsite\Excel\Excel::XLSX);
+                $excelBase64 = base64_encode($excel);
+                return response()->json(['code' => 200, 'excel' => $excelBase64]);
+            } else {
+                return response()->json(['code' => 500, 'message' => 'No se han cargado alumnos']);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile()
+            ]);
         }
     }
 }

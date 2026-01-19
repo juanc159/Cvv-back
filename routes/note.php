@@ -14,6 +14,8 @@ Route::post('/note-blockPayrollUpload', [NoteController::class, 'blockPayrollUpl
 
 Route::get('/note-downloadAllConsolidated', [NoteController::class, 'downloadAllConsolidated']);
 
+Route::get('/abc', [NoteController::class, 'downloadAllConsolidatedPocentage']);
+
 Route::post('/note-resetOptionDownloadPdf', [NoteController::class, 'resetOptionDownloadPdf']);
 
 /*
