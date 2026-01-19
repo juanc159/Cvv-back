@@ -24,12 +24,25 @@ class StudentStoreRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Obtenemos el ID del estudiante si es edición
+        $studentId = $this->route('id') ?? $this->id;
+
+        // Si estamos editando, necesitamos buscar el user_id asociado a este estudiante
+        $userIdToIgnore = null;
+        if ($studentId) {
+            $student = \App\Models\Student::find($studentId);
+            $userIdToIgnore = $student ? $student->user_id : null;
+        }
+
         return [
             'company_id' => 'required',
             'type_education_id' => 'required',
             'grade_id' => 'required',
             'section_id' => 'required',
-            'identity_document' => 'required',
+
+            // Validamos unicidad en la tabla USERS, ignorando al usuario dueño de este perfil
+            'identity_document' => 'required|unique:users,identity_document,' . $userIdToIgnore,
+
             'full_name' => 'required',
             'gender' => 'required',
             'birthday' => 'required',
@@ -47,6 +60,7 @@ class StudentStoreRequest extends FormRequest
             'grade_id.required' => 'El campo es obligatorio',
             'section_id.required' => 'El campo es obligatorio',
             'identity_document.required' => 'El campo es obligatorio',
+            'identity_document.unique' => 'El número de documento ya está registrado',
             'full_name.required' => 'El campo es obligatorio',
             'gender.required' => 'El campo es obligatorio',
             'birthday.required' => 'El campo es obligatorio',

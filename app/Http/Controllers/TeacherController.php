@@ -9,6 +9,7 @@ use App\Http\Resources\Teacher\TeacherListResource;
 use App\Http\Resources\Teacher\TeacherPlanningResource;
 use App\Jobs\BrevoProcessSendEmail;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Repositories\CompanyRepository;
 use App\Repositories\JobPositionRepository;
 use App\Repositories\SectionRepository;
@@ -20,6 +21,7 @@ use App\Repositories\TeacherRepository;
 use App\Repositories\TypeEducationRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
@@ -103,44 +105,82 @@ class TeacherController extends Controller
         try {
             DB::beginTransaction();
 
+            // ---------------------------------------------------
+            // PASO 1: CREAR EL USUARIO MAESTRO (Tabla users)
+            // ---------------------------------------------------
+
+            // Definimos contraseña: Si no envían una, usamos el email por defecto
+            $password = $request->password
+                ? Hash::make($request->password)
+                : Hash::make($request->email);
+
+            $user = User::create([
+                'name'      => $request->name,
+                'surname'   => $request->last_name, // Ojo: mapeamos last_name a surname
+                'email'     => $request->email,
+                'password'  => $password,
+                'type_user' => 'teacher', // Importante para el login
+                'is_active' => true,
+                'company_id' => $request->company_id,
+                // 'role_id' => ... (si usas roles)
+            ]);
+
+            // ---------------------------------------------------
+            // PASO 2: CREAR EL PERFIL DOCENTE (Tabla teachers)
+            // ---------------------------------------------------
+
             $post = $request->except(['photo', 'complementaries']);
 
+            // Inyectamos el ID del usuario recién creado
+            $post['user_id'] = $user->id;
+
+            // Limpieza de password para el repositorio (tu lógica original)
             if (empty($post['password'])) {
                 unset($post['password']);
             }
 
             $data = $this->teacherRepository->store($post);
 
+            // ---------------------------------------------------
+            // PASO 3: LÓGICA DE FOTO (Tu código original)
+            // ---------------------------------------------------
             if ($request->file('photo')) {
                 $file = $request->file('photo');
-                $photo = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
-                $data->photo = $photo;
+                // Nota: Mantenemos tu nomenclatura de archivo original
+                $photoPath = $file->store('company_' . $data->company_id . '/teachers/teacher_' . $data->id . $request->input('photo'), 'public');
+                $data->photo = $photoPath;
                 $data->save();
             }
 
-            // COMPLEMENTARIES
+            // ---------------------------------------------------
+            // PASO 4: COMPLEMENTARIOS (Tu código original)
+            // ---------------------------------------------------
             $complementaries = json_decode($request->input('complementaries'), 1);
-            $arrayIds = collect($complementaries)->pluck('id');
-            $this->teacherRepository->deleteArrayComplementaries($arrayIds, $data);
 
-            if ($complementaries) {
+            // Validación extra: asegurarse que complementaries no sea null antes de usar collect
+            if (is_array($complementaries)) {
+                $arrayIds = collect($complementaries)->pluck('id');
+                $this->teacherRepository->deleteArrayComplementaries($arrayIds, $data);
+
                 foreach ($complementaries as $key => $value) {
-                    $subjectsArray = collect($value['subjects'])->pluck('value')->toArray();
-                    $subjectsArray = implode(', ', $subjectsArray);
+                    // Validación defensiva por si subjects o value no vienen
+                    $subjectsData = $value['subjects'] ?? [];
+                    $subjectsArray = collect($subjectsData)->pluck('value')->toArray();
+                    $subjectsString = implode(', ', $subjectsArray);
 
                     $this->teacherComplementaryRepository->store([
                         'id' => $value['id'] ?? null,
                         'teacher_id' => $data->id,
                         'grade_id' => $value['grade_id'],
                         'section_id' => $value['section_id'],
-                        'subject_ids' => $subjectsArray,
+                        'subject_ids' => $subjectsString,
                     ]);
                 }
             }
 
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registro agregada correctamente']);
+            return response()->json(['code' => 200, 'message' => 'Registro agregado correctamente']);
         } catch (Throwable $th) {
             DB::rollBack();
 

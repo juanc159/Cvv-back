@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Obtener als notificaciones del usuario
-Route::get('/notification/getNotifications/{userId}', [NotificationController::class, 'getNotifications']);
+Route::get('/notification/getNotifications', [NotificationController::class, 'getNotifications']);
 
 // Marcar múltiples notificaciones como leídas
 Route::post('notification/markMultipleAsRead', [NotificationController::class, 'markMultipleAsRead']);

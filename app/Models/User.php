@@ -24,11 +24,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -86,5 +82,17 @@ class User extends Authenticatable
      public function notificaciones()
     {
         return $this->morphMany(Notification::class, 'notifiable');
+    }
+
+    // Relación: Un User tiene un perfil de Estudiante asociado
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id', 'id');
+    }
+
+    // Relación: Un User tiene un perfil de Profesor asociado
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class, 'user_id', 'id');
     }
 }

@@ -15,9 +15,10 @@ class NotificationController extends Controller
         protected UserRepository $userRepository,
     ) {}
 
-    public function getNotifications($userId, Request $request)
+    public function getNotifications(Request $request)
     {
-        $user = $this->userRepository->find($userId);
+        // Obtén el usuario directamente de la sesión
+        $user = auth()->user();
 
         $perPage = 3;
 

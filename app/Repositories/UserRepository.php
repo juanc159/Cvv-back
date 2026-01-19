@@ -24,7 +24,7 @@ class UserRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () use ($request){
+        return $this->cacheService->remember($cacheKey, function () use ($request) {
 
             $query = QueryBuilder::for($this->model->query())
                 ->select('users.id', 'users.name', 'users.surname', 'users.email', 'users.role_id', 'users.is_active', 'users.company_id')
@@ -55,7 +55,7 @@ class UserRepository extends BaseRepository
                         'roles',
                         'description',
                         'role_id',
-                    )), 
+                    )),
                     AllowedSort::custom('full_name', new UserFullNameSort),
 
                 ])
@@ -63,6 +63,7 @@ class UserRepository extends BaseRepository
                     if (! empty($request['company_id'])) {
                         $query->where('users.company_id', $request['company_id']);
                     }
+                    $query->where('type_user', 'admin');
                 })
                 ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
 
@@ -78,7 +79,7 @@ class UserRepository extends BaseRepository
                 filterComponent($query, $request);
 
                 if (! empty($request['name'])) {
-                    $query->where('name', 'like', '%'.$request['name'].'%');
+                    $query->where('name', 'like', '%' . $request['name'] . '%');
                 }
 
                 // idsAllowed
@@ -199,6 +200,8 @@ class UserRepository extends BaseRepository
             if (! empty($request['company_id'])) {
                 $query->where('company_id', $request['company_id']);
             }
+                    $query->where('type_user', 'admin');
+
         })->count();
 
         return $data;
