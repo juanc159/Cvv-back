@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Activity\ActivityStatusEnum;
 use App\Http\Resources\Country\CountrySelectResource;
 use App\Http\Resources\Grade\GradeSelectInifiniteResource;
 use App\Http\Resources\Student\StudentSelectInifiniteResource;
@@ -148,6 +149,43 @@ class QueryController extends Controller
             'code' => 200,
             'typeDocument_arrayInfo' => $dataTypeDocument,
             'typeDocument_countLinks' => $typeDocument->lastPage(),
+        ];
+    }
+
+    public function selectActivityStatusEnum(Request $request)
+    {
+        // 1. Obtener todos los casos del enum
+        $status = ActivityStatusEnum::cases();
+
+        // 2. Mapear los casos
+        $status = collect($status)->map(function ($item) {
+            return [
+                'value' => $item->value,              
+                'title' => $item->description(),  
+            ];
+        });
+
+        // 3. Filtrar por búsqueda de texto (Search Query)
+        if ($request->has('searchQueryInfinite') && ! empty($request->input('searchQueryInfinite'))) {
+            $searchTerm = strtolower($request->input('searchQueryInfinite'));
+            $status = $status->filter(function ($item) use ($searchTerm) {
+                return str_contains(strtolower($item['title']), $searchTerm);
+            });
+        }
+
+        // 4. Filtrar por "type" exacto
+        if ($request->has('type') && ! empty($request->input('type'))) {
+            $type = $request->input('type');
+
+            $status = $status->filter(function ($item) use ($type) {
+                return $item['value'] === $type;   // <-- string vs string
+            });
+        }
+
+        return [
+            'code' => 200,
+            'activityStatusEnum_arrayInfo' => $status->values()->toArray(),
+            'activityStatusEnum_countLinks' => 1,
         ];
     }
 }
