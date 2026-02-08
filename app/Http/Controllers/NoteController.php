@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ConsolidatedExport;
 use App\Exports\ConsolidatedExportPercentage;
 use App\Helpers\Constants;
 use App\Models\BlockData;
@@ -437,7 +438,7 @@ class NoteController extends Controller
             $type_education_id = $request->input('type_education_id');
 
             if (count($students) > 0) {
-                $excel = Excel::raw(new ConsolidatedExportPercentage($students, $headers, $type_education_id), \Maatwebsite\Excel\Excel::XLSX);
+                $excel = Excel::raw(new ConsolidatedExport($students, $headers, $type_education_id), \Maatwebsite\Excel\Excel::XLSX);
 
                 $excelBase64 = base64_encode($excel);
 
