@@ -707,4 +707,29 @@ class NoteController extends Controller
             ]);
         }
     }
+
+
+    public function deleteAllStudentGradeScores(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Eliminar todos los registros de la tabla 'notes'
+            DB::table('notes')->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'code' => 200,
+                'message' => 'Todas las notas de los estudiantes han sido eliminadas exitosamente.'
+            ]);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error al eliminar las notas: ' . $th->getMessage()
+            ]);
+        }
+    }
 }

@@ -167,6 +167,12 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar Constancias Masivas',
                 'menu_id' => 18,
             ],
+            [
+                'id' => 26,
+                'name' => 'note.delete_all_student_grade_scores_permission',
+                'description' => 'Eliminar todas las calificaciones de los estudiantes',
+                'menu_id' => 12,
+            ],
         ];
 
         // Inicializar la barra de progreso

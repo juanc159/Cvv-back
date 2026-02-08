@@ -18,6 +18,8 @@ Route::get('/note-downloadConsolidatedPocentage', [NoteController::class, 'downl
 
 Route::post('/note-resetOptionDownloadPdf', [NoteController::class, 'resetOptionDownloadPdf']);
 
+Route::post('/note-deleteAllStudentGradeScores', [NoteController::class, 'deleteAllStudentGradeScores']);
+
 /*
 |--------------------------------------------------------------------------
 | Type Educations
