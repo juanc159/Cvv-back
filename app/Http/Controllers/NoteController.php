@@ -173,6 +173,7 @@ class NoteController extends Controller
 
                         if ($gradeId && $sectionId) {
                             $studentData = [
+                                'id' => $student ? $student->id : null,
                                 // 'identity_document' => $cedula,
                                 // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Estudiante Nuevo',
                                 // 'grade_id' => $gradeId,
@@ -194,7 +195,7 @@ class NoteController extends Controller
                                 $val = trim($row['SOLVENTE']);
                                 $studentData['solvencyCertificate'] = ($val == 1 || $val === '1') ? 1 : 0;
                             }
-
+ 
 
                             // Usamos tu repositorio existente
                             $student = $this->studentRepository->store($studentData);
