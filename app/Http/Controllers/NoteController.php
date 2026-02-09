@@ -61,190 +61,211 @@ class NoteController extends Controller
 
     public function store(Request $request)
     {
-        // set_time_limit(30000);
-        // ini_set('memory_limit', '2048M');
+        // 1. Configuración para procesos pesados
+        // set_time_limit(0);
+        // ini_set('memory_limit', '512M');
+
+        DB::beginTransaction();
 
         try {
-            DB::beginTransaction();
+            // Validación básica
+            if (!$request->hasFile('archive')) {
+                return response()->json(['code' => 400, 'message' => 'No se ha subido ningún archivo']);
+            }
 
-            if ($request->hasFile('archive')) {
-                $file = $request->file('archive');
-                $import = Excel::toArray([], $file);
+            $teacher_id = $request->teacher_id;
+            $typeEducationId = $request->input('type_education_id');
 
-                $teacher_id = $request->teacher_id;
+            // ---------------------------------------------------------
+            // FASE 1: PREPARACIÓN DE DATOS (OPTIMIZACIÓN)
+            // ---------------------------------------------------------
 
-                $teacher = Teacher::with([
-                    'complementaries',
-                ])->find($teacher_id);
+            // A. Cargar Docente y sus Asignaciones
+            $teacher = \App\Models\Teacher::with(['complementaries.grade', 'complementaries.section'])
+                ->find($teacher_id);
 
-                $subjectsData = [];
-                if ($teacher) {
-                    foreach ($teacher->complementaries as $complementary) {
-                        // Acceder a las materias relacionadas
-                        $subjects = $complementary->subjects;
+            if (!$teacher) {
+                throw new \Exception("Docente no encontrado");
+            }
 
-                        // Puedes hacer lo que necesites con las materias
-                        foreach ($subjects as $subject) {
-                            // echo $subject->name; // Mostrar el nombre de la materia, por ejemplo
-                            $subjectsData[] = $subject;
-                        }
-                    }
-                    // return $subjectsData;
-                }
+            // B. Obtener configuración de notas (ej: 3 lapsos)
+            $typeEducation = $this->typeEducationRepository->find($typeEducationId);
+            $cantNotes = $typeEducation ? $typeEducation->cantNotes : 3;
 
-                $typeEducation = $this->typeEducationRepository->find($request->input('type_education_id'), ['grades.subjects']);
+            // C. Construir "Mapa de Permisos" y lista de IDs de materias
+            // Estructura: $mapaPermisos['Grado']['Seccion'] = [ID_Mat1, ID_Mat2...]
+            $mapaPermisos = [];
+            $todosIdsMaterias = [];
 
-                $sheets = count($import);
-                for ($j = 0; $j < $sheets; $j++) {
+            foreach ($teacher->complementaries as $comp) {
+                if ($comp->grade && $comp->section) {
+                    // Normalizamos nombres (Trim) para coincidir con Excel
+                    $gName = trim($comp->grade->name);
+                    $sName = trim($comp->section->name);
 
+                    $ids = array_map('trim', explode(',', $comp->subject_ids));
 
-                    for ($i = 0; $i < $typeEducation->cantNotes; $i++) {
-                        // Suponiendo que solo hay una hoja en el archivo Excel
-                        $data = $import[$j];
+                    // Guardamos los permisos
+                    $mapaPermisos[$gName][$sName] = $ids;
 
-
-                        // Obtener las claves y eliminarlas de $data
-                        $keys = array_shift($data);
-                        $formattedData = [];
-
-
-                        foreach ($data as $row) {
-                            $formattedRow = [];
-                            foreach ($keys as $index => $key) {
-                                $formattedRow[$key] = $row[$index] ?? null;
-                            }
-                            $formattedData[] = $formattedRow;
-                        }
-
-
-
-                        // $groupedCedulas = collect($formattedData)
-                        //     ->filter(function ($item) {
-                        //         return ! is_null($item['CÉDULA']); // Filtrar elementos con cédulas no nulas
-                        //     })
-                        //     ->groupBy('AÑO') // Agrupar por AÑO
-                        //     ->map(function ($yearGroup) {
-                        //         return $yearGroup->groupBy('SECCIÓN') // Agrupar por SECCIÓN dentro de cada AÑO
-                        //             ->map(function ($sectionGroup) {
-                        //                 return $sectionGroup->pluck('CÉDULA')->filter()->values(); // Extraer cédulas
-                        //             });
-                        //     });
-
-                        // foreach ($groupedCedulas as $key => $value) {
-                        //     // $grade = Grade::where("name", $key)->first();
-                        //     $grade = $this->grade($key, 'name');
-                        //     if ($grade) {
-                        //         foreach ($value as $key2 => $value2) {
-                        //             // $section = Section::where("name", trim($key2))->first();
-                        //             $section = $this->section($key2, 'name');
-                        //             if ($section) {
-                        //                 $this->studentRepository->deleteDataArray([
-                        //                     'company_id' => $request->input('company_id'),
-                        //                     'identity_document' => $value2,
-                        //                     'type_education_id' => $request->input('type_education_id'),
-                        //                     'grade_id' => $grade->id,
-                        //                     'section_id' => $section->id,
-                        //                 ]);
-                        //             }
-                        //         }
-                        //     }
-                        // }
-
-                        // Obtener todos los estudiantes cuyos cedulas NO están en el array
-
-                        $formattedData = array_map(function ($item) {
-                            return array_map('trim', $item); // Aplica trim a cada valor del item
-                        }, $formattedData);
-
-
-
-                        foreach ($formattedData as $kkk => $row) {
-                            if (! empty($row['CÉDULA'])) {
-
-                                $grade = $this->grade($row['AÑO'], 'name');
-                                // $section = $this->section($row['SECCIÓN'], 'name');
-
-                                $student = $this->studentRepository->searchOne([
-                                    'identity_document' => $row['CÉDULA'],
-                                ]);
-
-                                $model = [
-                                    'id' => $student ? $student->id : null,
-                                    // 'company_id' => $request->input('company_id'),
-                                    // 'type_education_id' => $request->input('type_education_id'),
-                                    // 'grade_id' => $grade?->id,
-                                    // 'section_id' => $section?->id,
-                                    // 'identity_document' => $row['CÉDULA'],
-                                    // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'],
-                                ];
-
-                                if (isset($row['PDF'])) {
-                                    $model['pdf'] = $row['PDF'] == 1 ? 1 : 0;
-                                }
-                                if (isset($row['SOLVENTE'])) {
-                                    $model['solvencyCertificate'] = $row['SOLVENTE'] == 1 ? 1 : 0;
-                                }
-
-                                if ($student) {
-                                    unset($model['password']);
-                                }
-
-                                $student = $this->studentRepository->store($model);
-
-                                //  $teacher->complementaries->where("grade_id",$grade->id);
-
-
-                                if (!$teacher) {
-                                    $subjectsData = [];
-                                }
-                                if (count($subjectsData) == 0) {
-
-                                    $grade = $typeEducation->grades->where('id', $grade->id)->first();
-
-                                    $subjectsData = $grade->subjects;
-                                }
-
-                                foreach ($subjectsData as $key => $sub) {
-                                    $model2 = [
-                                        'student_id' => $student->id,
-                                        'subject_id' => $sub->id,
-                                    ];
-
-                                    $note = $this->noteRepository->searchOne($model2);
-                                    $json = null;
-
-                                    if ($note) {
-                                        $json = json_decode($note->json, 1);
-                                    }
-
-                                    $model2 = [
-                                        'id' => $note ? $note->id : null,
-                                        'student_id' => $student->id,
-                                        'subject_id' => $sub->id,
-                                    ];
-
-                                    for ($xx = 1; $xx <= $typeEducation->cantNotes; $xx++) {
-                                        $json[$xx] = isset($row[$sub->code . $xx]) ? trim($row[$sub->code . $xx]) : (isset($json[$xx]) ? $json[$xx] : null);
-                                    }
-
-                                    $model2['json'] = json_encode($json);
-
-                                    $this->noteRepository->store($model2);
-                                }
-                                // return 4444;
-                            }
-                        }
-                    }
+                    // Acumulamos IDs para buscar sus códigos después
+                    $todosIdsMaterias = array_merge($todosIdsMaterias, $ids);
                 }
             }
 
+            // D. Diccionario de Materias (ID => Código)
+            // Esto evita buscar "SELECT code FROM subjects WHERE id=..." mil veces
+            $todosIdsMaterias = array_unique($todosIdsMaterias);
+            $diccionarioMaterias = \App\Models\Subject::whereIn('id', $todosIdsMaterias)
+                ->pluck('code', 'id')
+                ->toArray();
+            // Resultado: [15 => 'fsn', 20 => 'mat']
+
+            // E. Diccionario de Grados y Secciones (Nombre => ID)
+            // Necesario para crear/buscar estudiantes sin consultar la BD en el bucle
+            $mapaGrados = \App\Models\Grade::where('company_id', $teacher->company_id)->pluck('id', 'name')->toArray();
+            $mapaSecciones = \App\Models\Section::pluck('id', 'name')->toArray();
+
+            // ---------------------------------------------------------
+            // FASE 2: PROCESAMIENTO DEL EXCEL
+            // ---------------------------------------------------------
+
+            $file = $request->file('archive');
+            $import = \Maatwebsite\Excel\Facades\Excel::toArray([], $file);
+
+            foreach ($import as $sheetData) {
+                if (empty($sheetData)) continue;
+
+                // Extraer y limpiar encabezados
+                $headerRow = array_shift($sheetData);
+                $headerKeys = array_map('trim', $headerRow);
+
+                foreach ($sheetData as $rowData) {
+                    // Convertir fila a array asociativo
+                    // array_slice asegura que no falle si la fila tiene más datos que el header
+                    $row = array_combine($headerKeys, array_slice($rowData, 0, count($headerKeys)));
+
+                    // 1. Validar datos mínimos
+                    if (empty($row['CÉDULA']) || empty($row['AÑO']) || empty($row['SECCIÓN'])) {
+                        continue;
+                    }
+
+                    $cedula = trim($row['CÉDULA']);
+                    $nombreGrado = trim($row['AÑO']);
+                    $nombreSeccion = trim($row['SECCIÓN']);
+
+                    // 2. FILTRO DE SEGURIDAD MAESTRO
+                    // Si el profesor no tiene asignada esta combinación Grado/Sección, ADIÓS.
+                    if (!isset($mapaPermisos[$nombreGrado][$nombreSeccion])) {
+                        continue;
+                    }
+
+                    // Recuperar materias permitidas para ESTA fila
+                    $materiasPermitidasIds = $mapaPermisos[$nombreGrado][$nombreSeccion];
+
+                    // 3. Buscar o Crear Estudiante
+                    $student = $this->studentRepository->searchOne(['identity_document' => $cedula]);
+
+                    if (!$student) {
+                        // Validar que tengamos los IDs para crear
+                        $gradeId = $mapaGrados[$nombreGrado] ?? null;
+                        $sectionId = $mapaSecciones[$nombreSeccion] ?? null;
+
+                        if ($gradeId && $sectionId) {
+                            $studentData = [
+                                // 'identity_document' => $cedula,
+                                // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'Estudiante Nuevo',
+                                // 'grade_id' => $gradeId,
+                                // 'section_id' => $sectionId,
+                                // 'company_id' => $teacher->company_id,
+                                // 'type_education_id' => $typeEducationId,
+                            ];
+
+
+                            // REGLA: Campos opcionales (PDF y Solvencia)
+                            // Solo se agregan al array si la columna EXISTE en el Excel
+                            if (array_key_exists('PDF', $row)) {
+                                // Si la columna existe, tomamos el valor (1 o 0)
+                                $val = trim($row['PDF']);
+                                $studentData['pdf'] = ($val == 1 || $val === '1') ? 1 : 0;
+                            }
+
+                            if (array_key_exists('SOLVENTE', $row)) {
+                                $val = trim($row['SOLVENTE']);
+                                $studentData['solvencyCertificate'] = ($val == 1 || $val === '1') ? 1 : 0;
+                            }
+
+
+                            // Usamos tu repositorio existente
+                            $student = $this->studentRepository->store($studentData);
+                        } else {
+                            // Si no encontramos el ID del grado/sección en BD, no podemos crear al alumno
+                            continue;
+                        }
+                    }
+
+                    // 4. GUARDAR NOTAS (Solo de materias permitidas)
+                    foreach ($materiasPermitidasIds as $subjectId) {
+
+                        // Obtener código (ej: 'fsn')
+                        if (!isset($diccionarioMaterias[$subjectId])) continue;
+                        $code = $diccionarioMaterias[$subjectId];
+
+                        // Buscar nota existente para este alumno y materia
+                        // Nota: Idealmente searchOne debería estar cacheado o optimizado, 
+                        // pero al filtrar por materias permitidas reducimos el impacto.
+                        $noteRecord = $this->noteRepository->searchOne([
+                            'student_id' => $student->id,
+                            'subject_id' => $subjectId
+                        ]);
+
+                        $jsonNotes = $noteRecord ? json_decode($noteRecord->json, true) : [];
+                        $huboCambios = false;
+
+                        // Recorrer lapsos (1, 2, 3...)
+                        for ($i = 1; $i <= $cantNotes; $i++) {
+                            $excelKey = $code . $i; // ej: fsn1
+
+                            if (array_key_exists($excelKey, $row)) {
+                                $val = trim($row[$excelKey]);
+
+                                // Actualizamos solo si tiene valor. 
+                                // Si quieres permitir borrar notas, quita el check de !== ''
+                                if ($val !== '') {
+                                    // Convertir a string o float según tu necesidad
+                                    $jsonNotes[$i] = $val;
+                                    $huboCambios = true;
+                                }
+                            }
+                        }
+
+                        // Guardar en BD si es necesario
+                        if ($huboCambios) {
+                            $saveParams = [
+                                'id' => $noteRecord ? $noteRecord->id : null,
+                                'student_id' => $student->id,
+                                'subject_id' => $subjectId,
+                                'json' => json_encode($jsonNotes)
+                            ];
+                            $this->noteRepository->store($saveParams);
+                        }
+                    } // Fin foreach materias
+                } // Fin foreach filas
+            } // Fin foreach hojas
+
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Registros guardados correctamente', 'data' => $data]);
-        } catch (Exception $th) {
+            return response()->json([
+                'code' => 200,
+                'message' => 'Carga masiva procesada correctamente.'
+            ]);
+        } catch (\Exception $th) {
             DB::rollBack();
-
-            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()], 500);
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error en la carga: ' . $th->getMessage(),
+                'line' => $th->getLine()
+            ], 500);
         }
     }
 
