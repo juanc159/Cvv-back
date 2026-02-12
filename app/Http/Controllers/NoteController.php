@@ -23,6 +23,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
@@ -97,22 +98,28 @@ class NoteController extends Controller
             $mapaPermisos = [];
             $todosIdsMaterias = [];
 
+
             foreach ($teacher->complementaries as $comp) {
                 if ($comp->grade && $comp->section) {
-                    // Normalizamos nombres (Trim) para coincidir con Excel
                     $gName = trim($comp->grade->name);
                     $sName = trim($comp->section->name);
 
                     $ids = array_map('trim', explode(',', $comp->subject_ids));
 
-                    // Guardamos los permisos
-                    $mapaPermisos[$gName][$sName] = $ids;
+                    // --- CAMBIO AQUÍ ---
+                    // Verificar si ya existe el array, si no, crearlo
+                    if (!isset($mapaPermisos[$gName][$sName])) {
+                        $mapaPermisos[$gName][$sName] = [];
+                    }
 
-                    // Acumulamos IDs para buscar sus códigos después
+                    // Fusionar los nuevos IDs con los existentes
+                    $mapaPermisos[$gName][$sName] = array_merge($mapaPermisos[$gName][$sName], $ids);
+                    // -------------------
+
                     $todosIdsMaterias = array_merge($todosIdsMaterias, $ids);
                 }
             }
-
+ 
             // D. Diccionario de Materias (ID => Código)
             // Esto evita buscar "SELECT code FROM subjects WHERE id=..." mil veces
             $todosIdsMaterias = array_unique($todosIdsMaterias);
@@ -195,7 +202,7 @@ class NoteController extends Controller
                                 $val = trim($row['SOLVENTE']);
                                 $studentData['solvencyCertificate'] = ($val == 1 || $val === '1') ? 1 : 0;
                             }
- 
+
 
                             // Usamos tu repositorio existente
                             $student = $this->studentRepository->store($studentData);
@@ -204,7 +211,7 @@ class NoteController extends Controller
                             continue;
                         }
                     }
-
+ 
                     // 4. GUARDAR NOTAS (Solo de materias permitidas)
                     foreach ($materiasPermitidasIds as $subjectId) {
 

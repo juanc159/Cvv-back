@@ -21,6 +21,9 @@ class ExcelStructureValidator
     public function validate($filePath, $teacherId = null, $typeEducationId = null, $companyId = 1)
     {
         $expectedHeaders = ['NRO', 'PDF', 'SOLVENTE', 'AÑO', 'SECCIÓN', 'CÉDULA', 'NOMBRES Y APELLIDOS ESTUDIANTE'];
+        if ($teacherId) {
+            $expectedHeaders = ['NRO', 'AÑO', 'SECCIÓN', 'CÉDULA', 'NOMBRES Y APELLIDOS ESTUDIANTE'];
+        }
 
         try {
             $sheets = Excel::toArray([], $filePath, null, \Maatwebsite\Excel\Excel::XLSX);

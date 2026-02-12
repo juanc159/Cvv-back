@@ -17,31 +17,30 @@ class LoadNoteMasiveController extends Controller
         protected ExcelStructureValidator $structureValidator
     ) {}
 
-    public function process(Request $request): JsonResponse
+    public function process(Request $request)
     {
         try {
             // Validar request
             $validatedData = $this->validateRequest($request);
-            
+
             // Procesar archivo
             $uploadedFile = $this->validateAndGetFile($request);
-            
+
             // Guardar archivo temporalmente
             $filePath = $this->storeTemporaryFile($uploadedFile);
             $fullPath = storage_path('app/public/' . $filePath);
-            
-            // Validar estructura del archivo
+
+            // Validar estructura del archivo 
             $this->validateFileStructure($fullPath, $validatedData, $filePath);
-            
+
             // Procesar archivo
             $result = $this->processFile($fullPath, $validatedData, $filePath);
-            
+
             // Enviar evento de progreso inicial
             $this->dispatchInitialProgressEvent($result['batch_id']);
-            
+
             // Retornar respuesta exitosa
             return $this->successResponse($result, $uploadedFile);
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->validationErrorResponse($e);
         } catch (\Exception $e) {
@@ -81,7 +80,7 @@ class LoadNoteMasiveController extends Controller
         return $uploadedFile->storeAs('temp', $fileName, 'public');
     }
 
-    private function validateFileStructure(string $fullPath, array $validatedData, string $filePath): void
+    private function validateFileStructure(string $fullPath, array $validatedData, string $filePath)
     {
         $validation = $this->structureValidator->validate(
             $fullPath,
@@ -93,7 +92,7 @@ class LoadNoteMasiveController extends Controller
         if ($validation['operation_failed']) {
             Storage::disk('public')->delete($filePath);
             Log::warning("Validation failed for file: {$fullPath}");
-            
+
             throw new \Illuminate\Validation\ValidationException(
                 validator([], []),
                 response()->json([
