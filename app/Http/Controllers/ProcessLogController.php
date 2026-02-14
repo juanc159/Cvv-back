@@ -78,7 +78,8 @@ class ProcessLogController extends Controller
                         'connection_status' => 'disconnected', // Siempre desconectado para carga histórica
                         // Añadir otros campos de metadata si son necesarios por el frontend
                         'file_size' => $metadata['file_size'] ?? 0, // Asumiendo que file_size está en metadata
-                        'file_name' => $metadata ? $metadata['file_name'] : 'Archivo desconocido',
+                        'file_name' => 'Archivo desconocido',
+                        // 'file_name' => $metadata ? $metadata['file_name'] : 'Archivo desconocido',
                         'current_sheet' => 1, // Valor por defecto para histórico
                         'total_sheets' => 1, // Valor por defecto para histórico
                         'warnings_count' => 0, // Valor por defecto para histórico
