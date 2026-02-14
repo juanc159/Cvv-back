@@ -10,7 +10,7 @@ use App\Http\Controllers\WebSocketController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Events\TestEvent;
-
+use App\Http\Controllers\ConsolidatedImportController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -98,3 +98,7 @@ Route::get('/simple-test', function () {
     return 'Simple broadcast sent!';
 });
  
+
+
+// Ruta para la carga masiva de consolidados (Nuevo proceso)
+Route::post('/import-consolidated-notes', [ConsolidatedImportController::class, 'upload']);
