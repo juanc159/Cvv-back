@@ -29,11 +29,11 @@ class ConsolidatedImportService
         'NRO', 'PDF', 'SOLVENTE', 'AÑO', 'SECCIÓN', 'CÉDULA', 'NOMBRES Y APELLIDOS ESTUDIANTE'
     ];
 
-    public function __construct()
+    public function __construct($company_id)
     {
-        $this->gradesMap = Grade::pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
+        $this->gradesMap = Grade::where('company_id', $company_id)->pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
         $this->sectionsMap = Section::pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
-        $this->subjectsMap = Subject::pluck('id', 'code')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
+        $this->subjectsMap = Subject::where('company_id', $company_id)->pluck('id', 'code')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
     }
 
     public function setBatchId($batchId) { $this->batchId = $batchId; }
