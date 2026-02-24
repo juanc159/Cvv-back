@@ -32,6 +32,7 @@ class RoutesApi
         'routes/documents.php',
         'routes/notification.php',
         'routes/activity.php',
+        'routes/comment.php',
 
     ];
 }
