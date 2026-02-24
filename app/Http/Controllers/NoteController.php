@@ -320,164 +320,176 @@ class NoteController extends Controller
 
     public function downloadAllConsolidated(Request $request)
     {
-        try {
+          try {
+            $companyId = $request->input('company_id');
+            // Inicializamos la variable, pero puede cambiar si buscamos al profesor
+            $typeEducationId = $request->input('type_education_id');
+            $teacherId = $request->input('teacher_id');
 
-            $teacherComplementariesAll = $this->teacherComplementaryRepository->list([
-                'typeData' => 'all',
-            ], [
-                'grade',
-                'section',
-                'teacher' => function ($query) use ($request) {
-                    $query->where('type_education_id', $request->input('type_education_id'));
-                },
-            ]);
+            // LÓGICA DE AUTODETECCIÓN
+            // Si no mandan el tipo de educación, pero SÍ mandan el profesor, lo buscamos.
+            if (empty($typeEducationId) && !empty($teacherId)) {
+                $teacher = \App\Models\Teacher::find($teacherId);
+                if ($teacher) {
+                    $typeEducationId = $teacher->type_education_id;
+                } else {
+                    return response()->json(['code' => 404, 'message' => 'Profesor no encontrado']);
+                }
+            }
 
-            $listStudentAll = $this->studentRepository->list([
-                'typeData' => 'all',
-                'company_id' => $request->input('company_id'),
-            ], ['notes']);
+            // Validación de seguridad: A estas alturas DEBE haber un type_education_id
+            if (empty($typeEducationId)) {
+                return response()->json(['code' => 422, 'message' => 'Falta el ID del tipo de educación']);
+            }
 
-            $teachers = $this->teacherRepository->list([
-                'typeData' => 'all',
-                'type_education_id' => $request->input('type_education_id'),
-                'company_id' => $request->input('company_id'),
-            ]);
+            // --- AHORA SÍ, LA CONSULTA QUE YA TENÍAMOS ---
 
-            $subjectsData = $this->subjectRepository->list([
-                'typeData' => 'all',
-                'company_id' => $request->input('company_id'),
-            ]);
+            // 1. Obtener Asignaciones
+            $assignmentsQuery = \App\Models\TeacherComplementary::query()
+                ->with([
+                    'grade:id,name',
+                    'section:id,name',
+                    'teacher' => function ($q) use ($companyId, $typeEducationId) {
+                        $q->select('id', 'company_id', 'type_education_id')
+                            ->where('company_id', $companyId)
+                            ->where('type_education_id', $typeEducationId);
+                    }
+                ])
+                ->whereHas('teacher', function ($q) use ($companyId, $typeEducationId) {
+                    $q->where('company_id', $companyId)
+                        ->where('type_education_id', $typeEducationId);
+                });
 
-            $students = [];
+            // Aplicar filtro si tenemos el ID específico
+            if (!empty($teacherId)) {
+                $assignmentsQuery->where('teacher_id', $teacherId);
+            }
+
+            $assignments = $assignmentsQuery->get();
+
+
+            // 2. Optimización: Obtener solo las materias de esta empresa Y de este tipo de educación
+            $allSubjects = \App\Models\Subject::query()
+                ->where('company_id', $companyId)
+                ->where('type_education_id', $typeEducationId) // <--- Filtro clave que faltaba
+                ->where('is_active', true) // <--- Buena práctica: solo materias activas
+                ->pluck('code', 'id'); // Key: ID, Value: Code
+
+            // 3. Get Type Education for Note Count (Assuming only 1 type is requested)
+            $typeEducation = \App\Models\TypeEducation::find($typeEducationId);
+            $cantNotes = $typeEducation ? $typeEducation->cantNotes : 4;
+
+            $exportData = [];
+            $headers = [];
             $nro = 1;
 
-            // Construir los encabezados
-            $headers = [];
+            // 4. Optimization: Get IDs needed to fetch students in one go
+            // (Optional: If the dataset is massive, we can chunk. For now, we load per assignment).
 
-            foreach ($teachers as $key => $teacher) {
+            foreach ($assignments as $assignment) {
+                // Parse Subject IDs
+                $subjectIds = array_filter(array_map('trim', explode(',', $assignment->subject_ids)));
 
-                $teacherComplementaries = $teacherComplementariesAll->where('teacher_id', $teacher->id);
+                if (empty($subjectIds)) continue;
 
-                foreach ($teacherComplementaries as $key => $value) {
+                // 5. Fetch Students for this specific Grade/Section
+                // Eager Load Notes ONLY for the relevant subjects to save memory
+                $students = \App\Models\Student::query()
+                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate')
+                    ->where('company_id', $companyId)
+                    ->where('grade_id', $assignment->grade_id)
+                    ->where('section_id', $assignment->section_id)
+                    ->where('is_active', true) // Best practice
+                    ->whereDoesntHave('withdrawal') // Exclude withdrawn
+                    ->with(['notes' => function ($q) use ($subjectIds) {
+                        $q->select('student_id', 'subject_id', 'json')
+                            ->whereIn('subject_id', $subjectIds);
+                    }])
+                    ->orderBy('full_name') // Let SQL do the sorting
+                    ->get();
 
-                    $list = $listStudentAll->where('company_id', $teacher->company_id)
-                        ->where('type_education_id', $teacher->type_education_id)
-                        ->where('grade_id', $value->grade_id)
-                        ->where('section_id', $value->section_id);
+                // 6. Process Students
+                foreach ($students as $student) {
 
-                    $list = $list->sortBy('full_name');
+                    // Map notes for quick access: [subject_id => json_array]
+                    $studentNotes = $student->notes->keyBy('subject_id');
 
-                    $subjectIds = explode(',', $value->subject_ids);
-                    $subjectIds = array_map('trim', $subjectIds);
+                    $row = [
+                        'nro' => $nro++,
+                        'grade' => $assignment->grade->name,
+                        'section' => $assignment->section->name,
+                        'identity_document' => $student->identity_document,
+                        'full_name' => $student->full_name,
+                        'pdf' => $student->pdf == 1 ? 1 : '',
+                        'solvencyCertificate' => $student->solvencyCertificate == 1 ? 1 : '',
+                    ];
 
+                    // Process Grades
+                    for ($i = 1; $i <= $cantNotes; $i++) {
+                        foreach ($subjectIds as $subId) {
+                            if (!isset($allSubjects[$subId])) continue;
 
-                    $filteredSubjects = $subjectsData->whereIn('id', $subjectIds);
+                            $subjectCode = $allSubjects[$subId];
+                            $headerKey = "{$subjectCode}{$i}";
 
-                    if (count($list) > 0) {
-                        foreach ($list as $key2 => $value2) {
-                            // Inicializa un array para los códigos de materias
-                            $studentData = [
-                                'nro' => $nro++,
-                                'grade' => $value->grade->name,
-                                'section' => $value->section->name,
-                                'identity_document' => $value2->identity_document,
-                                'full_name' => $value2->full_name,
-                                'pdf' => $value2->pdf == 1 ? 1 : '',
-                                'solvencyCertificate' => $value2->solvencyCertificate == 1 ? 1 : '',
-                            ];
-
-                            // Agregar códigos como keys basadas en la cantidad de notas
-                            for ($i = 1; $i <= $teacher->typeEducation->cantNotes; $i++) {
-                                foreach ($filteredSubjects as $subject) {
-
-                                    $code = "{$subject->code}{$i}";
-
-                                    // Verifica si ya existe un array para este grado
-                                    if (! isset($headers[$value->grade->name])) {
-                                        $headers[$value->grade->name] = []; // Inicializa el array si no existe
-                                    }
-
-                                    // Agrega el código si no existe
-                                    if (! in_array($code, $headers[$value->grade->name])) {
-                                        $headers[$value->grade->name][] = $code; // Agrega el código al grado correspondiente
-                                    }
-
-                                    // Intenta obtener las notas para el subject_id correspondiente
-                                    $notes = $value2->notes->where('subject_id', $subject->id)->first(); // Cambia aquí para usar el ID correcto
-
-                                    // Verifica si se encontraron notas y decodifica
-                                    if ($notes) {
-                                        $notesArray = json_decode($notes->json, true); // Cambia a `true` para obtener un array asociativo
-
-                                        // Asigna la nota correspondiente si existe
-                                        if (isset($notesArray[$i])) { // Ajustar índice
-                                            // Verifica si ya existe
-                                            if (! isset($studentData["{$subject->code}{$i}"])) {
-                                                $studentData["{$subject->code}{$i}"] = $notesArray[$i]; // Asigna la nota si no existe
-                                            }
-                                        } else {
-                                            $studentData["{$subject->code}{$i}"] = null; // O cualquier valor predeterminado
-                                        }
-                                    } else {
-                                        // Si no se encontraron notas, asigna null
-                                        $studentData["{$subject->code}{$i}"] = null;
-                                    }
-                                }
+                            // Build Headers Dynamically
+                            $gradeName = $assignment->grade->name;
+                            if (!isset($headers[$gradeName])) {
+                                $headers[$gradeName] = [];
+                            }
+                            if (!in_array($headerKey, $headers[$gradeName])) {
+                                $headers[$gradeName][] = $headerKey;
                             }
 
-                            $students[] = $studentData; // Agrega el estudiante completo al array
+                            // Extract Note
+                            $noteValue = null;
+                            if (isset($studentNotes[$subId])) {
+                                $jsonNotes = json_decode($studentNotes[$subId]->json, true);
+                                $noteValue = $jsonNotes[$i] ?? null;
+                            }
+
+                            $row[$headerKey] = $noteValue;
                         }
+                    }
+
+                    // Add to main collection (Using a composite key to merge duplicates if student appears in multiple assignments)
+                    $key = $student->identity_document;
+                    if (!isset($exportData[$key])) {
+                        $exportData[$key] = $row;
+                    } else {
+                        // Merge new subject grades into existing student row
+                        $exportData[$key] = array_merge($exportData[$key], $row);
                     }
                 }
             }
 
-            // Ordenando los header de las materias
-            $headers = collect($headers)->map(function ($subjects) {
-                sort($subjects);
+            // 7. Sort Headers
+            foreach ($headers as $grade => $cols) {
+                sort($headers[$grade]);
+            }
 
-                return $subjects;
-            });
-
-            // Convertir el array a una colección
-            $studentsCollection = collect($students);
-
-            // Agrupando por `identity_document` y `full_name`
-            $students = $studentsCollection->reduce(function ($carry, $item) {
-                $key = $item['identity_document'] . '|' . $item['full_name'];
-
-                if (!isset($carry[$key])) {
-                    $carry[$key] = $item; // Si no existe, añadir el item
-                } else {
-                    $carry[$key] = array_merge($carry[$key], $item); // Si existe, fusionar
-                }
-
-                return $carry;
-            }, []);
-
-            // Reemplaza tu código de ordenación actual con este:
-            $students = collect($students)->sortBy(function ($student) {
-                // Extraer el apellido que viene antes de la coma
+            // 8. Prepare Final List (Sorting by Last Name via PHP as requested)
+            $finalList = collect($exportData)->sortBy(function ($student) {
                 $nameParts = explode(',', $student['full_name']);
                 $lastName = trim($nameParts[0] ?? '');
-
-                // Usar Collator para ordenar correctamente según las reglas del español
-                return normalizeSpanishString($lastName);
+                // Assuming normalizeSpanishString is a helper you have
+                return function_exists('normalizeSpanishString') ? normalizeSpanishString($lastName) : $lastName;
             })->values()->toArray();
 
-            $type_education_id = $request->input('type_education_id');
-
-            if (count($students) > 0) {
-                $excel = Excel::raw(new ConsolidatedExport($students, $headers, $type_education_id), \Maatwebsite\Excel\Excel::XLSX);
-
+            if (count($finalList) > 0) {
+                $excel = \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\ConsolidatedExport($finalList, $headers, $typeEducationId), \Maatwebsite\Excel\Excel::XLSX);
                 $excelBase64 = base64_encode($excel);
-
                 return response()->json(['code' => 200, 'excel' => $excelBase64]);
             } else {
-
                 return response()->json(['code' => 500, 'message' => 'No se han cargado alumnos']);
             }
-        } catch (Throwable $th) {
-            return response()->json(['code' => 500, 'message' => $th->getMessage(), 'line' => $th->getLine()]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile()
+            ]);
         }
     }
 
