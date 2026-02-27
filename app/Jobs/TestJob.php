@@ -21,25 +21,25 @@ class TestJob implements ShouldQueue
         $this->message = $message;
         $this->batchId = $batchId ?? uniqid();
         
-        Log::info("TestJob CONSTRUIDO - Message: {$this->message}, Batch: {$this->batchId}");
+        // Log::info("TestJob CONSTRUIDO - Message: {$this->message}, Batch: {$this->batchId}");
     }
 
     public function handle()
     {
-        Log::info("========== TESTOJOB INICIADO ==========");
-        Log::info("Batch ID: " . $this->batchId);
-        Log::info("Mensaje recibido: " . $this->message);
+        // Log::info("========== TESTOJOB INICIADO ==========");
+        // Log::info("Batch ID: " . $this->batchId);
+        // Log::info("Mensaje recibido: " . $this->message);
         
         // Simular proceso
         sleep(2);
         
-        Log::info("Paso 1 completado");
+        // Log::info("Paso 1 completado");
         
         sleep(2);
         
-        Log::info("Paso 2 completado");
+        // Log::info("Paso 2 completado");
         
-        Log::info("========== TESTOJOB FINALIZADO ==========");
-        Log::info("Resultado: Todo salió bien!");
+        // Log::info("========== TESTOJOB FINALIZADO ==========");
+        // Log::info("Resultado: Todo salió bien!");
     }
 }
