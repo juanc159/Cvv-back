@@ -291,8 +291,8 @@ class ProcessConsolidatedImportJob implements ShouldQueue
             //     if (strpos($sql, 'select') !== false) $selects++;
             // }
 
-            Log::debug("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
-            Log::debug("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
+            // Log::debug("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
+            // Log::debug("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
 
         } catch (\Exception $e) {
             Log::error("Error Crítico en Job: " . $e->getMessage());
