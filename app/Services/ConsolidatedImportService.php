@@ -126,7 +126,7 @@ class ConsolidatedImportService
             if ($update) {
                 try {
 
-                    Log::debug("ProcessConsolidatedImportService - Actualizando estudiante con cédula: {$cedula}");
+                    // Log::debug("ProcessConsolidatedImportService - Actualizando estudiante con cédula: {$cedula}");
 
 
 

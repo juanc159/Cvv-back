@@ -57,7 +57,7 @@ class ConsolidatedImportController extends Controller
                 'user_id' => $userId,
             ];
 
-            Log::debug("Despachando Job con Batch ID: {$batchId}");
+            // Log::debug("Despachando Job con Batch ID: {$batchId}");
 
             // 5. Despachar el Job pasando el batchId generado 
             ProcessConsolidatedImportJob::dispatch($filePath, $data, $batchId);
