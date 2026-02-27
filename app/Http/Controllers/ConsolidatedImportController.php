@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\ProcessConsolidatedImportJob;
+use App\Jobs\TestJob;
 use App\Services\ProcessBatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-// use App\Jobs\ProcessConsolidatedImportJob; // Lo descomentaremos en el Paso 3
+use Illuminate\Support\Str; 
 
 class ConsolidatedImportController extends Controller
 {
@@ -57,9 +57,9 @@ class ConsolidatedImportController extends Controller
                 'user_id' => $userId,
             ];
 
-            // Log::info("Despachando Job con Batch ID: {$batchId}");
+            Log::info("Despachando Job con Batch ID: {$batchId}");
 
-            // 5. Despachar el Job pasando el batchId generado
+            // 5. Despachar el Job pasando el batchId generado 
             ProcessConsolidatedImportJob::dispatch($filePath, $data, $batchId);
 
             // 6. Respuesta al Front (Con el batch_id correcto)

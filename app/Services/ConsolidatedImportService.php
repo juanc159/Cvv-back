@@ -15,7 +15,7 @@ class ConsolidatedImportService
     // Memoria caché
     protected $gradesMap = [];
     protected $sectionsMap = [];
-    protected $subjectsMap = []; 
+    protected $subjectsMap = [];
 
     // Contexto del Job
     protected $batchId;
@@ -26,22 +26,39 @@ class ConsolidatedImportService
 
     // LISTA NEGRA: Columnas que ignoramos
     protected $nonNoteHeaders = [
-        'NRO', 'PDF', 'SOLVENTE', 'AÑO', 'SECCIÓN', 'CÉDULA', 'NOMBRES Y APELLIDOS ESTUDIANTE'
+        'NRO',
+        'PDF',
+        'SOLVENTE',
+        'AÑO',
+        'SECCIÓN',
+        'CÉDULA',
+        'NOMBRES Y APELLIDOS ESTUDIANTE'
     ];
 
     public function __construct($company_id)
     {
-        $this->gradesMap = Grade::where('company_id', $company_id)->pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
+        $this->gradesMap = Grade::where("company_id", $company_id)->pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
         $this->sectionsMap = Section::pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
-        $this->subjectsMap = Subject::where('company_id', $company_id)->pluck('id', 'code')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
+        $this->subjectsMap = Subject::where("company_id", $company_id)->pluck('id', 'code')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
     }
 
-    public function setBatchId($batchId) { $this->batchId = $batchId; }
-    public function setCurrentRowNumber($rowNumber) { $this->currentRowNumber = $rowNumber; }
-    public function setTeacherPermissions(array $permissions) { $this->teacherPermissions = $permissions; }
+    public function setBatchId($batchId)
+    {
+        $this->batchId = $batchId;
+    }
+    public function setCurrentRowNumber($rowNumber)
+    {
+        $this->currentRowNumber = $rowNumber;
+    }
+    public function setTeacherPermissions(array $permissions)
+    {
+        $this->teacherPermissions = $permissions;
+    }
 
     public function processRow(array $row, array $jobData, array $headers)
     {
+
+
         $nombreGrado = strtoupper(trim($row['AÑO']));
         $nombreSeccion = strtoupper(trim($row['SECCIÓN']));
 
@@ -63,6 +80,7 @@ class ConsolidatedImportService
         $cedula = trim($row['CÉDULA']);
         $student = null;
 
+
         // === CAMINO A: ES DOCENTE (Lectura) ===
         if ($this->teacherPermissions !== null) {
             $student = Student::where('identity_document', $cedula)->first();
@@ -70,9 +88,13 @@ class ConsolidatedImportService
                 $this->addError('CÉDULA', "Estudiante no encontrado. Docente no puede crear.", 'DATA_ERROR', $cedula);
                 return;
             }
-        } 
+        }
         // === CAMINO B: ES ADMIN (Escritura) ===
         else {
+
+
+
+
             $gradeId = $this->gradesMap[$nombreGrado] ?? null;
             $sectionId = $this->sectionsMap[$nombreSeccion] ?? null;
 
@@ -81,28 +103,34 @@ class ConsolidatedImportService
                 return;
             }
 
+            //por ahroia solo actualizaremos los campos PDF y SOLVENTE, el resto de la info del estudiante no la tocaremos
             $studentData = [
-                'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'S/N',
-                'grade_id' => $gradeId,
-                'section_id' => $sectionId,
-                'company_id' => $jobData['company_id'],
-                'type_education_id' => $jobData['type_education_id'],
+                // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'S/N',
+                // 'grade_id' => $gradeId,
+                // 'section_id' => $sectionId,
+                // 'company_id' => $jobData['company_id'],
+                // 'type_education_id' => $jobData['type_education_id'],
             ];
+            $update = false;
 
             if (array_key_exists('PDF', $row)) {
+                $update = true;
                 $val = $row['PDF'];
                 $studentData['pdf'] = ($val == 1 || $val === '1') ? 1 : 0;
             }
             if (array_key_exists('SOLVENTE', $row)) {
+                $update = true;
                 $val = $row['SOLVENTE'];
                 $studentData['solvencyCertificate'] = ($val == 1 || $val === '1') ? 1 : 0;
             }
 
-            try {
-                $student = Student::updateOrCreate(['identity_document' => $cedula], $studentData);
-            } catch (\Exception $e) {
-                $this->addError('ESTUDIANTE', "Error DB: " . $e->getMessage(), 'DB_ERROR', $cedula);
-                return;
+            if ($update) {
+                try {
+                    $student = Student::updateOrCreate(['identity_document' => $cedula], $studentData);
+                } catch (\Exception $e) {
+                    $this->addError('ESTUDIANTE', "Error DB: " . $e->getMessage(), 'DB_ERROR', $cedula);
+                    return;
+                }
             }
         }
 
@@ -149,6 +177,7 @@ class ConsolidatedImportService
                 }
             }
         }
+
 
         // ---------------------------------------------------
         // FASE 3: GUARDAR NOTAS

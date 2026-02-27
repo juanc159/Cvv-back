@@ -2,17 +2,17 @@
 
 namespace App\Jobs;
 
+use App\Events\ImportProgressEvent;
+use App\Helpers\ErrorCollector;
+use App\Services\ConsolidatedImportService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redis;
-use App\Events\ImportProgressEvent;
-use App\Services\ConsolidatedImportService;
-use App\Helpers\ErrorCollector;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ProcessConsolidatedImportJob implements ShouldQueue
@@ -23,7 +23,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
     protected $data;
     protected $batchId;
     public $timeout = 7200;
-    
+
     // Propiedades para permisos del docente
     protected $teacherPermissions = null;
     protected $subjectCodeToIdMap = [];
@@ -33,13 +33,15 @@ class ProcessConsolidatedImportJob implements ShouldQueue
         $this->filePath = $filePath;
         $this->data = $data;
         $this->batchId = $batchId;
-        
+
+        Log::info("ProcessConsolidatedImportJob CONSTRUIDO - File: {$this->filePath}, Batch: {$this->batchId}");
+
         // Cargar permisos del docente si existe teacher_id
         if (!empty($data['teacher_id'])) {
             $this->loadTeacherPermissions($data['teacher_id']);
         }
     }
-    
+
     /**
      * Cargar los permisos del docente y estructurarlos
      */
@@ -47,37 +49,37 @@ class ProcessConsolidatedImportJob implements ShouldQueue
     {
         $teacher = \App\Models\Teacher::with(['complementaries.grade', 'complementaries.section'])
             ->find($teacherId);
-            
+
         if (!$teacher) {
             Log::warning("Docente no encontrado: {$teacherId}");
             return;
         }
-        
+
         // Estructura que espera el Servicio
         $this->teacherPermissions = [
             'mapa_permisos' => [],     // ['GRADO' => ['SECCION' => [ids...]]]
             'materias_permitidas' => [], // Lista plana de IDs para validaciones rápidas
             'codigos_permitidos' => []
         ];
-        
+
         foreach ($teacher->complementaries as $comp) {
             if ($comp->grade && $comp->section) {
                 $gName = strtoupper(trim($comp->grade->name));
                 $sName = strtoupper(trim($comp->section->name));
-                
+
                 // IDs de materias asignadas en este salón
                 $subjectIds = array_map('trim', explode(',', $comp->subject_ids));
-                
+
                 // 1. Mapa de permisos por grado/sección
                 if (!isset($this->teacherPermissions['mapa_permisos'][$gName][$sName])) {
                     $this->teacherPermissions['mapa_permisos'][$gName][$sName] = [];
                 }
-                
+
                 $this->teacherPermissions['mapa_permisos'][$gName][$sName] = array_merge(
                     $this->teacherPermissions['mapa_permisos'][$gName][$sName],
                     $subjectIds
                 );
-                
+
                 // 2. Lista plana acumulada
                 $this->teacherPermissions['materias_permitidas'] = array_merge(
                     $this->teacherPermissions['materias_permitidas'],
@@ -85,17 +87,17 @@ class ProcessConsolidatedImportJob implements ShouldQueue
                 );
             }
         }
-        
+
         // Limpiar duplicados
         $this->teacherPermissions['materias_permitidas'] = array_unique($this->teacherPermissions['materias_permitidas']);
-        
+
         // Log::info("Permisos de docente cargados para ID {$teacherId}");
         // Log::info("Mapa de permisos: " . json_encode($this->teacherPermissions['mapa_permisos']));
     }
 
     public function handle()
     {
-        // Activar Log de Consultas para monitoreo
+         // Activar Log de Consultas para monitoreo
         \Illuminate\Support\Facades\DB::enableQueryLog();
         
         // Aumentar memoria para el proceso
@@ -163,7 +165,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
             ]);
 
             // 4. Instanciar y Configurar Servicio
-            $importService = new ConsolidatedImportService();
+            $importService = new ConsolidatedImportService($this->data["company_id"]);
             $importService->setBatchId($this->batchId);
             
             // Pasar permisos del docente al servicio (si existen)
@@ -250,7 +252,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
 
             // 6. Finalización
             $errorCount = ErrorCollector::countErrors($this->batchId);
-            // Log::info("Procesamiento completado. Total errores: {$errorCount}");
+            Log::info("Procesamiento completado. Total errores: {$errorCount}");
 
             $status = $errorCount > 0 ? 'completed_with_errors' : 'completed';
             
@@ -289,8 +291,8 @@ class ProcessConsolidatedImportJob implements ShouldQueue
                 if (strpos($sql, 'select') !== false) $selects++;
             }
 
-            // Log::info("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
-            // Log::info("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
+            Log::info("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
+            Log::info("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
 
         } catch (\Exception $e) {
             Log::error("Error Crítico en Job: " . $e->getMessage());
@@ -309,11 +311,15 @@ class ProcessConsolidatedImportJob implements ShouldQueue
             ErrorCollector::saveErrorsToDatabase($this->batchId, 'failed');
 
             $this->updateProgress(0, 0, "Error: " . $e->getMessage(), 'error');
-        }
+        } 
     }
+
+
 
     protected function updateProgress($processed, $total, $action, $status = 'active', $errorCount = 0)
     {
+        // Log::info("entreo al updateProgress - Processed: {$processed}/{$total}, Action: {$action}, Status: {$status}, Errors: {$errorCount}");
+        
         ImportProgressEvent::dispatch(
             $this->batchId,
             (string)$processed,
