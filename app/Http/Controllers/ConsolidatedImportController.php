@@ -62,7 +62,7 @@ class ConsolidatedImportController extends Controller
             // 5. Despachar el Job pasando el batchId generado 
             // ProcessConsolidatedImportJob::dispatch($filePath, $data, $batchId);
 
-             TestJob::dispatch('Este es un mensaje de prueba', $batchId);
+            //  TestJob::dispatch('Este es un mensaje de prueba', $batchId);
 
             // 6. Respuesta al Front (Con el batch_id correcto)
             return response()->json([
