@@ -104,7 +104,7 @@ class ConsolidatedImportService
                 return;
             }
 
-            //por ahroia solo actualizaremos los campos PDF y SOLVENTE, el resto de la info del estudiante no la tocaremos
+            //por ahora solo actualizaremos los campos PDF y SOLVENTE, el resto de la info del estudiante no la tocaremos
             $studentData = [
                 // 'full_name' => $row['NOMBRES Y APELLIDOS ESTUDIANTE'] ?? 'S/N',
                 // 'grade_id' => $gradeId,
