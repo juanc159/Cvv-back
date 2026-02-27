@@ -35,6 +35,7 @@ class ConsolidatedImportService
         'NOMBRES Y APELLIDOS ESTUDIANTE'
     ];
 
+    // Constructor: Cargar mapas de referencia para validación y procesamiento
     public function __construct($company_id)
     {
         $this->gradesMap = Grade::where("company_id", $company_id)->pluck('id', 'name')->mapWithKeys(fn($item, $key) => [strtoupper(trim($key)) => $item])->toArray();
