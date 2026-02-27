@@ -34,7 +34,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
         $this->data = $data;
         $this->batchId = $batchId;
 
-        Log::info("ProcessConsolidatedImportJob CONSTRUIDO - File: {$this->filePath}, Batch: {$this->batchId}");
+        // Log::info("ProcessConsolidatedImportJob CONSTRUIDO - File: {$this->filePath}, Batch: {$this->batchId}");
 
         // Cargar permisos del docente si existe teacher_id
         if (!empty($data['teacher_id'])) {
@@ -252,7 +252,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
 
             // 6. Finalización
             $errorCount = ErrorCollector::countErrors($this->batchId);
-            Log::info("Procesamiento completado. Total errores: {$errorCount}");
+            // Log::info("Procesamiento completado. Total errores: {$errorCount}");
 
             $status = $errorCount > 0 ? 'completed_with_errors' : 'completed';
             
