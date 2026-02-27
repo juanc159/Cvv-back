@@ -14,6 +14,7 @@ class ConsolidatedImportController extends Controller
 {
     public function upload(Request $request)
     {
+        return 4444;
         $request->validate([
             'archive' => 'required|file',
             'company_id' => 'required',
