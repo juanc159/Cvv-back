@@ -24,6 +24,7 @@ use Throwable;
 
 class PassportAuthController extends Controller
 {
+    //prueba
     public function __construct(
         protected UserRepository $userRepository,
         protected TeacherRepository $teacherRepository,
