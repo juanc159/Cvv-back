@@ -222,7 +222,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
                     }
 
                     // --- PROCESAMIENTO PRINCIPAL ---
-                    // $importService->processRow($rowData, $this->data, $headers);
+                    $importService->processRow($rowData, $this->data, $headers);
                     // -------------------------------
 
                     $globalProcessedCount++;
