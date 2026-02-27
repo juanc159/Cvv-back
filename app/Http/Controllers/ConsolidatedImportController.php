@@ -13,9 +13,8 @@ use Illuminate\Support\Str;
 class ConsolidatedImportController extends Controller
 {
     public function upload(Request $request)
-    {
-        return 4444;
-        $request->validate([
+    { 
+       return $request->validate([
             'archive' => 'required|file',
             'company_id' => 'required',
             'type_education_id' => 'required',
