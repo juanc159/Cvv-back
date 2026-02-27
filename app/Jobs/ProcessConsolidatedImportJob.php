@@ -98,10 +98,10 @@ class ProcessConsolidatedImportJob implements ShouldQueue
     public function handle()
     {
          // Activar Log de Consultas para monitoreo
-        \Illuminate\Support\Facades\DB::enableQueryLog();
+        // \Illuminate\Support\Facades\DB::enableQueryLog();
         
-        // Aumentar memoria para el proceso
-        ini_set('memory_limit', '1024M');
+        // // Aumentar memoria para el proceso
+        // ini_set('memory_limit', '1024M');
 
         // Validar existencia física del archivo
         if (!Storage::disk('public')->exists($this->filePath)) {
@@ -277,22 +277,22 @@ class ProcessConsolidatedImportJob implements ShouldQueue
                 @unlink($fullPath);
             }
 
-            // 7. Reporte de Consultas (Optimización)
-            $queries = \Illuminate\Support\Facades\DB::getQueryLog();
+            // // 7. Reporte de Consultas (Optimización)
+            // $queries = \Illuminate\Support\Facades\DB::getQueryLog();
             
-            $inserts = 0;
-            $updates = 0;
-            $selects = 0;
+            // $inserts = 0;
+            // $updates = 0;
+            // $selects = 0;
 
-            foreach ($queries as $q) {
-                $sql = strtolower($q['query']);
-                if (strpos($sql, 'insert') !== false) $inserts++;
-                if (strpos($sql, 'update') !== false) $updates++;
-                if (strpos($sql, 'select') !== false) $selects++;
-            }
+            // foreach ($queries as $q) {
+            //     $sql = strtolower($q['query']);
+            //     if (strpos($sql, 'insert') !== false) $inserts++;
+            //     if (strpos($sql, 'update') !== false) $updates++;
+            //     if (strpos($sql, 'select') !== false) $selects++;
+            // }
 
-            Log::info("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
-            Log::info("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
+            // Log::info("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
+            // Log::info("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
 
         } catch (\Exception $e) {
             Log::error("Error Crítico en Job: " . $e->getMessage());
