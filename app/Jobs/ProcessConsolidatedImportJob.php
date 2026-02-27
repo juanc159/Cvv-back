@@ -34,7 +34,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
         $this->data = $data;
         $this->batchId = $batchId;
 
-        // Log::info("ProcessConsolidatedImportJob CONSTRUIDO - File: {$this->filePath}, Batch: {$this->batchId}");
+        Log::debug("ProcessConsolidatedImportJob CONSTRUIDO - File: {$this->filePath}, Batch: {$this->batchId}");
 
         // Cargar permisos del docente si existe teacher_id
         if (!empty($data['teacher_id'])) {
@@ -91,8 +91,8 @@ class ProcessConsolidatedImportJob implements ShouldQueue
         // Limpiar duplicados
         $this->teacherPermissions['materias_permitidas'] = array_unique($this->teacherPermissions['materias_permitidas']);
 
-        // Log::info("Permisos de docente cargados para ID {$teacherId}");
-        // Log::info("Mapa de permisos: " . json_encode($this->teacherPermissions['mapa_permisos']));
+        Log::debug("Permisos de docente cargados para ID {$teacherId}");
+        Log::debug("Mapa de permisos: " . json_encode($this->teacherPermissions['mapa_permisos']));
     }
 
     public function handle()
@@ -126,7 +126,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
         $redisKey = "batch:{$this->batchId}:metadata";
 
         try {
-            // Log::info("Iniciando Job. Batch: {$this->batchId}");
+            Log::debug("Iniciando Job. Batch: {$this->batchId}");
 
             // Limpiar errores previos de este batch si existieran
             ErrorCollector::clear($this->batchId);
@@ -154,7 +154,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
                 unset($infoSheet);
             }
 
-            // Log::info("Metadatos calculados: {$totalSheets} hojas, {$totalRowsGlobal} filas.");
+            Log::debug("Metadatos calculados: {$totalSheets} hojas, {$totalRowsGlobal} filas.");
 
             // 3. Actualizar Metadata en Redis para el Frontend
             Redis::hmset($redisKey, [
@@ -252,7 +252,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
 
             // 6. Finalización
             $errorCount = ErrorCollector::countErrors($this->batchId);
-            // Log::info("Procesamiento completado. Total errores: {$errorCount}");
+            Log::debug("Procesamiento completado. Total errores: {$errorCount}");
 
             $status = $errorCount > 0 ? 'completed_with_errors' : 'completed';
             
@@ -291,8 +291,8 @@ class ProcessConsolidatedImportJob implements ShouldQueue
             //     if (strpos($sql, 'select') !== false) $selects++;
             // }
 
-            // Log::info("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
-            // Log::info("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
+            Log::debug("MÉTRICAS FINALIZADAS - Total Queries: " . count($queries));
+            Log::debug("INSERTS: $inserts, UPDATES: $updates, SELECTS: $selects");
 
         } catch (\Exception $e) {
             Log::error("Error Crítico en Job: " . $e->getMessage());
@@ -318,7 +318,7 @@ class ProcessConsolidatedImportJob implements ShouldQueue
 
     protected function updateProgress($processed, $total, $action, $status = 'active', $errorCount = 0)
     {
-        // Log::info("entreo al updateProgress - Processed: {$processed}/{$total}, Action: {$action}, Status: {$status}, Errors: {$errorCount}");
+        Log::debug("entreo al updateProgress - Processed: {$processed}/{$total}, Action: {$action}, Status: {$status}, Errors: {$errorCount}");
         
         ImportProgressEvent::dispatch(
             $this->batchId,
