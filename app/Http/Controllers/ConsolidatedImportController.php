@@ -14,7 +14,7 @@ class ConsolidatedImportController extends Controller
 {
     public function upload(Request $request)
     { 
-       return $request->validate([
+        $request->validate([
             'archive' => 'required|file',
             'company_id' => 'required',
             'type_education_id' => 'required',
@@ -50,7 +50,7 @@ class ConsolidatedImportController extends Controller
             );
 
             // 4. Preparar datos para el Job
-            $data = [
+          return $data = [
                 'company_id' => $companyId,
                 'type_education_id' => $request->input('type_education_id'),
                 'teacher_id' => $request->input('teacher_id'),
