@@ -8,12 +8,12 @@ use App\Services\ProcessBatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Support\Str; 
 
 class ConsolidatedImportController extends Controller
 {
     public function upload(Request $request)
-    {
+    { 
         $request->validate([
             'archive' => 'required|file',
             'company_id' => 'required',
@@ -57,6 +57,12 @@ class ConsolidatedImportController extends Controller
                 'user_id' => $userId,
             ];
 
+            // Log::info("Despachando Job con Batch ID: {$batchId}");
+
+            // 5. Despachar el Job pasando el batchId generado 
+            // ProcessConsolidatedImportJob::dispatch($filePath, $data, $batchId);
+
+             TestJob::dispatch('Este es un mensaje de prueba', $batchId);
 
             // 6. Respuesta al Front (Con el batch_id correcto)
             return response()->json([
