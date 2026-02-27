@@ -94,8 +94,6 @@ class ConsolidatedImportService
         else {
 
 
-
-
             $gradeId = $this->gradesMap[$nombreGrado] ?? null;
             $sectionId = $this->sectionsMap[$nombreSeccion] ?? null;
 
@@ -127,6 +125,11 @@ class ConsolidatedImportService
 
             if ($update) {
                 try {
+
+                    Log::debug("ProcessConsolidatedImportService - Actualizando estudiante con cédula: {$cedula}");
+
+
+
                     $student = Student::updateOrCreate(['identity_document' => $cedula], $studentData);
                 } catch (\Exception $e) {
                     $this->addError('ESTUDIANTE', "Error DB: " . $e->getMessage(), 'DB_ERROR', $cedula);
