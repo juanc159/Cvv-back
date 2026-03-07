@@ -3,7 +3,9 @@
 namespace App\Repositories;
 
 use App\Helpers\Constants;
+use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\TeacherComplementary;
 use App\QueryBuilder\Filters\DataSelectFilter;
 use App\QueryBuilder\Filters\QueryFilters;
 use App\QueryBuilder\Sort\IsActiveSort;
@@ -205,5 +207,92 @@ class TeacherRepository extends BaseRepository
     public function findByEmail($email)
     {
         return $this->model::where('email', $email)->first();
+    }
+
+
+    public function getTeacherActivityOptions(string $teacherId): array
+    {
+        // Traer complementaries del docente con grade y section
+        $comps = TeacherComplementary::query()
+            ->where('teacher_id', $teacherId)
+            ->with([
+                'grade:id,name,is_active,company_id',
+                'section:id,name,is_active',
+            ])
+            ->get();
+
+        // GRADES únicos (activos)
+        $grades = $comps->pluck('grade')
+            ->filter(fn($g) => $g && (bool) $g->is_active)
+            ->unique('id')
+            ->values()
+            ->map(fn($g) => [
+                'value' => $g->id,
+                'title' => $g->name,
+            ])
+            ->values()
+            ->all();
+
+        // SECTIONS únicos (activos)
+        $sections = $comps->pluck('section')
+            ->filter(fn($s) => $s && (bool) $s->is_active)
+            ->unique('id')
+            ->values()
+            ->map(fn($s) => [
+                'value' => $s->id,
+                'title' => $s->name,
+            ])
+            ->values()
+            ->all();
+
+        // SUBJECTS: parsear CSV de subject_ids en complementaries
+        $subjectIds = $comps->pluck('subject_ids')
+            ->filter()
+            ->flatMap(function ($csv) {
+                return collect(explode(',', (string) $csv))
+                    ->map(fn($id) => trim($id))
+                    ->filter(fn($id) => $id !== '');
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        $subjects = Subject::query()
+            ->select(['id', 'name'])
+            ->whereIn('id', $subjectIds)
+            ->orderBy('name')
+            ->get()
+            ->map(fn($subj) => [
+                'value' => $subj->id,
+                'title' => $subj->name,
+            ])
+            ->values()
+            ->all();
+
+        // RULES: combinaciones permitidas grade + section => subjects
+        $rules = $comps
+            ->filter(fn($c) => $c->grade_id && $c->section_id)
+            ->map(function ($c) {
+                $ids = collect(explode(',', (string) $c->subject_ids))
+                    ->map(fn($id) => trim($id))
+                    ->filter(fn($id) => $id !== '')
+                    ->values()
+                    ->all();
+
+                return [
+                    'grade_id' => $c->grade_id,
+                    'section_id' => $c->section_id,
+                    'subject_ids' => $ids,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'grades' => $grades,
+            'sections' => $sections,
+            'subjects' => $subjects,
+            'rules' => $rules,
+        ];
     }
 }

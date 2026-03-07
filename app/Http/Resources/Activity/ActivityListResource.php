@@ -2,31 +2,34 @@
 
 namespace App\Http\Resources\Activity;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class ActivityListResource extends JsonResource
 {
-    public function toArray($request)
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
+            'company_id' => $this->company_id,
+            'teacher_id' => $this->teacher_id,
+
             'title' => $this->title,
-            'description' => $this->description, // Opcional, si lo necesitas en la lista
-            // Ajustamos el formato a 12 horas con AM/PM y aseguramos la zona horaria.
-            'deadline_at' => $this->deadline_at ? Carbon::parse($this->deadline_at)->setTimezone(config('app.timezone'))->format("d-m-Y h:i A") : null,
+            'description' => $this->description,
+
+            'deadline_at' => optional($this->deadline_at)->toISOString(),
+
             'status' => $this->status,
-            'status_description' =>  $this->status?->description(),
-            'status_color' =>  $this->status?->color(),
+            'status_color' => $this->status?->color(),
+            'status_description' => $this->status?->description(),
+
             'grade' => $this->grade?->name,
             'section' => $this->section?->name,
-             
+            'subject' => $this->subject?->name,
 
-            // Relaciones
-            'subject' => $this->subject ? [
-                'id' => $this->subject->id,
-                'name' => $this->subject->name
-            ] : null,
+
+
+            'created_at' => optional($this->created_at)->toISOString(),
         ];
     }
 }

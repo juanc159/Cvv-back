@@ -17,3 +17,5 @@ Route::post('/selectInfiniteStudent', [QueryController::class, 'selectInfiniteSt
 Route::post('/selectInfiniteTypedocument', [QueryController::class, 'selectInfiniteTypedocument']);
 
 Route::get('/autoCompleteDataStudents', [QueryController::class, 'autoCompleteDataStudents']);
+
+Route::post('/selectActivityStatusEnum', [QueryController::class, 'selectActivityStatusEnum']);

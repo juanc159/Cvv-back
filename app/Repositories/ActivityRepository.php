@@ -25,55 +25,55 @@ class ActivityRepository extends BaseRepository
     {
         $cacheKey = $this->cacheService->generateKey("{$this->model->getTable()}_paginate", $request, 'string');
 
-        return $this->cacheService->remember($cacheKey, function () use ($request) {
+        // return $this->cacheService->remember($cacheKey, function () use ($request) {
 
-            $query = QueryBuilder::for($this->model->query())
-                ->with([
-                    'grade:id,name',
-                    'section:id,name',
-                    'subject:id,name',
-                ])
-                ->where('company_id', $request['company_id']) // viene del front
-                ->where('teacher_id', $request['teacher_id']) // viene del controller
-                ->allowedFilters([
-                    'status',
-                    AllowedFilter::callback('inputGeneral', function ($query, $value) {
-                        $query->where(function ($subQuery) use ($value) {
+        $query = QueryBuilder::for($this->model->query())
+            ->with([
+                'grade:id,name',
+                'section:id,name',
+                'subject:id,name',
+            ])
+            ->where('company_id', $request['company_id']) // viene del front
+            ->where('teacher_id', $request['teacher_id']) // viene del controller
+            ->allowedFilters([
+                'status',
+                AllowedFilter::callback('inputGeneral', function ($query, $value) {
+                    $query->where(function ($subQuery) use ($value) {
+                        $subQuery
+                            ->where('title', 'LIKE', "%{$value}%")
+                            ->orWhere('description', 'LIKE', "%{$value}%")
+                            ->orWhere('status', 'LIKE', "%{$value}%");
 
-                            $subQuery->orWhere('title', 'LIKE', "%{$value}%");
-
-                            $subQuery->orWhereHas('grade', function ($qq) use ($value) { // Filtro por Año
-                                $qq->where('name', 'like', "%$value%");
-                            });
-                            $subQuery->orWhereHas('section', function ($qq) use ($value) { // Filtro por Sección
-                                $qq->where('name', 'like', "%$value%");
-                            });
-                            $subQuery->orWhereHas('subject', function ($qq) use ($value) { // Filtro por Materia
-                                $qq->where('name', 'like', "%$value%");
-                            });
-
-                            QueryFilters::filterByText(
-                                $subQuery,
-                                $value,
-                                'status',
-                                ActivityStatusEnum::toFilterMap() // ¡Automático!
-                            );
+                        $subQuery->orWhereHas('grade', function ($qq) use ($value) {
+                            $qq->where('name', 'like', "%$value%");
                         });
-                    }),
-                ])
-                ->allowedSorts([
-                    "title",
-                    "deadline_at",
-                    AllowedSort::custom('status', new EnumDescriptionSort(ActivityStatusEnum::class)),
-                    AllowedSort::custom('grade', new RelatedTableSort('activities', 'grades', 'name', 'grade_id')),
-                    AllowedSort::custom('section', new RelatedTableSort('activities', 'sections', 'name', 'section_id')),
+                        $subQuery->orWhereHas('section', function ($qq) use ($value) {
+                            $qq->where('name', 'like', "%$value%");
+                        });
+                        $subQuery->orWhereHas('subject', function ($qq) use ($value) {
+                            $qq->where('name', 'like', "%$value%");
+                        });
 
-                ])
-                ->defaultSort('-created_at')
-                ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+                        QueryFilters::filterByText(
+                            $subQuery,
+                            $value,
+                            'status',
+                            ActivityStatusEnum::toFilterMap() // ¡Automático!
+                        );
+                    });
+                }),
+            ])
+            ->allowedSorts([
+                "title",
+                "deadline_at",
+                AllowedSort::custom('status', new EnumDescriptionSort(ActivityStatusEnum::class)),
 
-            return $query;
-        }, Constants::REDIS_TTL);
+            ])
+            ->defaultSort('-created_at')
+            ->paginate(request()->perPage ?? Constants::ITEMS_PER_PAGE);
+
+        return $query;
+        // }, Constants::REDIS_TTL);
     }
 
     public function list($request = [], $with = [], $select = ['*'])
@@ -106,23 +106,19 @@ class ActivityRepository extends BaseRepository
         return $data;
     }
 
-    public function store(array $request, $id = null)
+    public function store($request)
     {
         $request = $this->clearNull($request);
 
-        // Determinar el ID a utilizar para buscar o crear el modelo
-        $idToUse = ($id === null || $id === 'null') && ! empty($request['id']) && $request['id'] !== 'null' ? $request['id'] : $id;
-
-        if (! empty($idToUse)) {
-            $data = $this->model->find($idToUse);
+        if (! empty($request['id'])) {
+            $data = $this->model->find($request['id']);
         } else {
             $data = $this->model::newModelInstance();
         }
 
         foreach ($request as $key => $value) {
-            $data[$key] = is_array($request[$key]) ? $request[$key]['value'] : $request[$key];
+            $data[$key] = $request[$key];
         }
-
         $data->save();
 
         return $data;
@@ -140,30 +136,5 @@ class ActivityRepository extends BaseRepository
         })->count();
 
         return $data;
-    }
-
-    /**
-     * Obtiene las actividades visibles para un estudiante específico.
-     * Filtra por Grado, Sección y que el estado sea PUBLICADO.
-     */
-    public function getStudentActivities($companyId, $gradeId, $sectionId, $studentId, $perPage = 10)
-    {
-        return $this->model
-            ->with([
-                'subject:id,name', // Traemos el nombre de la materia
-                'teacher:id,user_id', // Datos básicos del profesor
-                'teacher.user:id,name,surname',
-                'latestSubmission' => function ($query) use ($studentId) {
-                    $query->where('student_id', $studentId);
-                },
-            ])
-            ->where('company_id', $companyId)
-            ->where('grade_id', $gradeId)
-            ->where('section_id', $sectionId)
-            // FILTRO CLAVE: Solo mostramos lo que el profesor ya publicó
-            ->where('status', \App\Enums\Activity\ActivityStatusEnum::ACTIVITY_STATUS_002->value)
-            // Ordenar: Primero las que están por vencer (deadline más antigua a más futura)
-            ->orderBy('deadline_at', 'asc')
-            ->paginate($perPage);
     }
 }

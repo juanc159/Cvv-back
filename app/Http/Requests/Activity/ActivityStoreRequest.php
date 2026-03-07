@@ -32,7 +32,7 @@ class ActivityStoreRequest extends FormRequest
 
             // Fecha límite: si usas datetime-local del front, llega como "YYYY-MM-DDTHH:mm"
             // Laravel lo valida como date. Si lo mandas null, ok.
-            'deadline_at' => ['nullable', 'date', 'after_or_equal:now'],
+            'deadline_at' => ['nullable', 'date'],
 
             // Status: tú dijiste que en activities es string y luego lo manejarás con enum.
             // Aquí validamos contra valores permitidos (ajusta los tuyos).
@@ -64,8 +64,6 @@ class ActivityStoreRequest extends FormRequest
             'title.max'      => 'El título no puede exceder 255 caracteres.',
 
             'deadline_at.date' => 'La fecha límite no es válida.',
-            'deadline_at.after_or_equal' => 'La fecha límite debe ser igual o posterior al momento actual.',
-            'deadline_at.after' => 'La fecha límite debe ser posterior al momento actual.',
 
             'status.required' => 'El estado es requerido.',
             'status.in'       => 'El estado no es válido.',

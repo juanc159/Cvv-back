@@ -31,6 +31,7 @@ class RoutesApi
         'routes/pendingRegistration.php',
         'routes/documents.php',
         'routes/notification.php',
+        'routes/activity.php',
 
     ];
 }
