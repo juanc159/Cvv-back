@@ -1,8 +1,7 @@
 <?php
 
 namespace App\Http\Resources\Activity;
-
-use App\Enums\Activity\ActivitySubmissionStatusEnum;
+ 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
 

@@ -2,34 +2,28 @@
 
 namespace App\Http\Resources\Activity;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class ActivityListResource extends JsonResource
 {
-    public function toArray(Request $request): array
+    public function toArray($request)
     {
         return [
             'id' => $this->id,
-            'company_id' => $this->company_id,
-            'teacher_id' => $this->teacher_id,
-
             'title' => $this->title,
-            'description' => $this->description,
-
-            'deadline_at' => optional($this->deadline_at)->toISOString(),
-
+            'description' => $this->description, // Opcional, si lo necesitas en la lista
+            'deadline_at' => Carbon::parse($this->deadline_at)->format("d-m-Y H:i"),
             'status' => $this->status,
-            'status_color' => $this->status?->color(),
-            'status_description' => $this->status?->description(),
+            'status_description' =>  $this->status?->description(),
+            'status_color' =>  $this->status?->color(),
+             
 
-            'grade' => $this->grade?->name,
-            'section' => $this->section?->name,
-            'subject' => $this->subject?->name,
-
-
-
-            'created_at' => optional($this->created_at)->toISOString(),
+            // Relaciones
+            'subject' => $this->subject ? [
+                'id' => $this->subject->id,
+                'name' => $this->subject->name
+            ] : null,
         ];
     }
 }

@@ -45,3 +45,6 @@ Route::middleware(['check.permission:student.list'])->group(function () {
 
 
 Route::post('/student/saveLiterals', [StudentController::class, 'saveLiterals']);
+
+
+
