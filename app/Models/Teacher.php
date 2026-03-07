@@ -62,4 +62,13 @@ class Teacher extends Authenticatable
     {
         return $this->hasOne(Company::class, 'id', 'company_id');
     }
+
+    /**
+     * Relación inversa: Un perfil de Teacher pertenece a un User.
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

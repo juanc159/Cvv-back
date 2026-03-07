@@ -55,6 +55,18 @@ class User extends Authenticatable
         return $this->name.' '.$this->surname;
     }
 
+    /**
+     * Accesor para obtener la foto del perfil (Teacher o Student).
+     * Busca primero en el perfil de profesor, luego en el de estudiante.
+     *
+     * @return string|null
+     */
+    public function getPhotoAttribute(): ?string
+    {
+        // Prioriza la foto del profesor, si no, la del estudiante.
+        return $this->teacher?->photo ?? $this->student?->photo;
+    }
+
     public function scopeSearchFullName($query, $value)
     {
         if (empty($value)) {

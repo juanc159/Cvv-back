@@ -7,6 +7,8 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\WebSocketController;
 use App\Models\Note;
 use App\Models\Student;
+use App\Models\User;
+use App\Notifications\BellNotification;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -212,4 +214,18 @@ Route::get('/limpiar-boletines', function () {
 
         
     return "Proceso finalizado.<br>Archivos eliminados: $filesDeleted<br>Registros actualizados en BD: $dbUpdated";
+});
+
+
+Route::get('/notify_test', function () {
+
+    $user = User::first();
+
+    // Enviar notificación
+    $user->notify(new BellNotification([
+        'title' => 'hola',
+        'subtitle' => 'chao',
+    ]));
+
+    return 'Enviado';
 });
