@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Activity extends Model
@@ -54,6 +55,17 @@ class Activity extends Model
 
     public function submissions(): HasMany
     {
-        return $this->hasMany(Submission::class);
+        return $this->hasMany(ActivitySubmission::class);
+    }
+
+    /**
+     * Relación para obtener la última entrega de una actividad.
+     * Esto es un "hasOne of many".
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function latestSubmission(): HasOne
+    {
+        return $this->hasOne(ActivitySubmission::class)->latestOfMany('attempt_number');
     }
 }

@@ -13,10 +13,13 @@ class ActivityListResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description, // Opcional, si lo necesitas en la lista
-            'deadline_at' => Carbon::parse($this->deadline_at)->format("d-m-Y H:i"),
+            // Ajustamos el formato a 12 horas con AM/PM y aseguramos la zona horaria.
+            'deadline_at' => $this->deadline_at ? Carbon::parse($this->deadline_at)->setTimezone(config('app.timezone'))->format("d-m-Y h:i A") : null,
             'status' => $this->status,
             'status_description' =>  $this->status?->description(),
             'status_color' =>  $this->status?->color(),
+            'grade' => $this->grade?->name,
+            'section' => $this->section?->name,
              
 
             // Relaciones

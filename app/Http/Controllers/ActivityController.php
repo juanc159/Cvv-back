@@ -10,7 +10,7 @@ use App\Http\Resources\Activity\ActivityListPendingResource;
 use App\Http\Resources\Activity\ActivityListResource;
 use App\Models\Activity;
 use App\Models\ActivitySubmission;
-use App\Models\Notification;
+use Illuminate\Support\Facades\Notification;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -128,6 +128,9 @@ class ActivityController extends Controller
                 // 2) guardar por repositorio
                 $activity = $this->activityRepository->store($payload);
 
+                // 3) Notificar a los estudiantes si la actividad se publicó
+                $this->notifyStudents($activity);
+
                 return response()->json([
                     'code' => 200,
                     'message' => 'Actividad agregada correctamente',
@@ -177,17 +180,27 @@ class ActivityController extends Controller
     public function update(ActivityStoreRequest $request, $id)
     {
         try {
+            // Prevenimos la edición si la actividad ya está publicada.
+            $activity = $this->activityRepository->find($id);
+            if ($activity->status === ActivityStatusEnum::ACTIVITY_STATUS_002) {
+                return response()->json(['code' => 403, 'message' => 'No se puede modificar una actividad que ya ha sido publicada.'], 403);
+            }
+
+
             DB::beginTransaction();
 
-            $data = $this->activityRepository->store($request->except('path'));
+            // Usamos el repositorio para actualizar la actividad
+            $updatedActivity = $this->activityRepository->store($request->validated(), $id);
 
             if ($request->file('path')) {
                 $file = $request->file('path');
-                $path = $file->store('/activitys/activity_' . $data->id . $request->input('path'), 'public');
-                $data->path = $path;
-                $data->save();
+                $path = $file->store('/activitys/activity_' . $updatedActivity->id . $request->input('path'), 'public');
+                $updatedActivity->path = $path;
+                $updatedActivity->save();
             }
 
+            // Notificar a los estudiantes si la actividad se acaba de publicar
+            $this->notifyStudents($updatedActivity);
             DB::commit();
 
             return response()->json(['code' => 200, 'message' => 'Activity modificado correctamente']);
@@ -275,7 +288,7 @@ class ActivityController extends Controller
             $sectionId = $student->section_id;
 
             // 3. Llamar al Repositorio (El método que creamos en el paso anterior)
-            $data = $this->activityRepository->getStudentActivities($companyId, $gradeId, $sectionId);
+            $data = $this->activityRepository->getStudentActivities($companyId, $gradeId, $sectionId, $student->id);
 
             // 4. Formatear la respuesta
             // Reutilizamos ActivityListResource para que el JSON sea consistente con lo que ya tienes
@@ -332,7 +345,7 @@ class ActivityController extends Controller
             // 4. Preparar la data con la estructura que exige BellNotification
             $notificationData = [
                 'title' => 'Nueva Actividad: ' . $activity->title,
-                'subtitle' => ($activity->subject->name ?? 'Materia') . ' - Vence: ' . ($activity->deadline_at ? date('d/m H:i', strtotime($activity->deadline_at)) : 'Sin fecha'),
+                'subtitle' => ($activity->subject->name ?? 'Materia') . ' - Vence: ' . ($activity->deadline_at ? $activity->deadline_at->setTimezone(config('app.timezone'))->format('d/m/Y h:i A') : 'Sin fecha'),
                 'action_url' => '/student/activities', // Ruta del front donde verá la lista
                 'openInNewTab' => false,
                 'img' => null, // Dejamos null para que tu lógica use la foto del usuario/empresa o null
@@ -507,6 +520,8 @@ class ActivityController extends Controller
                 'next_attempt' => 1,           // El número de intento que toca hacer
             ];
 
+            $isOverdue = $activity->deadline_at ? now()->gt($activity->deadline_at) : false;
+
             if ($lastSubmission) {
                 $status = $lastSubmission->status;
 
@@ -516,7 +531,7 @@ class ActivityController extends Controller
 
                 // --- ESCENARIO A: BORRADOR (001) ---
                 if ($status === ActivitySubmissionStatusEnum::ACTIVITY_SUBMISSION_STATUS_001) {
-                    $formState['can_edit'] = true;
+                    $formState['can_edit'] = true; // Puede editar el borrador
                     $formState['mode']     = 'edit'; // Editamos el existente
                     $formState['next_attempt'] = $lastSubmission->attempt_number;
                     // PRE-LLENAMOS EL FORMULARIO CON LO QUE GUARDÓ
@@ -531,7 +546,7 @@ class ActivityController extends Controller
                     ActivitySubmissionStatusEnum::ACTIVITY_SUBMISSION_STATUS_002,
                     ActivitySubmissionStatusEnum::ACTIVITY_SUBMISSION_STATUS_004
                 ])) {
-                    $formState['can_edit'] = false; // BLOQUEADO
+                    $formState['can_edit'] = false; // BLOQUEADO por estar en revisión o ya calificado
                     $formState['mode']     = 'locked';
                     $formState['next_attempt'] = $lastSubmission->attempt_number;
                     // Mostramos lo que envió, pero en modo lectura
@@ -543,7 +558,7 @@ class ActivityController extends Controller
 
                 // --- ESCENARIO C: REQUIERE CORRECCIÓN (003) ---
                 elseif ($status === ActivitySubmissionStatusEnum::ACTIVITY_SUBMISSION_STATUS_003) {
-                    $formState['can_edit'] = true;
+                    $formState['can_edit'] = true; // Puede crear una nueva entrega
                     $formState['mode']     = 'create'; // Creamos uno NUEVO
                     $formState['next_attempt'] = $lastSubmission->attempt_number + 1;
                     // DEJAMOS EL FORMULARIO VACÍO PARA EL NUEVO INTENTO
@@ -556,6 +571,16 @@ class ActivityController extends Controller
                 }
             }
 
+            // --- LÓGICA DE VENCIMIENTO (SOBREESCRIBE LO ANTERIOR SI APLICA) ---
+            // Si está vencida Y el formulario aún es editable (es decir, no está 'Revisado' o 'Entregado'),
+            // entonces lo bloqueamos y mostramos el mensaje específico.
+            if ($isOverdue && $formState['can_edit']) {
+                $formState['can_edit'] = false;
+                $formState['mode'] = 'locked';
+                $formState['status_label'] = 'Bloqueado por fecha de entrega vencida';
+                $formState['status_color'] = 'error';
+            }
+
             // 4. PREPARAR RESPUESTA FINAL
             $response = [
                 // Info de la Actividad (Estática)
@@ -563,10 +588,10 @@ class ActivityController extends Controller
                     'id'          => $activity->id,
                     'title'       => $activity->title,
                     'description' => $activity->description,
-                    'deadline_at' => $activity->deadline_at,
+                    'deadline_at' => $activity->deadline_at ? $activity->deadline_at->setTimezone(config('app.timezone'))->format('d/m/Y h:i A') : null,
                     'subject'     => $activity->subject,
-                    'teacher'     => $activity->teacher,
-                    'is_overdue'  => $activity->deadline_at ? now()->gt($activity->deadline_at) : false,
+                    'teacher'     => $activity->teacher, 
+                    'is_overdue'  => $isOverdue,
                 ],
 
                 // Estado Actual del Formulario (Dinámico)
@@ -753,10 +778,11 @@ class ActivityController extends Controller
                 return response()->json(['code' => 403, 'message' => 'No tienes permiso.'], 403);
             }
 
-            // 2. Cargar Alumnos
+            // 2. Cargar Alumnos (ordenados por nombre completo)
             $students = Student::with('user') // Optimización: Solo traer nombre del usuario
                 ->where('grade_id', $activity->grade_id)
                 ->where('section_id', $activity->section_id)
+                ->orderBy('full_name', 'asc')
                 ->get();
 
             // 3. OPTIMIZACIÓN SQL: Traer entregas pero SOLO los campos necesarios para la lista.
