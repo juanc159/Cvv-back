@@ -372,11 +372,6 @@ class PassportAuthController extends Controller
                     'icon' => 'tabler-home',
                     // 'children' => [] // Si tuviera hijos se ponen aquí
                 ],
-                [
-                    'title' => 'Mis Actividades',
-                    'to' => 'ActivitiesStudent', // Nombre de la ruta Vue
-                    'icon' => 'tabler-backpack', // Un icono de mochila queda bien
-                ],
                 // Aquí puedes agregar más items en el futuro (ej: 'Mis Notas', 'Horario')
             ];
 
