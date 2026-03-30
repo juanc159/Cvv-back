@@ -32,7 +32,7 @@ Route::middleware(['check.permission:teacher.list'])->group(function () {
 
     Route::post('/teacher-planningStore', [TeacherController::class, 'planningStore']);
 
-    Route::put('/teachers/order', [TeacherController::class, 'updateOrder']);
+    Route::post('/teachers/order', [TeacherController::class, 'updateOrder']);
 
     Route::delete('/teacher-resetPlanifications', [TeacherController::class, 'resetPlanifications']);
 });
