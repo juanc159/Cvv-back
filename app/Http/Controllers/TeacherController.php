@@ -596,8 +596,9 @@ class TeacherController extends Controller
 
     public function updateOrder(Request $request)
     {
+
         try {
-            $company_id = auth()->user()->company_id;
+            $company_id = $request->input('company_id');
 
             DB::beginTransaction();
             $teachers = $request->input('teachers');
