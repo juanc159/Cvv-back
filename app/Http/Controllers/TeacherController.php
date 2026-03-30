@@ -12,6 +12,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use App\Repositories\CompanyRepository;
 use App\Repositories\JobPositionRepository;
+use App\Services\CacheService;
 use App\Repositories\SectionRepository;
 use App\Repositories\StudentRepository;
 use App\Repositories\SubjectRepository;
@@ -37,6 +38,7 @@ class TeacherController extends Controller
         protected StudentRepository $studentRepository,
         protected TeacherPlanningRepository $teacherPlanningRepository,
         protected CompanyRepository $companyRepository,
+        protected CacheService $cacheService,
     ) {}
 
     public function list(Request $request)
@@ -595,15 +597,22 @@ class TeacherController extends Controller
     public function updateOrder(Request $request)
     {
         try {
+            $company_id = auth()->user()->company_id;
 
             DB::beginTransaction();
-            $teachers = $request->input('teachers'); // Array de teachers con el nuevo orden
+            $teachers = $request->input('teachers');
 
             foreach ($teachers as $index => $teacher) {
-                Teacher::where('id', $teacher['id'])->update(['order' => $index]);
+                Teacher::where('id', $teacher['id'])
+                    ->where('company_id', $company_id)
+                    ->update(['order' => $index]);
             }
 
             DB::commit();
+
+            // Limpiar cache de teachers para esta compañía
+            $cacheKey = $this->cacheService->generateKey("teachers_wherePw", ["company_id" => $company_id], 'string');
+            $this->cacheService->forget($cacheKey);
 
             return response()->json(['code' => 200, 'message' => 'Orden actualizado correctamente']);
         } catch (Throwable $th) {
