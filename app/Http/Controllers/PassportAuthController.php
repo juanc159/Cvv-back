@@ -508,4 +508,61 @@ class PassportAuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Devuelve los datos frescos del usuario autenticado sin generar un token nuevo.
+     * Reutiliza los builders loginAdmin/loginTeacher/loginStudent pasando el token actual.
+     */
+    public function me(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json(['code' => 401, 'message' => 'No autenticado'], 401);
+            }
+
+            if (!$user->is_active) {
+                return response()->json(['code' => 401, 'message' => 'Usuario inactivo'], 401);
+            }
+
+            $currentToken = $user->token();
+
+            $tokenWrapper = (object) [
+                'accessToken' => $request->bearerToken(),
+                'token' => (object) [
+                    'expires_at' => $currentToken?->expires_at,
+                ],
+            ];
+
+            switch ($user->type_user) {
+                case 'admin':
+                    return response()->json($this->loginAdmin($user, $tokenWrapper), 200);
+
+                case 'teacher':
+                    $teacherProfile = $user->teacher;
+                    if (!$teacherProfile) {
+                        return response()->json(['code' => 500, 'message' => 'Perfil de docente no encontrado.'], 500);
+                    }
+                    return response()->json($this->loginTeacher($teacherProfile, $tokenWrapper), 200);
+
+                case 'student':
+                    $studentProfile = $user->student;
+                    if (!$studentProfile) {
+                        return response()->json(['code' => 500, 'message' => 'Perfil de estudiante no encontrado.'], 500);
+                    }
+                    return response()->json($this->loginStudent($studentProfile, $tokenWrapper), 200);
+
+                default:
+                    return response()->json(['code' => 403, 'message' => 'Tipo de usuario no válido'], 403);
+            }
+        } catch (Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error al obtener datos del usuario',
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+            ], 500);
+        }
+    }
 }

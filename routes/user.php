@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\PassportAuthController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
+// Datos del usuario autenticado (sin permiso especial, solo requiere sesión)
+Route::get('/me', [PassportAuthController::class, 'me']);
 
 // Rutas protegidas
 Route::middleware(['check.permission:menu.user'])->group(function () {
