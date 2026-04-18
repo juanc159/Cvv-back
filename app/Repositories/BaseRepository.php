@@ -286,6 +286,7 @@ class BaseRepository
         }
 
         $nombre = $nombre . '.pdf';
+
         if ($is_stream) {
             return $pdf->stream($nombre);
         } else {

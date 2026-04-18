@@ -65,7 +65,7 @@ class DocumentController extends Controller
      */
     public function certificate(string $id)
     {
-        return $this->generateCertificate($id, 'Pdfs.StudyCertificate');
+        return $this->generateCertificate($id, 'Pdfs.StudyCertificate'); 
     }
 
     /**
@@ -175,7 +175,7 @@ class DocumentController extends Controller
             $currentDate = Carbon::now();
             if ($currentDate) {
                 $currentDate->setLocale('es');
-                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT); // Ensure two digits for day
+                $day = str_pad($currentDate->day, 2, '0', STR_PAD_LEFT);
                 $month = $currentDate->monthName;
                 $year = $currentDate->year;
                 $formattedDate = "los $day días del mes de $month de $year";
@@ -221,7 +221,6 @@ class DocumentController extends Controller
             }
             $student->type_document_name = $type_document_name;
 
-            // Preparar datos para el PDF, incluyendo información adicional si existe
             $pdfData = [
                 'student' => $student,
                 'date' => $formattedDate,
@@ -232,26 +231,30 @@ class DocumentController extends Controller
                 $pdfData['additionalInfo'] = $additionalInfo;
             }
 
-            // Generar el PDF
-            $pdfContent = $this->studentRepository->pdf(
+            $nameMap = [
+                'Pdfs.StudyCertificate'             => 'Constancia_de_Estudios',
+                'Pdfs.CertificateCompletion'        => 'Constancia_de_Culminacion',
+                'Pdfs.ProofOfNotHavingScholarship'  => 'Constancia_de_No_Beca',
+                'Pdfs.CertificateApproval'          => 'Constancia_de_Aprobacion',
+                'Pdfs.CertificateOfGoodConduct'     => 'Constancia_de_Buena_Conducta',
+                'Pdfs.CertificateOfEnrollment'      => 'Constancia_de_Inscripcion',
+                'Pdfs.CertificateTransporter'       => 'Constancia_de_Transportista',
+                'Pdfs.CertificateEnrollmentAmount'  => 'Constancia_de_Inscripcion_por_Monto',
+                'Pdfs.CertificateWithdrawal'        => 'Constancia_de_Retiro',
+                'Pdfs.AbsencePermission'            => 'Permiso_de_Ausencia',
+            ];
+
+            $baseName = $nameMap[$view] ?? 'Documento';
+            $rawName = $baseName . '_' . $student->full_name;
+            $fileName = preg_replace('/_+/', '_', trim(preg_replace('/[^A-Za-z0-9_\-]/', '_', iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $rawName) ?: $rawName), '_'));
+
+            return $this->studentRepository->pdf(
                 $view,
                 $pdfData,
-                'Constancia_de_Estudios_' . $student->full_name,
-                true // Forzar descarga
+                $fileName,
+                false
             );
-
-            if (!$pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            return [
-                'code' => 200,
-                'pdf' => base64_encode($pdfContent),
-            ];
-        });
+        }, 200, 500, false, false, true);
     }
 
     public function masiveCertificatesData()
@@ -306,7 +309,6 @@ class DocumentController extends Controller
 
             $grade = $this->gradeRepository->find($request['grade_id']);
             $company_id = $request['company_id'];
-            $student_id = $request['student_id'];
 
             // Formatear la fecha actual en español
             $currentDate = Carbon::now();
@@ -393,26 +395,13 @@ class DocumentController extends Controller
                 'term' => $term,
             ];
 
-            // Generar el PDF
-            $pdfContent = $this->studentRepository->pdf(
+            return $this->studentRepository->pdf(
                 "Pdfs.CertificateProsecution",
                 $pdfData,
-                'Constancia_de_Prosecusión_' . $grade->name,
-                true // Forzar descarga
+                'Constancia_de_Prosecucion_' . $grade->name,
+                false
             );
-
-            if (!$pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            return [
-                'code' => 200,
-                'pdf' => base64_encode($pdfContent),
-            ];
-        });
+        }, 200, 500, false, false, true);
     }
 
     /**
@@ -534,26 +523,13 @@ class DocumentController extends Controller
 
             ];
 
-            // Generar el PDF
-            $pdfContent = $this->studentRepository->pdf(
+            return $this->studentRepository->pdf(
                 "Pdfs.CertificateInitialEducation",
                 $pdfData,
-                'Certificado_Educacion_Inicial' . $grade->name,
-                true // Forzar descarga
+                'Certificado_Educacion_Inicial_' . $grade->name,
+                false
             );
-
-            if (!$pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            return [
-                'code' => 200,
-                'pdf' => base64_encode($pdfContent),
-            ];
-        });
+        }, 200, 500, false, false, true);
     }
 
     /**
@@ -716,26 +692,13 @@ class DocumentController extends Controller
                 'signatureImg' => $signatureImg,
             ];
 
-            // Generar el PDF
-            $pdfContent = $this->studentRepository->pdf(
+            return $this->studentRepository->pdf(
                 $pdfView,
                 $pdfData,
-                'Constancia_de_Prosecución_' . $grade->name,
-                true // Forzar descarga
+                'Constancia_de_Prosecucion_' . $grade->name,
+                false
             );
-
-            if (!$pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            return [
-                'code' => 200,
-                'pdf' => base64_encode($pdfContent),
-            ];
-        });
+        }, 200, 500, false, false, true);
     }
 
     public function searchStudentFor(Request $request)

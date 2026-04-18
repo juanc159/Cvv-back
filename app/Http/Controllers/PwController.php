@@ -221,14 +221,10 @@ class PwController extends Controller
     public function pdfPNote($id)
     {
         try {
-            // Verificar que Carbon::now() devuelva una instancia válida
             $currentDate = Carbon::now();
-
-            // Configurar el locale y formatear
             $currentDate->setLocale('es');
             $formattedDate = $currentDate->translatedFormat('l, j \\de F \\de Y');
 
-            // Resto del código...
             $student = $this->studentRepository->find($id, [
                 'notes.subject',
                 'grade.subjects',
@@ -247,7 +243,6 @@ class PwController extends Controller
                 ->with('subject')
                 ->get();
 
-            /// Obtener materias pendientes con sus intentos
             $pendingAttempts = $student->pendingRegistrationAttempts()
                 ->with('subject')
                 ->get()
@@ -256,7 +251,9 @@ class PwController extends Controller
                     return $attempts->sortBy('attempt_number');
                 });
 
-            $pdfContent = $this->studentRepository->pdf(
+            $fileName = 'Boletin_de_Notas_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $student->full_name ?? 'estudiante');
+
+            return $this->studentRepository->pdf(
                 'Pdfs.StudentNote',
                 [
                     'student' => $student,
@@ -264,29 +261,15 @@ class PwController extends Controller
                     'date' => $formattedDate,
                     'pendingAttempts' => $pendingAttempts,
                 ],
-                'Notas',
+                $fileName,
                 false
             );
-
-            if (! $pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            $pdfBase64 = base64_encode($pdfContent);
-
-            return response()->json([
-                'code' => 200,
-                'pdf' => $pdfBase64,
-            ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 500,
                 'message' => 'Error al procesar la solicitud',
-                'error' => $th->getMessage(), // Para depuración
-                'line' => $th->getLine(),     // Para depuración
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
             ], 500);
         }
     }
@@ -651,32 +634,19 @@ class PwController extends Controller
 
             $next_school_year = '2025-2026';
 
-            // Generar el PDF
-            $pdfContent = $this->studentRepository->pdf(
+            $fileName = 'Solvencia_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $student->full_name ?? 'estudiante');
+
+            return $this->studentRepository->pdf(
                 'Pdfs.SolvencyCertificate',
                 [
                     'student' => $studentData,
                     'next_school_year' => $next_school_year,
                     'solvencyCode' => $solvencyCode,
                 ],
-                'Solvencia',
+                $fileName,
                 false,
                 setPaper: [0, 0, 595, 420] // Mitad de una hoja A4
             );
-
-            if (!$pdfContent) {
-                return response()->json([
-                    'code' => 500,
-                    'message' => 'Error al generar el PDF',
-                ], 500);
-            }
-
-            $pdfBase64 = base64_encode($pdfContent);
-
-            return response()->json([
-                'code' => 200,
-                'pdf' => $pdfBase64,
-            ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 500,
