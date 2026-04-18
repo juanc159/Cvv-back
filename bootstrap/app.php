@@ -27,12 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withExceptions(function (Exceptions $exceptions) {
         // Respuesta amigable cuando la sesión expiró o el token es inválido.
+        // Siempre devolvemos JSON porque el backend es API-first (no hay vistas con login).
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'code' => 401,
-                    'message' => 'Su sesión ha expirado. Por favor inicie sesión nuevamente.',
-                ], 401);
-            }
+            return response()->json([
+                'code' => 401,
+                'message' => 'Su sesión ha expirado. Por favor inicie sesión nuevamente.',
+            ], 401);
         });
     })->create();

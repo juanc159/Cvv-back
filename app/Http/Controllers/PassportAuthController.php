@@ -134,6 +134,7 @@ class PassportAuthController extends Controller
 
     public function loginAdmin($user, $token)
     {
+        $obj['user_id'] = $user->id;
         if ($user->company) {
             if (! $user->company?->is_active) {
                 return [
@@ -235,6 +236,7 @@ class PassportAuthController extends Controller
     public function loginTeacher($user, $token)
     {
         // datos personales
+        $obj['user_id'] = $user->user_id;
         $obj['id'] = $user->id;
         $obj['full_name'] = $user->full_name;
         $obj['photo'] = $user->photo_url;
@@ -309,6 +311,7 @@ class PassportAuthController extends Controller
     {
         if ($user) {
             // datos personales
+            $obj['user_id'] = $user->user_id;
             $obj['id'] = $user->id;
             $obj['full_name'] = $user->full_name;
             $obj['photo'] = $user->photo_url;
