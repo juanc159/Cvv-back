@@ -237,6 +237,11 @@ class ConsolidatedImportService
             return ['valid' => true, 'value' => strtoupper($value)];
         }
 
+        // 3. Guion: se guarda literal como marcador de "sin nota"
+        if ($value === '-') {
+            return ['valid' => true, 'value' => '-'];
+        }
+
         // Si no pasa ninguna
         return ['valid' => false, 'value' => $value];
     }
