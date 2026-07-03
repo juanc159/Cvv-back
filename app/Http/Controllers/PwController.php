@@ -629,10 +629,10 @@ class PwController extends Controller
                 'type_document_name' => $type_document_name,
                 'identity_document' => $student["identity_document"],
                 'grade_name' => $student->type_education?->name . " - " . $student->grade?->name . " " . $student->section?->name,
-                'school_year' => "2024-2025",
+                'school_year' => "2025-2026",
             ];
 
-            $next_school_year = '2025-2026';
+            $next_school_year = '2026-2027';
 
             $fileName = 'Solvencia_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $student->full_name ?? 'estudiante');
 
