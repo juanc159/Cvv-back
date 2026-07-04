@@ -395,7 +395,7 @@ class NoteController extends Controller
                 // 5. Fetch Students for this specific Grade/Section
                 // Eager Load Notes ONLY for the relevant subjects to save memory
                 $students = \App\Models\Student::query()
-                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate')
+                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate', 'boletin_active')
                     ->where('company_id', $companyId)
                     ->where('grade_id', $assignment->grade_id)
                     ->where('section_id', $assignment->section_id)
@@ -422,6 +422,7 @@ class NoteController extends Controller
                         'full_name' => $student->full_name,
                         'pdf' => $student->pdf == 1 ? 1 : '',
                         'solvencyCertificate' => $student->solvencyCertificate == 1 ? 1 : '',
+                        'boletin_active' => $student->boletin_active == 1 ? 1 : '',
                     ];
 
                     // Process Grades
@@ -651,7 +652,7 @@ class NoteController extends Controller
                 // 5. Fetch Students for this specific Grade/Section
                 // Eager Load Notes ONLY for the relevant subjects to save memory
                 $students = \App\Models\Student::query()
-                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate')
+                    ->select('id', 'full_name', 'identity_document', 'grade_id', 'section_id', 'pdf', 'solvencyCertificate', 'boletin_active')
                     ->where('company_id', $companyId)
                     ->where('grade_id', $assignment->grade_id)
                     ->where('section_id', $assignment->section_id)
@@ -678,6 +679,7 @@ class NoteController extends Controller
                         'full_name' => $student->full_name,
                         'pdf' => $student->pdf == 1 ? 1 : '',
                         'solvencyCertificate' => $student->solvencyCertificate == 1 ? 1 : '',
+                        'boletin_active' => $student->boletin_active == 1 ? 1 : '',
                     ];
 
                     // Process Grades

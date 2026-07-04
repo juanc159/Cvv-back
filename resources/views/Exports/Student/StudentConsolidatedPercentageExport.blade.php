@@ -5,6 +5,7 @@
                 <th style="border: 1px solid black">NRO</th>
                 @if ($type_education_id)
                     <th style="border: 1px solid black">PDF</th>
+                    <th style="border: 1px solid black">BOLETIN</th>
                     <th style="border: 1px solid black">SOLVENTE</th>
                 @endif
                 <th style="border: 1px solid black">AÑO</th>
@@ -22,7 +23,7 @@
                 $previousSection = null;
                 $nro = 1;
                 // Calculamos colspan dinámico
-                $fixedColumnsCount = $type_education_id ? 7 : 5;
+                $fixedColumnsCount = $type_education_id ? 8 : 5;
                 
                 // Inicializamos los contadores usando array_fill_keys (Más rápido y sin errores de redelcaring)
                 $approvedCount = array_fill_keys($headers, 0);
@@ -109,6 +110,7 @@
 
                     @if ($type_education_id)
                         <td style="border: 1px solid black">{{ $row['pdf'] }}</td>
+                        <td style="border: 1px solid black">{{ $row['boletin_active'] }}</td>
                         <td style="border: 1px solid black">{{ $row['solvencyCertificate'] }}</td>
                     @endif
 

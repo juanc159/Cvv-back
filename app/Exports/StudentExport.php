@@ -66,25 +66,29 @@ class StudentExport implements FromView, ShouldAutoSize, WithEvents, WithStyles,
 
                 // Establecer el rango de bloqueo para columnas
                 $protectedColumns = 'A:E';
-                $additionalProtectedColumns = 'A:F';
+                // Con type_education_id las columnas editables son B (PDF), C (SOLVENTE) y D (BOLETIN);
+                // el bloque fijo NRO..CÉDULA llega hasta G.
+                $additionalProtectedColumns = 'A:G';
 
                 // Si $prueba tiene valor, bloquear B1 y permitir B2 en adelante
                 if ($this->type_education_id) {
                     $sheet->getStyle('B1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
                     $sheet->getStyle('C1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
+                    $sheet->getStyle('D1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
                     $sheet->getStyle($additionalProtectedColumns)->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
 
-                    // Desbloquear B2 hasta el último valor de la columna B
+                    // Desbloquear los toggles editables (PDF/SOLVENTE/BOLETIN) desde la fila 2
                     if ($highestRow > 1) {
                         $sheet->getStyle('B2:B' . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
                         $sheet->getStyle('C2:C' . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
+                        $sheet->getStyle('D2:D' . $highestRow)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
                     }
                 } else {
                     $sheet->getStyle($protectedColumns)->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
                 }
 
-                // Bloquear las columnas F en adelante
-                $init = $this->type_education_id ? 'G1' : 'F1';
+                // Bloquear las columnas de notas en adelante (H con type_education_id, F sin él)
+                $init = $this->type_education_id ? 'H1' : 'F1';
                 $sheet->getStyle("$init:" . $highestColumn . '1')->getProtection()->setLocked(Protection::PROTECTION_PROTECTED);
             },
         ];

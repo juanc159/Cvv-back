@@ -28,7 +28,7 @@ class StudentRepository extends BaseRepository
 
         $query = QueryBuilder::for($this->model->query())
             ->with(['type_education:id,name', 'grade:id,name', 'section:id,name', 'type_document:id,name', 'country:id,name', 'state:id,name', 'city:id,name'])
-            ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id', "country_id", "state_id", "city_id", "nationalized", "gender", "birthday",'students.company_id'])
+            ->select(['students.id', 'full_name', 'students.type_education_id', 'grade_id', 'section_id', 'photo', 'identity_document', 'type_document_id', "country_id", "state_id", "city_id", "nationalized", "gender", "birthday",'students.company_id', 'pdf', 'solvencyCertificate', 'boletin_active'])
             ->allowedFilters([
                 'full_name',
                 'identity_document', 
@@ -116,6 +116,26 @@ class StudentRepository extends BaseRepository
 
         return $data;
         // }, Constants::REDIS_TTL);
+    }
+
+    /**
+     * Actualiza un campo booleano en varios estudiantes, acotado por compañía.
+     *
+     * @param  array  $ids  IDs de los estudiantes
+     * @param  mixed  $value  Nuevo valor
+     * @param  string  $column  Columna a actualizar
+     * @param  int|null  $companyId  Si se pasa, solo afecta estudiantes de esa compañía
+     * @return int  Número de filas afectadas
+     */
+    public function changeStateMasive($ids, $value, $column, $companyId = null)
+    {
+        $query = $this->model->whereIn('id', $ids);
+
+        if (! empty($companyId)) {
+            $query->where('company_id', $companyId);
+        }
+
+        return $query->update([$column => $value]);
     }
 
     public function list($request = [], $with = [], $select = ['*'])

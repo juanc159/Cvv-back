@@ -293,18 +293,73 @@ class StudentController extends Controller
     }
   }
 
+  // Campos que se permiten cambiar por los endpoints genéricos de estado.
+  private const ALLOWED_STATUS_FIELDS = ['pdf', 'boletin_active', 'solvencyCertificate', 'is_active'];
+
   public function changeStatus(Request $request)
   {
+    $field = $request->input('field');
+
+    if (! in_array($field, self::ALLOWED_STATUS_FIELDS, true)) {
+      return response()->json(['code' => 422, 'message' => 'Campo no permitido'], 422);
+    }
+
     try {
       DB::beginTransaction();
 
-      $model = $this->studentRepository->changeState($request->input('id'), strval($request->input('value')), $request->input('field'));
+      $model = $this->studentRepository->changeState($request->input('id'), strval($request->input('value')), $field);
 
       ($model->is_active == 1) ? $msg = 'habilitada' : $msg = 'inhabilitada';
 
       DB::commit();
 
       return response()->json(['code' => 200, 'message' => 'Student ' . $msg . ' con éxito']);
+    } catch (Throwable $th) {
+      DB::rollback();
+
+      return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+    }
+  }
+
+  /**
+   * Cambia un campo booleano (pdf / boletin_active / solvencyCertificate / is_active)
+   * en varios estudiantes a la vez.
+   *
+   * Modo 'filter': aplica a TODOS los estudiantes que coincidan con los filtros
+   * actuales del listado (acotado por company_id y excluyendo retirados).
+   * Modo 'selected': aplica solo a los IDs recibidos.
+   */
+  public function changeStatusMasive(Request $request)
+  {
+    $field = $request->input('field');
+
+    if (! in_array($field, self::ALLOWED_STATUS_FIELDS, true)) {
+      return response()->json(['code' => 422, 'message' => 'Campo no permitido'], 422);
+    }
+
+    $value = ($request->input('value') == 1) ? 1 : 0;
+    $mode = $request->input('mode', 'selected');
+    $companyId = $request->input('company_id');
+
+    try {
+      DB::beginTransaction();
+
+      if ($mode === 'filter') {
+        // Reutiliza los mismos filtros del listado para traer todos los coincidentes.
+        $all = $this->studentRepository->paginate(array_merge($request->all(), ['typeData' => 'all']));
+        $ids = $all->pluck('id')->all();
+      } else {
+        $ids = $request->input('ids', []);
+      }
+
+      $affected = 0;
+      if (! empty($ids)) {
+        $affected = $this->studentRepository->changeStateMasive($ids, $value, $field, $companyId);
+      }
+
+      DB::commit();
+
+      return response()->json(['code' => 200, 'message' => "Registros actualizados: {$affected}", 'affected' => $affected]);
     } catch (Throwable $th) {
       DB::rollback();
 

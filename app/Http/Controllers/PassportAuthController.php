@@ -336,6 +336,7 @@ class PassportAuthController extends Controller
             $obj['pdf'] = $user->pdf;
             $obj['solvencyCertificate'] = $user->solvencyCertificate;
             $obj['boletin'] = $user->boletin;
+            $obj['boletin_active'] = $user->boletin_active;
             $obj['type_user'] = 'student';
             $obj['url_to_download_prosecucion_pdf'] = null;
 

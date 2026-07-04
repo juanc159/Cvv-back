@@ -29,6 +29,7 @@ class ConsolidatedImportService
         'NRO',
         'PDF',
         'SOLVENTE',
+        'BOLETIN',
         'AÑO',
         'SECCIÓN',
         'CÉDULA',
@@ -121,6 +122,11 @@ class ConsolidatedImportService
                 $update = true;
                 $val = $row['SOLVENTE'];
                 $studentData['solvencyCertificate'] = ($val == 1 || $val === '1') ? 1 : 0;
+            }
+            if (array_key_exists('BOLETIN', $row)) {
+                $update = true;
+                $val = $row['BOLETIN'];
+                $studentData['boletin_active'] = ($val == 1 || $val === '1') ? 1 : 0;
             }
 
             if ($update) {
