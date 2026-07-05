@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Passport\Passport;
 use Throwable;
 
 class PassportAuthController extends Controller
@@ -90,6 +91,13 @@ class PassportAuthController extends Controller
             // 4. GENERACIÓN DEL TOKEN
             // Aquí ya estamos seguros de quién es. Creamos el token.
             // Opcional: Podríamos agregar Scopes aquí: $user->createToken('authToken', [$user->type_user]);
+
+            // Caducidad de sesión por tipo de usuario (absoluta, desde el login).
+            // Alumnos: sesión corta; personal: jornada. Configurable en config/session_token.php.
+            $ttlHours = config('session_token.ttl_hours.'.$user->type_user)
+                ?? config('session_token.default_hours', 2);
+            Passport::personalAccessTokensExpireIn(now()->addHours((int) $ttlHours));
+
             $token = $user->createToken('authToken');
 
             // 5. REDIRECCIONAMIENTO DE RESPUESTA (Strategy Pattern)
@@ -566,6 +574,47 @@ class PassportAuthController extends Controller
                 'message' => 'Error al obtener datos del usuario',
                 'error' => $th->getMessage(),
                 'line' => $th->getLine(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cierra TODAS las sesiones activas (revoca todos los tokens de Passport),
+     * obligando a que todo el mundo vuelva a iniciar sesión.
+     *
+     * Solo el Super Administrador puede ejecutarlo. Se preserva el token del
+     * propio admin que dispara la acción para que no quede expulsado.
+     */
+    public function revokeAllSessions(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $superAdminRoleId = config('session_token.super_admin_role_id');
+            if (! $user || $user->role_id !== $superAdminRoleId) {
+                return response()->json([
+                    'code' => 403,
+                    'message' => 'No autorizado. Solo el Super Administrador puede cerrar todas las sesiones.',
+                ], 403);
+            }
+
+            $currentTokenId = optional($user->token())->id;
+
+            $affected = DB::table('oauth_access_tokens')
+                ->where('revoked', 0)
+                ->when($currentTokenId, fn ($q) => $q->where('id', '!=', $currentTokenId))
+                ->update(['revoked' => 1]);
+
+            return response()->json([
+                'code' => 200,
+                'message' => "Se cerraron {$affected} sesiones. Todos los usuarios deberán iniciar sesión nuevamente.",
+                'revoked_sessions' => $affected,
+            ], 200);
+        } catch (Throwable $th) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'No se pudieron cerrar las sesiones',
+                'error' => $th->getMessage(),
             ], 500);
         }
     }
