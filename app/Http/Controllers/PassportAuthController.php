@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Constants;
 use App\Http\Requests\Authentication\PassportAuthLoginRequest;
 use App\Http\Requests\Authentication\PassportAuthSendResetLinkRequest;
 use App\Jobs\BrevoProcessSendEmail;
+use App\Models\BlockData;
 use App\Models\Role;
 use App\Models\User;
 use App\Repositories\BlockDataRepository;
@@ -331,7 +333,9 @@ class PassportAuthController extends Controller
 
             // informacion año, grado y seccion
             $obj['type_education_id'] = $user->type_education_id;
-            $obj['type_education_name'] = $user->typeEducation?->name;
+            // La relación en el modelo Student se llama type_education (snake_case).
+            // Con typeEducation Laravel no la resuelve y devolvía null siempre.
+            $obj['type_education_name'] = $user->type_education?->name;
             $obj['grade_id'] = $user->grade_id;
             $obj['grade_name'] = $user->grade?->name;
             $obj['section_id'] = $user->section_id;
@@ -348,21 +352,28 @@ class PassportAuthController extends Controller
             $obj['type_user'] = 'student';
             $obj['url_to_download_prosecucion_pdf'] = null;
 
-            // si es de Educación Inicial
-            if ($user->type_education_id == 1) {
-                // solo Primer Nivel y Segundo Nivel
-                if ($user->grade_id == 1 || $user->grade_id == 2) {
-                    // $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionInitialEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
-                }
-                // solo si es Tercer Nivel
-                if ($user->grade_id == 3) {
-                    // $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/certificateInitialEducation?section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
-                }
-            }
+            // La constancia/certificado solo se ofrece si el administrador tiene la opción
+            // encendida desde el módulo de Notas (se usa solo a fin de año escolar) y además
+            // el estudiante está solvente. Si falla cualquiera de las dos, la url queda en
+            // null y el frontend no muestra la tarjeta.
+            if (BlockData::isActive(Constants::ENABLE_PROSECUTION_DOCUMENTS) && $user->solvencyCertificate == 1) {
 
-            // si es de Educación Primaria
-            if ($user->type_education_id == 2) {
-                // $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionPrimaryEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                // si es de Educación Inicial
+                if ($user->type_education_id == 1) {
+                    // solo Primer Nivel y Segundo Nivel
+                    if ($user->grade_id == 1 || $user->grade_id == 2) {
+                        $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionInitialEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                    }
+                    // solo si es Tercer Nivel
+                    if ($user->grade_id == 3) {
+                        $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/certificateInitialEducation?section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                    }
+                }
+
+                // si es de Educación Primaria
+                if ($user->type_education_id == 2) {
+                    $obj['url_to_download_prosecucion_pdf'] = '/documentStudent/prosecutionPrimaryEducation?grade_id=' . urlencode($user->grade_id) . '&section_id=' . urlencode($user->section_id) . '&ordering=full_name&company_id=' . urlencode($user->company_id) . '&student_id=' . urlencode($user->id);
+                }
             }
 
             $company = $user->company;

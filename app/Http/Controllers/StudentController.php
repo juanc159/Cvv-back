@@ -162,11 +162,8 @@ class StudentController extends Controller
 
       // 5. Manejo de Foto (Tu lógica original)
       if ($request->file('photo')) {
-        $file = $request->file('photo');
-        // Nota: Corregí un detalle aquí, concatenabas $request->input('photo') que suele ser null si es archivo
-        $photoPath = $file->store('company_' . $data->company_id . '/student/student_' . $data->id, 'public');
-        $data->photo = $photoPath;
-        $data->save();
+        // Guarda la foto y borra la anterior si la hubiera, para no dejar huérfanos.
+        $data->replaceFile('photo', $request->file('photo'));
       }
 
       DB::commit();
@@ -246,10 +243,8 @@ class StudentController extends Controller
       $data = $this->studentRepository->store($post);
 
       if ($request->file('photo')) {
-        $file = $request->file('photo');
-        $photo = $file->store('company_' . $data->company_id . '/student/student_' . $data->id . $request->input('photo'), 'public');
-        $data->photo = $photo;
-        $data->save();
+        // Guarda la foto nueva y borra la anterior para no dejar huérfanos.
+        $data->replaceFile('photo', $request->file('photo'));
       }
 
       DB::commit();

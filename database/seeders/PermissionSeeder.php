@@ -173,6 +173,30 @@ class PermissionSeeder extends Seeder
                 'description' => 'Eliminar todas las calificaciones de los estudiantes',
                 'menu_id' => 12,
             ],
+            [
+                'id' => 27,
+                'name' => 'note.enable_prosecution_documents',
+                'description' => 'Habilitar constancias de prosecución a los estudiantes',
+                'menu_id' => 12,
+            ],
+            [
+                'id' => 28,
+                'name' => 'maintenance.menu',
+                'description' => 'Visualizar Módulo Mantenimiento',
+                'menu_id' => 19,
+            ],
+            [
+                'id' => 29,
+                'name' => 'maintenance.files',
+                'description' => 'Auditoría de archivos',
+                'menu_id' => 20,
+            ],
+            [
+                'id' => 30,
+                'name' => 'maintenance.data',
+                'description' => 'Revisión de datos',
+                'menu_id' => 21,
+            ],
         ];
 
         // Inicializar la barra de progreso

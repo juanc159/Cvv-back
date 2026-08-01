@@ -159,6 +159,32 @@ class MenuSeeder extends Seeder
                 'father' => 16,
                 'requiredPermission' => 'documents.masive',
             ],
+            [
+                'id' => 19,
+                'order' => 900,
+                'title' => 'Mantenimiento',
+                'icon' => 'tabler-tool',
+                'to' => null,
+                'requiredPermission' => 'maintenance.menu',
+            ],
+            [
+                'id' => 20,
+                'order' => 910,
+                'title' => 'Auditoría de archivos',
+                'icon' => 'tabler-file-search',
+                'to' => 'Maintenance-Files',
+                'father' => 19,
+                'requiredPermission' => 'maintenance.files',
+            ],
+            [
+                'id' => 21,
+                'order' => 920,
+                'title' => 'Revisión de datos',
+                'icon' => 'tabler-checkup-list',
+                'to' => 'Maintenance-Data',
+                'father' => 19,
+                'requiredPermission' => 'maintenance.data',
+            ],
         ];
 
         // Inicializar la barra de progreso

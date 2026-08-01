@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Constants;
+use App\Models\BlockData;
 use App\Models\Grade;
+use App\Models\Student;
 use App\Models\Term;
 use App\Repositories\GradeRepository;
 use App\Repositories\SectionRepository;
@@ -22,6 +25,42 @@ class DocumentController extends Controller
         protected SectionRepository $sectionRepository,
 
     ) {}
+
+    /**
+     * Valida el acceso cuando la constancia/certificado se pide desde el portal del estudiante.
+     *
+     * Los mismos métodos atienden dos caminos:
+     *   - /documents/*        → módulo administrativo, genera por grado/sección sin restricciones.
+     *   - /documentStudent/*  → portal del alumno, exige que la opción esté encendida y que él esté solvente.
+     *
+     * Devuelve null si se puede continuar, o el arreglo de error que el método debe retornar.
+     */
+    private function denyIfNotSolvent(): ?array
+    {
+        if (! request()->routeIs('documentStudent.*')) {
+            return null;
+        }
+
+        // Interruptor general del módulo de Notas: solo se habilita a fin de año escolar.
+        if (! BlockData::isActive(Constants::ENABLE_PROSECUTION_DOCUMENTS)) {
+            return [
+                'code' => 403,
+                'message' => 'La descarga de constancias no está habilitada en este momento.',
+            ];
+        }
+
+        $studentId = request('student_id');
+        $student = $studentId ? Student::find($studentId) : null;
+
+        if (! $student || $student->solvencyCertificate != 1) {
+            return [
+                'code' => 403,
+                'message' => 'Debes estar solvente para descargar este documento.',
+            ];
+        }
+
+        return null;
+    }
 
     /**
      * Muestra los datos de un estudiante.
@@ -280,6 +319,10 @@ class DocumentController extends Controller
     public function prosecutionInitialEducation()
     {
         return $this->runTransaction(function () {
+            if ($denied = $this->denyIfNotSolvent()) {
+                return $denied;
+            }
+
             // Array de meses en español
             $spanishMonths = [
                 1 => 'Enero',
@@ -410,6 +453,10 @@ class DocumentController extends Controller
     public function certificateInitialEducation()
     {
         return $this->runTransaction(function () {
+            if ($denied = $this->denyIfNotSolvent()) {
+                return $denied;
+            }
+
             // Array de meses en español
             $spanishMonths = [
                 1 => 'Enero',
@@ -431,6 +478,12 @@ class DocumentController extends Controller
 
             $request = request()->all();
 
+            // El grado va fijo a propósito: este certificado es exclusivo de Tercer Nivel
+            // (el último de Educación Inicial), y solo lo usa el colegio 1, donde ese grado
+            // tiene el id 3. Por eso se ignora el grade_id que llegue en el request.
+            //
+            // OJO si mañana lo usa otro colegio: sus grados tienen otros ids (los del
+            // colegio 3 son UUID), así que acá habría que tomar el grade_id del request.
             $grade = $this->gradeRepository->find(3);
             $company_id = $request['company_id'];
 
@@ -538,6 +591,10 @@ class DocumentController extends Controller
     public function prosecutionPrimaryEducation()
     {
         return $this->runTransaction(function () {
+            if ($denied = $this->denyIfNotSolvent()) {
+                return $denied;
+            }
+
             // Array de meses en español
             $spanishMonths = [
                 1 => 'Enero',
@@ -589,7 +646,10 @@ class DocumentController extends Controller
                 // Si hay un grado siguiente, usamos su nombre y tipo de educación
                 if ($nextGrade) {
                     $nextGradeName = $nextGrade->name;
-                    $nextEducationType = $nextGrade->educationType->name ?? 'Educación Primaria';
+                    // La relación en el modelo Grade se llama typeEducation. Antes decía
+                    // educationType, que no existe: Laravel devolvía null sin avisar y
+                    // siempre caía al valor por defecto, dejando sin uso el with() de arriba.
+                    $nextEducationType = $nextGrade->typeEducation->name ?? 'Educación Primaria';
                     $nextGradeNameWithType = "$nextGradeName de $nextEducationType";
                 }
             }

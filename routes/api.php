@@ -29,7 +29,8 @@ Route::get('/teacher-planningShow/{id?}', [TeacherController::class, 'planning']
 
 Route::get('/note-dataForm', [NoteController::class, 'dataForm']);
 
-Route::post('/savefiles', [NoteController::class, 'savefiles']);
+// Escribe en el registro del alumno (foto / boletín), así que exige sesión.
+Route::post('/savefiles', [NoteController::class, 'savefiles'])->middleware('auth:api');
 
 Route::get('/file/download', function (Request $request) {
     try {
@@ -52,11 +53,17 @@ Route::get('/file/download', function (Request $request) {
 
 
 
-Route::get('/documentStudent/prosecutionInitialEducation', [DocumentController::class, 'prosecutionInitialEducation']);
+// Portal del estudiante: mismas vistas que el módulo administrativo, pero exigen solvencia.
+// El prefijo de nombre 'documentStudent.' es lo que el DocumentController usa para saber
+// que debe validar la solvencia (ver DocumentController::denyIfNotSolvent).
+Route::get('/documentStudent/prosecutionInitialEducation', [DocumentController::class, 'prosecutionInitialEducation'])
+    ->name('documentStudent.prosecutionInitialEducation');
 
-Route::get('/documentStudent/certificateInitialEducation', [DocumentController::class, 'certificateInitialEducation']);
+Route::get('/documentStudent/certificateInitialEducation', [DocumentController::class, 'certificateInitialEducation'])
+    ->name('documentStudent.certificateInitialEducation');
 
-Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation']);
+Route::get('/documentStudent/prosecutionPrimaryEducation', [DocumentController::class, 'prosecutionPrimaryEducation'])
+    ->name('documentStudent.prosecutionPrimaryEducation');
 
 
 Route::post('/note-store-teachers', [NoteController::class, 'store']);

@@ -24,11 +24,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 class NoteController extends Controller
 {
+    /**
+     * Únicas columnas que la carga de archivos puede escribir, con el tipo que acepta cada una.
+     *
+     * Se valida por MIME real, no por la extensión del nombre: un archivo llamado ".jpg"
+     * puede tener cualquier contenido, y termina guardado en el disco público.
+     */
+    private const ALLOWED_FILE_FIELDS = [
+        'photo' => [
+            'mimetypes' => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+            'label' => 'una imagen (JPG, PNG, WEBP o GIF)',
+        ],
+        'boletin' => [
+            'mimetypes' => ['application/pdf'],
+            'label' => 'un archivo PDF',
+        ],
+    ];
+
+    /** Tamaño máximo por archivo, en kilobytes. */
+    private const MAX_FILE_KB = 10240;
+
     public function __construct(
         protected TypeEducationRepository $typeEducationRepository,
         protected StudentRepository $studentRepository,
@@ -56,6 +77,7 @@ class NoteController extends Controller
         return response()->json([
             'typeEducations' => $typeEducations,
             'blockData' => $blockData,
+            'prosecutionDocuments' => BlockData::isActive(Constants::ENABLE_PROSECUTION_DOCUMENTS),
             'teachers' => $teachers,
         ]);
     }
@@ -318,6 +340,37 @@ class NoteController extends Controller
         }
     }
 
+    /**
+     * Enciende o apaga las constancias/certificados de prosecución del portal del estudiante.
+     *
+     * Solo se usan a fin de año escolar. Con el interruptor apagado el alumno no ve la tarjeta
+     * y el backend rechaza la descarga aunque le armen la URL a mano.
+     */
+    public function toggleProsecutionDocuments(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $model = BlockData::firstOrNew(['name' => Constants::ENABLE_PROSECUTION_DOCUMENTS]);
+            $model->is_active = (bool) $request->input('value');
+            $model->save();
+
+            $msg = $model->is_active ? 'Activadas' : 'Desactivadas';
+
+            DB::commit();
+
+            return response()->json([
+                'code' => 200,
+                'message' => 'Constancias de prosecución ' . $msg . ' con éxito',
+                'is_active' => $model->is_active,
+            ]);
+        } catch (Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['code' => 500, 'message' => $th->getMessage()]);
+        }
+    }
+
     public function downloadAllConsolidated(Request $request)
     {
           try {
@@ -498,6 +551,61 @@ class NoteController extends Controller
     {
         $field = $request->input('field');
 
+        // El campo llega desde el request y luego se asigna con $student->$field, lo que
+        // permitiría escribir CUALQUIER columna (password, is_active, user_id...).
+        // Solo se aceptan las dos que realmente usa la carga de archivos.
+        if (! array_key_exists($field, self::ALLOWED_FILE_FIELDS)) {
+            return response()->json([
+                'code' => 422,
+                'message' => 'El campo indicado no es válido',
+            ], 422);
+        }
+
+        // Cada campo acepta solo su tipo: la foto una imagen, el boletín un PDF.
+        // La regla mimetypes mira el contenido real del archivo, no su extensión.
+        $rules = self::ALLOWED_FILE_FIELDS[$field];
+
+        $validator = Validator::make($request->all(), [
+            'file' => [
+                'required',
+                'file',
+                'max:' . self::MAX_FILE_KB,
+                'mimetypes:' . implode(',', $rules['mimetypes']),
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $name = $request->hasFile('file') ? $request->file('file')->getClientOriginalName() : '';
+
+            return response()->json([
+                'code' => 422,
+                'message' => trim("El archivo $name no es válido: se espera {$rules['label']}, de hasta "
+                    . (self::MAX_FILE_KB / 1024) . ' MB.'),
+            ], 422);
+        }
+
+        // El colegio llega desde el frontend (store de autenticación), igual que en el resto
+        // del módulo: el superadmin no tiene company_id propio y elige con cuál trabaja.
+        $companyId = $request->input('company_id');
+
+        if (empty($companyId)) {
+            return response()->json([
+                'code' => 422,
+                'message' => 'Falta el colegio (company_id)',
+            ], 422);
+        }
+
+        // Quien sí está atado a un colegio solo puede escribir en el suyo, sin importar
+        // qué company_id mande. El superadmin (sin company_id) opera sobre el que eligió.
+        $userCompanyId = $request->user()?->company_id;
+
+        if (! empty($userCompanyId) && (string) $userCompanyId !== (string) $companyId) {
+            return response()->json([
+                'code' => 403,
+                'message' => 'No puedes cargar archivos de otro colegio',
+            ], 403);
+        }
+
         $responseMessages = []; // Aquí guardaremos los mensajes de cada archivo
 
         // Verificar si los archivos han sido subidos
@@ -511,17 +619,18 @@ class NoteController extends Controller
                 // Obtener el nombre del archivo sin extensión
                 $fileNameWithoutExtension = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
 
-                // Buscar el estudiante con ese documento de identidad
-                $student = Student::where('identity_document', $fileNameWithoutExtension)->first();
+                // Buscar el estudiante con ese documento de identidad dentro del colegio.
+                // La cédula solo es única por colegio (índice unique_identity_per_company),
+                // así que sin este filtro el archivo podía terminar en el alumno homónimo
+                // de otra institución.
+                $student = Student::where('identity_document', $fileNameWithoutExtension)
+                    ->where('company_id', $companyId)
+                    ->first();
 
                 // Si el estudiante existe, actualizamos el campo 'photo'
                 if ($student) {
-                    // Guardar el archivo en la carpeta 'students'
-                    $path = $file->store('company_' . $student->company_id . '/student/student_' . $student->id . $request->input('file'), 'public');
-
-                    // Actualizar el campo 'photo'
-                    $student->$field = $path;
-                    $student->save();
+                    // Guarda el archivo nuevo y borra el anterior para no dejar huérfanos.
+                    $student->replaceFile($field, $file);
 
                     // Agregar mensaje de éxito al array
                     $responseMessages[] = [
@@ -553,20 +662,39 @@ class NoteController extends Controller
         }
     }
 
+    /**
+     * Apaga las banderas de documentos de todos los alumnos del colegio: notas (pdf),
+     * boletín (boletin_active) y solvencia (solvencyCertificate).
+     *
+     * Se usa al cerrar el año escolar para dejar a todos en cero y volver a habilitarlos
+     * a medida que se vayan solventando.
+     */
     public function resetOptionDownloadPdf(Request $request)
     {
+        $companyId = $request->input('company_id');
+
+        // Sin colegio la actualización alcanzaría a los alumnos de todas las empresas.
+        if (empty($companyId)) {
+            return response()->json(['code' => 422, 'message' => 'Falta el colegio (company_id)']);
+        }
+
         try {
             DB::beginTransaction();
 
-            $request['typeData'] = 'all';
-            $students = $this->studentRepository->list($request->all());
-            foreach ($students as $key => $value) {
-                $value->pdf = null;
-                $value->save();
-            }
+            // Una sola sentencia en vez de recorrer y guardar alumno por alumno.
+            // Se incluye a los retirados: tampoco deben conservar documentos habilitados.
+            $updated = Student::where('company_id', $companyId)->update([
+                'pdf' => 0,
+                'boletin_active' => 0,
+                'solvencyCertificate' => 0,
+            ]);
+
             DB::commit();
 
-            return response()->json(['code' => 200, 'message' => 'Se ha reiniciado la opción de pdf en el consolidado']);
+            return response()->json([
+                'code' => 200,
+                'message' => "Se reiniciaron notas, boletín y solvencia de {$updated} estudiantes",
+            ]);
         } catch (Throwable $th) {
             DB::rollback();
 

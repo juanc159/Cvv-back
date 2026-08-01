@@ -38,7 +38,22 @@ class Constants
 
     public const BLOCK_PAYROLL_UPLOAD = 'BLOCK_PAYROLL_UPLOAD';
 
+    // Interruptor de las constancias/certificados de prosecución del portal del estudiante.
+    // Solo se usan a fin de año escolar: el admin lo enciende en esa temporada y lo apaga después.
+    public const ENABLE_PROSECUTION_DOCUMENTS = 'ENABLE_PROSECUTION_DOCUMENTS';
 
+
+
+    /**
+     * Regla de validación para las fotos de perfil (alumnos y docentes).
+     *
+     * Se valida por MIME real y no por la extensión: un archivo llamado ".jpg" puede
+     * tener cualquier contenido y termina guardado en el disco público.
+     */
+    /** Se antepone 'nullable|' o 'required|' según el formulario. */
+    public const RULE_PHOTO = 'file|mimetypes:image/jpeg,image/png,image/webp,image/gif|max:10240';
+
+    public const MESSAGE_PHOTO = 'La foto debe ser una imagen (JPG, PNG, WEBP o GIF) de hasta 10 MB.';
 
     public const ERROR_MESSAGE_VALIDATION_BACK = 'Se evidencia algunos errores.';
 

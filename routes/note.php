@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/note-blockPayrollUpload', [NoteController::class, 'blockPayrollUpload']);
 
+Route::post('/note-toggleProsecutionDocuments', [NoteController::class, 'toggleProsecutionDocuments']);
+
 Route::get('/note-downloadAllConsolidated', [NoteController::class, 'downloadAllConsolidated']);
 
 Route::get('/note-downloadConsolidatedPocentage', [NoteController::class, 'downloadConsolidatedPocentage']);

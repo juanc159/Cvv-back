@@ -45,13 +45,20 @@ class TeacherStoreRequest extends FormRequest
             'email' => 'required|email|unique:users,email,' . $userIdToIgnore,
 
             'phone' => 'required',
-            'photo' => 'required',
+            // La foto ya era obligatoria pero no se validaba el tipo. Al editar puede
+            // llegar como la ruta ya guardada (texto) en vez de un archivo nuevo, así que
+            // tipo y tamaño solo se exigen cuando efectivamente suben uno.
+            'photo' => $this->hasFile('photo')
+                ? 'required|' . Constants::RULE_PHOTO
+                : 'required',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'photo.mimetypes' => Constants::MESSAGE_PHOTO,
+            'photo.max' => Constants::MESSAGE_PHOTO,
             'company_id.required' => 'El campo es obligatorio',
             'type_education_id.required' => 'El campo es obligatorio',
             'job_position_id.required' => 'El campo es obligatorio',

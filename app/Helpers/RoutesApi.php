@@ -34,6 +34,7 @@ class RoutesApi
         'routes/activity.php',
         'routes/comment.php',
         'routes/session.php',
+        'routes/maintenance.php',
 
     ];
 }

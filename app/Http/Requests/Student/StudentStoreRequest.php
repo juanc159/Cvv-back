@@ -49,12 +49,19 @@ class StudentStoreRequest extends FormRequest
             'country_id' => 'required',
             'state_id' => 'required',
             'city_id' => 'required',
+
+            // La foto se sube por este mismo formulario y antes no se validaba: aceptaba
+            // cualquier tipo de archivo y lo dejaba en el disco público. Al editar puede
+            // llegar como la ruta ya guardada (texto), por eso el condicional.
+            'photo' => $this->hasFile('photo') ? Constants::RULE_PHOTO : 'nullable',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'photo.mimetypes' => Constants::MESSAGE_PHOTO,
+            'photo.max' => Constants::MESSAGE_PHOTO,
             'company_id.required' => 'El campo es obligatorio',
             'type_education_id.required' => 'El campo es obligatorio',
             'grade_id.required' => 'El campo es obligatorio',

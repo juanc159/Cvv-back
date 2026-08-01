@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Helpers\Constants;
 use App\Traits\Cacheable;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model; 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class Student extends Model
 {
@@ -26,6 +30,47 @@ class Student extends Model
         'string:{table}_statisticsData*',
     ];
 
+    /**
+     * Reemplaza un archivo del alumno (foto o boletín) y borra el anterior.
+     *
+     * store() genera siempre un nombre aleatorio nuevo, así que antes de esto cada carga
+     * dejaba el archivo viejo huérfano en el disco: solo se pisaba la ruta en la BD y
+     * nadie borraba nada.
+     *
+     * @param  string  $field  Columna donde se guarda la ruta (photo o boletin)
+     * @return string Ruta del archivo nuevo
+     */
+    public function replaceFile(string $field, UploadedFile $file): string
+    {
+        $previousPath = $this->getAttribute($field);
+
+        $newPath = $file->store(
+            'company_' . $this->company_id . '/student/student_' . $this->id,
+            Constants::DISK_FILES
+        );
+
+        $this->setAttribute($field, $newPath);
+        $this->save();
+
+        // Se borra recién después de guardar: si algo falla antes, el archivo anterior
+        // sigue siendo el válido y no perdemos nada.
+        if (! empty($previousPath) && $previousPath !== $newPath) {
+            try {
+                Storage::disk(Constants::DISK_FILES)->delete($previousPath);
+            } catch (\Throwable $th) {
+                // Que no se pueda borrar el viejo no debe tumbar una carga que ya funcionó.
+                Log::warning('No se pudo borrar el archivo anterior del alumno', [
+                    'student_id' => $this->id,
+                    'field' => $field,
+                    'path' => $previousPath,
+                    'error' => $th->getMessage(),
+                ]);
+            }
+        }
+
+        return $newPath;
+    }
+
     public function notes()
     {
         return $this->hasMany(Note::class, 'student_id', 'id');
@@ -34,6 +79,21 @@ class Student extends Model
     public function type_education()
     {
         return $this->hasOne(TypeEducation::class, 'id', 'type_education_id');
+    }
+
+    /**
+     * Alias en camelCase de type_education().
+     *
+     * Student es el único modelo que declara esta relación en snake_case: Teacher, Subject
+     * y Grade usan typeEducation(). Al pedir $student->typeEducation, Laravel no encontraba
+     * el método y devolvía null en silencio, sin lanzar ningún error. Eso ya provocó que
+     * el login del estudiante enviara type_education_name vacío durante quién sabe cuánto.
+     *
+     * Con este alias las dos formas funcionan y el problema no puede repetirse.
+     */
+    public function typeEducation()
+    {
+        return $this->type_education();
     }
 
     public function grade()
