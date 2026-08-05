@@ -15,8 +15,9 @@
     }
 
     body {
-        margin-top: 4cm;
-        /* Increased to accommodate taller header */
+        margin-top: 4.5cm;
+        /* Debe ir siempre igual que header{height}: es el espacio que el body
+           deja libre para no pisar el header, que es position:fixed. */
         margin-left: 0cm;
         margin-right: 0cm;
         margin-bottom: 3cm;
@@ -32,8 +33,9 @@
         top: 0cm;
         left: 0cm;
         right: 0cm;
-        height: 4cm;
-        /* Increased to fit both images */
+        height: 4.5cm;
+        /* Alto real del contenido, medido sobre el PDF: el escudo termina en
+           5.10cm. Con los 4cm de antes se montaba encima del título. */
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -67,14 +69,21 @@
 
     footer {
         position: fixed;
-        bottom: 0.5cm;
+        bottom: 0cm;
         left: 0cm;
         right: 0cm;
-        height: 2cm;
+        /* Picture2 es 794x107px: a ancho completo de pagina (21cm) mide 2.83cm
+           de alto. Entra en los 3cm que el body reserva con su margin-bottom. */
+        height: 2.83cm;
         text-align: center;
         font-size: 12px;
         line-height: 1.2;
         color: #333;
+    }
+
+    footer .footer-banner {
+        width: 100%;
+        display: block;
     }
 
     table {
@@ -205,11 +214,13 @@
 <body>
     <!-- IMAGEN DE ENCABEZADO -->
     <header>
-        <img src="{{ public_path('img/Header-Mpppd.png') }}" class="main-logo">
+        <img src="{{ public_path('img/Picture1.png') }}" class="main-logo">
         <img src="{{ public_path('img/escudo_de_venezuela.png') }}" class="escudo-logo">
     </header>
 
+    <!-- MEMBRETE AL PIE -->
     <footer>
+        <img src="{{ public_path('img/Picture2.png') }}" class="footer-banner">
     </footer>
 
     <main>
@@ -256,11 +267,10 @@
                 <table class="signature-table">
                     <tr class="header-row"> <!-- Added class to target first row -->
                         <td>
-                            <p><strong>INSTITUCIÓN EDUCATIVA <br> (PARA VALIDEZ NACIONAL)</strong></p>
+                            <p><strong>INSTITUCIÓN EDUCATIVA <br></strong></p>
                         </td>
                         <td>
-                            <p><strong>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br>(PARA VALIDEZ
-                                    INTERNACIONAL)</strong></p>
+                            <p><strong>CENTRO DE DESARROLLO DE LA CALIDAD <br> EDUCATIVA ESTADAL <br></strong></p>
                         </td>
                     </tr>
                     <tr>
