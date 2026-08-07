@@ -650,7 +650,7 @@ class DocumentController extends Controller
                     // educationType, que no existe: Laravel devolvía null sin avisar y
                     // siempre caía al valor por defecto, dejando sin uso el with() de arriba.
                     $nextEducationType = $nextGrade->typeEducation->name ?? 'Educación Primaria';
-                    $nextGradeNameWithType = "$nextGradeName de $nextEducationType";
+                    $nextGradeNameWithType = "$nextGradeName del Nivel de $nextEducationType";
                 }
             }
 
