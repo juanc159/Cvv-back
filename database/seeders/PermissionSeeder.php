@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Helpers\Constants;
-use App\Models\Menu;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -198,23 +197,23 @@ class PermissionSeeder extends Seeder
                 'description' => 'Revisión de datos',
                 'menu_id' => 21,
             ],
-            // Promoción de alumnos. Sin id fijo: la migración del módulo ya los creó con un
-            // uuid, así que aquí se buscan por nombre. El menú tampoco se referencia por id,
-            // porque lo asignó el autoincremento y cambia según el entorno.
             [
+                'id' => 31,
                 'name' => 'studentPromotion.menu',
                 'description' => 'Visualizar menú Promoción de alumnos',
-                'menu_permission' => 'studentPromotion.menu',
+                'menu_id' => 22,
             ],
             [
+                'id' => 32,
                 'name' => 'studentPromotion.list',
                 'description' => 'Visualizar Módulo Promoción de alumnos',
-                'menu_permission' => 'studentPromotion.list',
+                'menu_id' => 23,
             ],
             [
+                'id' => 33,
                 'name' => 'studentPromotion.closure',
                 'description' => 'Visualizar Cierre del período escolar',
-                'menu_permission' => 'studentPromotion.closure',
+                'menu_id' => 24,
             ],
         ];
 
@@ -223,36 +222,20 @@ class PermissionSeeder extends Seeder
         $bar = $this->command->getOutput()->createProgressBar(count($arrayData));
 
         // Insertar o actualizar permisos
-        $permissionIds = [];
-
         foreach ($arrayData as $value) {
-            // El menú puede indicarse por id fijo o por su permiso, para los módulos cuyo
-            // menú lo creó una migración y el id depende del autoincremento.
-            $menuId = isset($value['menu_permission'])
-                ? Menu::where('requiredPermission', $value['menu_permission'])->value('id')
-                : $value['menu_id'];
-
-            // Igual que con los menús: con id fijo se busca por id, si no por nombre, que es
-            // único. Así no se duplica lo que la migración del módulo ya dejó creado.
-            $permission = Permission::updateOrCreate(
-                isset($value['id']) ? ['id' => $value['id']] : ['name' => $value['name']],
+            Permission::updateOrCreate(
+                ['id' => $value['id']],
                 [
                     'name' => $value['name'],
                     'description' => $value['description'],
-                    'menu_id' => $menuId,
+                    'menu_id' => $value['menu_id'],
                     'guard_name' => 'api',
                 ]
             );
-
-            $permissionIds[] = $permission->id;
         }
 
         // Obtener permisos
-        //
-        // Se usan los ids recién procesados y no un whereIn sobre el array: syncPermissions
-        // reemplaza la lista completa del rol, así que cualquier permiso que no llegue hasta
-        // aquí se le quita al Super Administrador al correr este seeder.
-        $permissions = Permission::whereIn('id', $permissionIds)->get();
+        $permissions = Permission::whereIn('id', collect($arrayData)->pluck('id'))->get();
 
         // Asignar permisos al rol
         $role = Role::find(Constants::ROLE_SUPERADMIN_UUID);

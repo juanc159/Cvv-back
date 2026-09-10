@@ -185,29 +185,29 @@ class MenuSeeder extends Seeder
                 'father' => 19,
                 'requiredPermission' => 'maintenance.data',
             ],
-            // Promoción de alumnos. Sin id fijo a propósito: estas entradas ya las crea la
-            // migración del módulo, así que aquí se buscan por su permiso para actualizar
-            // las que existan en vez de duplicarlas con otro id.
             [
+                'id' => 22,
                 'order' => 105,
                 'title' => 'Promoción de alumnos',
                 'icon' => 'tabler-arrow-big-up-lines',
                 'requiredPermission' => 'studentPromotion.menu',
             ],
             [
+                'id' => 23,
                 'order' => 1,
                 'title' => 'Cargar promoción',
                 'to' => 'StudentPromotion-Index',
                 'icon' => '',
-                'father_permission' => 'studentPromotion.menu',
+                'father' => 22,
                 'requiredPermission' => 'studentPromotion.list',
             ],
             [
+                'id' => 24,
                 'order' => 2,
                 'title' => 'Cierre del período',
                 'to' => 'StudentPromotion-Closure',
                 'icon' => '',
-                'father_permission' => 'studentPromotion.menu',
+                'father' => 22,
                 'requiredPermission' => 'studentPromotion.closure',
             ],
         ];
@@ -217,31 +217,16 @@ class MenuSeeder extends Seeder
         $bar = $this->command->getOutput()->createProgressBar(count($arrayData));
 
         foreach ($arrayData as $key => $value) {
-            // Las entradas con id fijo se buscan por id, como siempre. Las que no lo traen
-            // se identifican por su permiso, que es único y no depende del autoincremento.
-            $data = isset($value['id'])
-                ? Menu::find($value['id'])
-                : Menu::where('requiredPermission', $value['requiredPermission'])->first();
-
+            $data = Menu::find($value['id']);
             if (! $data) {
                 $data = new Menu;
             }
-
-            if (isset($value['id'])) {
-                $data->id = $value['id'];
-            }
-
+            $data->id = $value['id'];
             $data->order = $value['order'];
             $data->title = $value['title'];
             $data->to = $value['to'] ?? null;
             $data->icon = $value['icon'];
-
-            // El padre puede venir por id o por el permiso del menú padre, para los casos
-            // en que su id lo asignó el autoincremento y varía entre entornos.
-            $data->father = isset($value['father_permission'])
-                ? Menu::where('requiredPermission', $value['father_permission'])->value('id')
-                : ($value['father'] ?? null);
-
+            $data->father = $value['father'] ?? null;
             $data->requiredPermission = $value['requiredPermission'];
             $data->save();
         }
