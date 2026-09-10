@@ -35,6 +35,8 @@ class RoutesApi
         'routes/comment.php',
         'routes/session.php',
         'routes/maintenance.php',
+        'routes/studentPromotion.php',
+        'routes/schoolYearClosure.php',
 
     ];
 }

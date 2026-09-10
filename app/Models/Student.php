@@ -71,6 +71,18 @@ class Student extends Model
         return $newPath;
     }
 
+    /**
+     * Bajas y egresos del alumno.
+     *
+     * Es un historial, no un único registro: un alumno puede retirarse, volver a
+     * inscribirse el año siguiente y retirarse otra vez. El vigente es el que tiene
+     * reactivated_at en null.
+     */
+    public function withdrawals()
+    {
+        return $this->hasMany(StudentWithdrawal::class, 'student_id', 'id');
+    }
+
     public function notes()
     {
         return $this->hasMany(Note::class, 'student_id', 'id');

@@ -422,9 +422,13 @@ class StudentController extends Controller
         return response()->json(['message' => 'Estudiante no encontrado'], 404);
       }
 
-      $studentWithdrawal = $this->studentWithdrawalRepository->searchOne([
-        'student_id' => $request->input('student_id'),
-      ]);
+      // Solo bloquea si la baja sigue vigente. Antes bastaba con que hubiera existido
+      // alguna vez, así que un alumno que se retiró, volvió a inscribirse y se retiró de
+      // nuevo no se podía dar de baja la segunda vez.
+      $studentWithdrawal = \App\Models\StudentWithdrawal::where('student_id', $request->input('student_id'))
+        ->whereNull('reactivated_at')
+        ->first();
+
       if ($studentWithdrawal) {
         return response()->json(['message' => 'Estudiante ya ha sido de baja'], 404);
       }
@@ -432,6 +436,7 @@ class StudentController extends Controller
       // Save withdrawal record
       $studentWithdrawal = $this->studentWithdrawalRepository->store([
         'student_id' => $request->input('student_id'),
+        'type' => \App\Services\SchoolYearClosureService::STATUS_WITHDRAWAL,
         'date' => $request->input('date'),
         'reason' => $request->input('reason'),
       ]);
