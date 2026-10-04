@@ -37,8 +37,12 @@ class StudentStoreRequest extends FormRequest
         return [
             'company_id' => 'required',
             'type_education_id' => 'required',
-            'grade_id' => 'required',
-            'section_id' => 'required',
+
+            // Al crear, grado y seccion son obligatorios. Al editar no, porque un alumno ya
+            // registrado puede quedarse sin inscribir: es el estado en el que lo deja la
+            // promocion anual cuando nadie lo reclama.
+            'grade_id' => $studentId ? 'nullable' : 'required',
+            'section_id' => $studentId ? 'nullable' : 'required',
 
             // Validamos unicidad en la tabla USERS, ignorando al usuario dueño de este perfil
             'identity_document' => 'required|unique:users,identity_document,' . $userIdToIgnore,
