@@ -145,12 +145,13 @@ class UserController extends Controller
             $user = $this->userRepository->find($id);
             if ($user) {
 
-                // Verificar si hay registros relacionados
-                // if (
-                //     $user->users()->exists()
-                // ) {
-                //     throw new \Exception('No se puede eliminar el usuario, por que tiene relación de datos en otros módulos');
-                // }
+                // students.user_id y teachers.user_id son ON DELETE CASCADE, así que borrar
+                // este usuario se llevaría por delante la ficha completa del alumno o del
+                // docente sin avisar. Esos perfiles se borran desde su propio módulo.
+                if (\App\Models\Student::where('user_id', $user->id)->exists()
+                    || \App\Models\Teacher::where('user_id', $user->id)->exists()) {
+                    throw new \Exception('Este usuario pertenece a un alumno o a un docente. Elimínelo desde su módulo correspondiente.');
+                }
 
                 $user->delete();
                 $msg = 'Registro eliminado correctamente';

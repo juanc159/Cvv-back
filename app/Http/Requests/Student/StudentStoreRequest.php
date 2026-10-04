@@ -71,7 +71,7 @@ class StudentStoreRequest extends FormRequest
             'grade_id.required' => 'El campo es obligatorio',
             'section_id.required' => 'El campo es obligatorio',
             'identity_document.required' => 'El campo es obligatorio',
-            'identity_document.unique' => 'El número de documento ya está registrado',
+            'identity_document.unique' => $this->duplicatedDocumentMessage(),
             'full_name.required' => 'El campo es obligatorio',
             'gender.required' => 'El campo es obligatorio',
             'birthday.required' => 'El campo es obligatorio',
@@ -79,6 +79,31 @@ class StudentStoreRequest extends FormRequest
             'state_id.required' => 'El campo es obligatorio',
             'city_id.required' => 'El campo es obligatorio',
         ];
+    }
+
+    /**
+     * Explica a quién pertenece la cédula en vez de limitarse a decir que está ocupada.
+     *
+     * La unicidad se valida contra users, que es por donde entra el alumno al sistema, no
+     * contra students. Cuando el dueño es un usuario sin ficha de alumno, el mensaje genérico
+     * dejaba a quien registra buscando en la lista de estudiantes a alguien que no está ahí.
+     */
+    private function duplicatedDocumentMessage(): string
+    {
+        $user = \App\Models\User::where('identity_document', $this->input('identity_document'))->first();
+
+        if (! $user) {
+            return 'El número de documento ya está registrado';
+        }
+
+        $owner = trim($user->name.' '.$user->surname);
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
+
+        if ($student) {
+            return 'El número de documento ya lo usa el alumno '.$student->full_name;
+        }
+
+        return 'El número de documento está ocupado por un usuario sin ficha de alumno ('.$owner.'). Avise al equipo de sistemas para liberarlo.';
     }
 
     protected function prepareForValidation(): void

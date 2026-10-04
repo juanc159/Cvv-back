@@ -19,6 +19,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Bus\Batchable;
@@ -145,25 +146,17 @@ class ImportStudentExcelJob implements ShouldQueue
                         return $row;
                     })->values()->toArray();
 
-                    // Campos únicos para upsert (identity_document + company_id)
-                    $uniqueBy = ['identity_document', 'company_id'];
+                    Log::info("Guardando chunk de " . count($insertData) . " alumnos del lote {$this->customBatchId}");
 
-                    // Campos a actualizar: todos excepto 'id' (de la primera row)
-                    $firstRowKeys = array_keys($insertData[0] ?? []);
-                    $updateColumns = array_values(array_diff($firstRowKeys, ['id']));
-
-
-                    Log::info("Upserting chunk of " . count($insertData) . " students for batch {$this->customBatchId}");
-                    Log::info("insertData", $insertData);
-                    Log::info("uniqueBy", $uniqueBy);
-                    Log::info("updateColumns", $updateColumns);
-
-                    // Upsert por chunk
-                    Student::upsert(
-                        $insertData,
-                        $uniqueBy,
-                        $updateColumns
-                    );
+                    // Antes esto era un Student::upsert() masivo, que dejaba dos agujeros: los
+                    // alumnos nuevos nacían sin fila en users y por lo tanto no podían entrar al
+                    // sistema (el login se autentica contra users), y al actualizar uno existente
+                    // no se disparaba StudentObserver, así que un cambio de cédula no llegaba a
+                    // su usuario. Se guarda con Eloquent uno por uno: son cientos de filas por
+                    // archivo, no millones, y el costo extra no se nota.
+                    foreach ($insertData as $row) {
+                        $this->saveStudent($row, $companyId);
+                    }
                 }
             }
 
@@ -264,6 +257,59 @@ class ImportStudentExcelJob implements ShouldQueue
     /**
      * Mapea columnas del Excel a campos de BD usando cache del Validator.
      */
+    /**
+     * Guarda un alumno del Excel, creando su usuario de acceso si todavía no tiene.
+     *
+     * users es la tabla por la que entra el alumno al sistema, así que un alumno sin usuario
+     * queda registrado pero sin poder iniciar sesión. Replica lo que hace
+     * StudentController::store: primero el usuario, después la ficha apuntando a él.
+     */
+    private function saveStudent(array $row, ?string $companyId): void
+    {
+        $document = $row['identity_document'] ?? null;
+
+        if (empty($document)) {
+            return;
+        }
+
+        $row['company_id'] = $row['company_id'] ?? $companyId;
+
+        $student = Student::where('identity_document', $document)
+            ->where('company_id', $row['company_id'])
+            ->first();
+
+        if ($student) {
+            // save() con Eloquent para que StudentObserver propague los cambios a users.
+            $student->fill($row)->save();
+
+            return;
+        }
+
+        $fullName = $row['full_name'] ?? '';
+        $parts = explode(' ', trim($fullName));
+
+        $user = User::where('identity_document', $document)->first();
+
+        // users.identity_document es único en todo el sistema: si el alumno ya existe en otro
+        // colegio se reutiliza su usuario en vez de intentar crear uno repetido.
+        if (! $user) {
+            $user = User::create([
+                'name' => $parts[0] ?? $fullName,
+                'surname' => isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : '',
+                'identity_document' => $document,
+                'password' => Hash::make($document),
+                'type_user' => 'student',
+                'is_active' => true,
+                'company_id' => $row['company_id'],
+            ]);
+        }
+
+        $row['user_id'] = $user->id;
+        $row['password'] = $document;
+
+        Student::create($row);
+    }
+
     private function mapExcelColumnsToDb(array $row, string $batchId, string $companyId): array
     {
         foreach (ExcelDataStudentValidator::$columnMapping as $excelCol => $map) { // Accede al array static del Validator

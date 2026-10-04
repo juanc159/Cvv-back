@@ -40,6 +40,8 @@ class DataCheckService
             $this->sectionsWithMissingSubjects($companyId),
             $this->inactiveTeachersWithAssignments($companyId),
             $this->studentsWithoutGrade($companyId),
+            $this->incompleteStudentDocuments($companyId),
+            $this->mismatchedDocumentType($companyId),
             $this->duplicatedDocumentsAcrossCompanies(),
             $this->sharedFilePaths(),
         ];
@@ -301,6 +303,94 @@ class DataCheckService
             self::SEVERITY_ERROR,
             $items,
             'Volver a cargar el archivo en cada registro para que cada uno tenga el suyo.'
+        );
+    }
+
+    /**
+     * Cédulas escolares a las que les falta un dígito.
+     *
+     * La cédula escolar tiene 11 dígitos. Las de 10 que empiezan por el mismo prefijo son
+     * la misma cédula con el último dígito perdido al teclearla. El número está mal, no la
+     * etiqueta: nadie puede deducir el dígito que falta sin ver el documento del alumno.
+     *
+     * Importa porque la promoción empareja por cédula: con el número incompleto el alumno no
+     * coincide con el listado que manda el colegio y entra como si fuera otra persona.
+     */
+    protected function incompleteStudentDocuments(?string $companyId): array
+    {
+        $prefijos = DB::table('students')
+            ->selectRaw('DISTINCT LEFT(identity_document, 3) as prefijo')
+            ->whereRaw('LENGTH(identity_document) = 11')
+            ->pluck('prefijo');
+
+        $rows = DB::table('students as s')
+            ->leftJoin('grades as g', 'g.id', '=', 's.grade_id')
+            ->leftJoin('sections as sec', 'sec.id', '=', 's.section_id')
+            ->leftJoin('companies as c', 'c.id', '=', 's.company_id')
+            ->selectRaw('s.identity_document as cedula, s.full_name as alumno, c.name as colegio,
+                         g.name as grado, sec.name as seccion')
+            ->whereRaw('LENGTH(s.identity_document) = 10')
+            ->whereIn(DB::raw('LEFT(s.identity_document, 3)'), $prefijos)
+            ->when($companyId, fn ($q) => $q->where('s.company_id', $companyId))
+            ->orderBy('s.full_name')
+            ->get();
+
+        return $this->check(
+            'incomplete_student_documents',
+            'Cédulas escolares incompletas',
+            'Tienen 10 dígitos cuando la cédula escolar tiene 11. Les falta el último dígito.',
+            self::SEVERITY_ERROR,
+            $rows->map(fn ($r) => [
+                'cedula' => $r->cedula,
+                'alumno' => $r->alumno,
+                'colegio' => $r->colegio ?? '-',
+                'grado' => $r->grado ?? '(sin grado)',
+                'seccion' => $r->seccion ?? '-',
+            ])->all(),
+            'Verificar la cédula contra el documento del alumno y corregirla en su ficha.'
+        );
+    }
+
+    /**
+     * Alumnos cuyo tipo de documento no concuerda con el número que tienen.
+     *
+     * La cédula escolar tiene 11 dígitos y la de identidad 8. Cuando el alumno saca su cédula
+     * real se le actualiza el número pero se olvida la etiqueta, y al revés.
+     *
+     * A diferencia del chequeo anterior, aquí el número está bien: solo sobra corregir el tipo.
+     */
+    protected function mismatchedDocumentType(?string $companyId): array
+    {
+        $rows = DB::table('students as s')
+            ->join('type_documents as td', 'td.id', '=', 's.type_document_id')
+            ->leftJoin('grades as g', 'g.id', '=', 's.grade_id')
+            ->leftJoin('sections as sec', 'sec.id', '=', 's.section_id')
+            ->selectRaw('s.identity_document as cedula, s.full_name as alumno, td.name as tipo_actual,
+                         g.name as grado, sec.name as seccion')
+            ->where(function ($q) {
+                $q->where(fn ($x) => $x->whereRaw('LENGTH(s.identity_document) = 8')
+                    ->where('td.name', 'LIKE', 'C%dula escolar'))
+                  ->orWhere(fn ($x) => $x->whereRaw('LENGTH(s.identity_document) = 11')
+                    ->where('td.name', 'LIKE', 'C%dula de identidad'));
+            })
+            ->when($companyId, fn ($q) => $q->where('s.company_id', $companyId))
+            ->orderBy('s.full_name')
+            ->get();
+
+        return $this->check(
+            'mismatched_document_type',
+            'Tipo de documento que no concuerda con la cédula',
+            'El número es correcto, pero está etiquetado con el tipo equivocado.',
+            self::SEVERITY_WARNING,
+            $rows->map(fn ($r) => [
+                'cedula' => $r->cedula,
+                'alumno' => $r->alumno,
+                'tipo_actual' => $r->tipo_actual,
+                'deberia_ser' => strlen($r->cedula) === 8 ? 'Cédula de identidad' : 'Cédula escolar',
+                'grado' => $r->grado ?? '(sin grado)',
+                'seccion' => $r->seccion ?? '-',
+            ])->all(),
+            'Corregir el tipo de documento en la ficha del alumno.'
         );
     }
 
