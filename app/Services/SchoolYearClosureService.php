@@ -136,12 +136,21 @@ class SchoolYearClosureService
                     'reason' => $data['reason'],
                 ]);
 
+                // Quien se retira o egresa deja de tener derecho a constancias y boletines.
+                // Estas banderas no se apagaban solas, así que un alumno que ya no pertenece
+                // al colegio seguía pudiendo descargarlos desde el portal; en enero hubo que
+                // arreglarlo a mano con students:clear-flags-unassigned.
+                $student->solvencyCertificate = 0;
+                $student->boletin_active = 0;
+                $student->pdf = 0;
+
                 // Desactivar es opcional: un alumno retirado que quizá vuelva el mes que
                 // viene puede conservar su acceso hasta que el colegio decida lo contrario.
                 if (! empty($data['deactivate'])) {
                     $student->is_active = false;
-                    $student->save();
                 }
+
+                $student->save();
 
                 $affected++;
             }

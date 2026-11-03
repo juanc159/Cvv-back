@@ -42,6 +42,7 @@ class DataCheckService
             $this->studentsWithoutGrade($companyId),
             $this->incompleteStudentDocuments($companyId),
             $this->mismatchedDocumentType($companyId),
+            $this->studentsWithIncompleteProfile($companyId),
             $this->duplicatedDocumentsAcrossCompanies(),
             $this->sharedFilePaths(),
         ];
@@ -391,6 +392,76 @@ class DataCheckService
                 'seccion' => $r->seccion ?? '-',
             ])->all(),
             'Corregir el tipo de documento en la ficha del alumno.'
+        );
+    }
+
+    /**
+     * Alumnos con campos vacíos en su ficha.
+     *
+     * La foto queda fuera a propósito: falta en más de un centenar de fichas sin que eso rompa
+     * nada, y si entrara al chequeo este saldría siempre en rojo hasta volverse ruido que todos
+     * aprenden a ignorar. Aquí solo van los datos que el colegio necesita para emitir documentos.
+     *
+     * Hoy son una decena de casos, casi todos municipios que la promoción no pudo resolver
+     * porque no existen en la tabla de ciudades. El chequeo vale sobre todo como red: una carga
+     * masiva con datos pobres se ve aquí sin tener que salir a buscarla.
+     */
+    protected function studentsWithIncompleteProfile(?string $companyId): array
+    {
+        $campos = [
+            'gender' => 'Sexo',
+            'birthday' => 'Fecha de nacimiento',
+            'country_id' => 'País',
+            'state_id' => 'Estado',
+            'city_id' => 'Municipio',
+            'type_document_id' => 'Tipo de documento',
+            'real_entry_date' => 'Fecha de ingreso',
+        ];
+
+        $rows = DB::table('students as s')
+            ->leftJoin('grades as g', 'g.id', '=', 's.grade_id')
+            ->leftJoin('sections as sec', 'sec.id', '=', 's.section_id')
+            ->leftJoin('companies as c', 'c.id', '=', 's.company_id')
+            ->selectRaw('s.identity_document as cedula, s.full_name as alumno, c.name as colegio,
+                         g.name as grado, sec.name as seccion, '
+                        .implode(', ', array_map(fn ($campo) => "s.{$campo}", array_keys($campos))))
+            ->where(function ($q) use ($campos) {
+                foreach (array_keys($campos) as $campo) {
+                    $q->orWhereNull("s.{$campo}");
+                }
+
+                $q->orWhere('s.gender', '');
+            })
+            ->when($companyId, fn ($q) => $q->where('s.company_id', $companyId))
+            ->orderBy('s.full_name')
+            ->get();
+
+        $items = $rows->map(function ($r) use ($campos) {
+            $faltantes = [];
+
+            foreach ($campos as $campo => $etiqueta) {
+                if ($r->$campo === null || $r->$campo === '') {
+                    $faltantes[] = $etiqueta;
+                }
+            }
+
+            return [
+                'cedula' => $r->cedula,
+                'alumno' => $r->alumno,
+                'colegio' => $r->colegio ?? '-',
+                'grado' => $r->grado ?? '(sin grado)',
+                'seccion' => $r->seccion ?? '-',
+                'le_falta' => implode(', ', $faltantes),
+            ];
+        })->all();
+
+        return $this->check(
+            'students_incomplete_profile',
+            'Alumnos con datos incompletos en su ficha',
+            'Les falta algún dato que hace falta para emitir constancias y boletines. La foto no cuenta.',
+            self::SEVERITY_WARNING,
+            $items,
+            'Completar los datos que faltan desde la ficha del alumno.'
         );
     }
 

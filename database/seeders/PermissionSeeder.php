@@ -199,9 +199,21 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'id' => 31,
+                'name' => 'studentPromotion.menu',
+                'description' => 'Visualizar menú Promoción de alumnos',
+                'menu_id' => 22,
+            ],
+            [
+                'id' => 32,
                 'name' => 'studentPromotion.list',
                 'description' => 'Visualizar Módulo Promoción de alumnos',
-                'menu_id' => 22,
+                'menu_id' => 23,
+            ],
+            [
+                'id' => 33,
+                'name' => 'studentPromotion.closure',
+                'description' => 'Visualizar Cierre del período escolar',
+                'menu_id' => 24,
             ],
         ];
 

@@ -361,6 +361,12 @@ class TeacherController extends Controller
             $students = [];
             $nro = 1;
 
+            // Orden alfabético en español. sortBy() compara byte a byte, y en UTF-8 la Ñ y las
+            // vocales acentuadas empiezan por 0xC3, mayor que cualquier letra A-Z: CAÑIZALEZ
+            // caía después de CARRION y MUÑOZ después de MURILLO. Lo mismo con los nombres en
+            // minúscula, que se iban todos al final.
+            $collator = class_exists(\Collator::class) ? collator_create('es') : null;
+
             // Construir los encabezados
             $headers = [];
 
@@ -370,7 +376,9 @@ class TeacherController extends Controller
                     ->where('grade_id', $value->grade_id)
                     ->where('section_id', $value->section_id);
 
-                $list = $list->sortBy('full_name');
+                $list = $collator
+                    ? $list->sort(fn ($a, $b) => collator_compare($collator, $a->full_name, $b->full_name))
+                    : $list->sortBy('full_name');
                 $subjectIds = explode(',', $value->subject_ids);
                 $subjectIds = array_map('trim', $subjectIds);
 

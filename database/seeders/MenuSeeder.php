@@ -189,9 +189,26 @@ class MenuSeeder extends Seeder
                 'id' => 22,
                 'order' => 105,
                 'title' => 'Promoción de alumnos',
-                'to' => 'StudentPromotion-Index',
                 'icon' => 'tabler-arrow-big-up-lines',
+                'requiredPermission' => 'studentPromotion.menu',
+            ],
+            [
+                'id' => 23,
+                'order' => 1,
+                'title' => 'Cargar promoción',
+                'to' => 'StudentPromotion-Index',
+                'icon' => '',
+                'father' => 22,
                 'requiredPermission' => 'studentPromotion.list',
+            ],
+            [
+                'id' => 24,
+                'order' => 2,
+                'title' => 'Cierre del período',
+                'to' => 'StudentPromotion-Closure',
+                'icon' => '',
+                'father' => 22,
+                'requiredPermission' => 'studentPromotion.closure',
             ],
         ];
 
