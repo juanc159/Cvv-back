@@ -37,6 +37,17 @@ class ActivityRepository extends BaseRepository
                 ->where('teacher_id', $request['teacher_id']) // viene del controller
                 ->allowedFilters([
                     'status',
+                    // Separa el listado del docente en vigentes e histórico. Sin esto las
+                    // actividades vencidas se mezclan con las del día y tapan lo que importa.
+                    AllowedFilter::callback('vigencia', function ($query, $value) {
+                        if ($value === 'vigentes') {
+                            $query->where('deadline_at', '>=', now());
+                        }
+
+                        if ($value === 'historico') {
+                            $query->where('deadline_at', '<', now());
+                        }
+                    }),
                     AllowedFilter::callback('inputGeneral', function ($query, $value) {
                         $query->where(function ($subQuery) use ($value) {
 

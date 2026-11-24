@@ -23,6 +23,10 @@ Route::post('/activity/update/{id}', [ActivityController::class, 'update']);
 
 Route::delete('/activity/delete/{id}', [ActivityController::class, 'delete']);
 
+Route::post('/activity/deletePreview', [ActivityController::class, 'deletePreview']);
+
+Route::post('/activity/deleteMasive', [ActivityController::class, 'deleteMasive']);
+
 Route::post('/activity/changeStatus', [ActivityController::class, 'changeStatus']);
 
 Route::get('/activity/pending', [ActivityController::class, 'pending']);

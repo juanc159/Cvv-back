@@ -18,6 +18,8 @@ use App\Models\TeacherComplementary;
 use App\Notifications\BellNotification;
 use App\Repositories\ActivityRepository;
 use App\Repositories\TeacherRepository;
+use App\Services\ActivityDeletionService;
+use App\Traits\HttpResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -25,10 +27,13 @@ use Illuminate\Validation\Rules\Enum;
 
 class ActivityController extends Controller
 {
+    use HttpResponseTrait;
+
     public function __construct(
         protected TeacherRepository $teacherRepository,
         protected ActivityRepository $activityRepository,
         protected QueryController $queryController,
+        protected ActivityDeletionService $activityDeletionService,
     ) {}
 
     public function list(Request $request)
@@ -186,6 +191,12 @@ class ActivityController extends Controller
                 return response()->json(['code' => 403, 'message' => 'No se puede modificar una actividad que ya ha sido publicada.'], 403);
             }
 
+            // Las vencidas son de solo lectura. El botón de editar ya no se muestra en el
+            // histórico, pero ocultarlo en pantalla no impide llamar a este endpoint.
+            if ($activity->deadline_at && $activity->deadline_at->isPast()) {
+                return response()->json(['code' => 403, 'message' => 'No se puede modificar una actividad cuya fecha límite ya pasó.'], 403);
+            }
+
 
             DB::beginTransaction();
 
@@ -216,23 +227,30 @@ class ActivityController extends Controller
         }
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         try {
-            DB::beginTransaction();
-            $activity = $this->activityRepository->find($id);
-            if ($activity) {
-                $activity->delete();
-                $msg = 'Registro eliminado correctamente';
-            } else {
-                $msg = 'El registro no existe';
+            // El borrado de la tabla viaja como DELETE sin cuerpo, así que el colegio se toma
+            // de la propia actividad. El servicio lo vuelve a exigir, de modo que sigue sin
+            // poder alcanzar una actividad de otro colegio.
+            $activity = Activity::withTrashed()->find($id);
+
+            if (! $activity) {
+                return response()->json(['code' => 200, 'message' => 'El registro no existe']);
             }
-            DB::commit();
 
-            return response()->json(['code' => 200, 'message' => $msg]);
+            $resumen = $this->activityDeletionService->delete([$id], $activity->company_id);
+
+            if ($resumen['activities'] === 0) {
+                return response()->json(['code' => 200, 'message' => 'El registro no existe']);
+            }
+
+            return response()->json([
+                'code' => 200,
+                'message' => $this->deletionMessage($resumen),
+                'deleted' => $resumen,
+            ]);
         } catch (Throwable $th) {
-            DB::rollBack();
-
             return response()->json([
                 'code' => 500,
                 'message' => $th->getMessage(),
@@ -240,6 +258,71 @@ class ActivityController extends Controller
                 'line' => $th->getLine(),
             ], 500);
         }
+    }
+
+    /**
+     * Qué se va a borrar, sin borrar nada.
+     *
+     * La confirmación necesita decir cuántas entregas de alumnos se destruyen; un "¿está
+     * seguro?" a secas no da la información para decidir.
+     */
+    public function deletePreview(Request $request)
+    {
+        return $this->execute(function () use ($request) {
+            $validated = $request->validate([
+                'ids' => ['required', 'array', 'min:1'],
+                'ids.*' => ['required'],
+                'company_id' => ['required'],
+            ]);
+
+            return [
+                'code' => 200,
+                'preview' => $this->activityDeletionService->preview($validated['ids'], $validated['company_id']),
+            ];
+        });
+    }
+
+    /**
+     * Borrado de varias actividades a la vez, para la limpieza por períodos que hace el docente
+     * desde el histórico.
+     */
+    public function deleteMasive(Request $request)
+    {
+        return $this->execute(function () use ($request) {
+            $validated = $request->validate([
+                'ids' => ['required', 'array', 'min:1'],
+                'ids.*' => ['required'],
+                'company_id' => ['required'],
+            ], [
+                'ids.required' => 'Debe seleccionar al menos una actividad.',
+            ]);
+
+            $resumen = $this->activityDeletionService->delete($validated['ids'], $validated['company_id']);
+
+            return [
+                'code' => 200,
+                'message' => $this->deletionMessage($resumen),
+                'deleted' => $resumen,
+            ];
+        });
+    }
+
+    /**
+     * Resume en una frase lo que se llevó el borrado.
+     */
+    private function deletionMessage(array $resumen): string
+    {
+        $partes = [$resumen['activities'].' actividad(es)'];
+
+        if ($resumen['submissions'] > 0) {
+            $partes[] = $resumen['submissions'].' entrega(s)';
+        }
+
+        if ($resumen['comments'] > 0) {
+            $partes[] = $resumen['comments'].' comentario(s)';
+        }
+
+        return 'Se eliminó: '.implode(', ', $partes).'.';
     }
 
     public function changeStatus(Request $request)
